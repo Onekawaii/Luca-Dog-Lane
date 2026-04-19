@@ -1,0 +1,265 @@
+{
+  "eat_random_item": [
+    {
+      "weight": 5,
+      "conditions": ["room_tag:junk"],
+      "text": "You eat a gummy screw. It tastes like battery acid and mall regret.",
+      "effects": {
+        "health": -7,
+        "ape_chaos": 1
+      }
+    },
+    {
+      "weight": 2,
+      "conditions": ["inventory_has:amber_shard"],
+      "text": "You almost eat the amber shard, then receive a prophetic stomach warning.",
+      "effects": {
+        "alter": 1,
+        "unlock_flag": "shard_warning"
+      }
+    },
+    {
+      "weight": 1,
+      "conditions": ["room_tag:bureaucratic"],
+      "text": "You accidentally eat an official receipt and become temporarily fileable.",
+      "effects": {
+        "bureaucracy": 2,
+        "unlock_flag": "self_filed"
+      }
+    },
+    {
+      "weight": 3,
+      "conditions": ["room_tag:feathered"],
+      "text": "You eat a feather. It tickles going down and grants avian insight.",
+      "effects": {
+        "alter": 2,
+        "reputation_chicken": 1
+      }
+    }
+  ],
+  "ape_scream": [
+    {
+      "weight": 100,
+      "conditions": [],
+      "text": "You scream. It lowers fear. Resistance +1.",
+      "effects": {
+        "resistance": 1,
+        "ape_chaos": 1
+      }
+    },
+    {
+      "weight": 25,
+      "conditions": [],
+      "text": "You scream. It increases suspicion. Hive Pressure +10.",
+      "effects": {
+        "hive_pressure": 10
+      }
+    },
+    {
+      "weight": 15,
+      "conditions": [],
+      "text": "You scream. A goblin clerk appears!",
+      "effects": {
+        "unlock_flag": "goblin_encounter"
+      }
+    },
+    {
+      "weight": 10,
+      "conditions": ["high_ape_chaos"],
+      "text": "You scream. Chaos rises. Ape Chaos +5.",
+      "effects": {
+        "ape_chaos": 5
+      }
+    },
+    {
+      "weight": 5,
+      "conditions": [],
+      "text": "You scream. The architecture screams back.",
+      "effects": {
+        "unlock_flag": "hallucination"
+      }
+    },
+    {
+      "weight": 4,
+      "conditions": ["room_tag:ape"],
+      "text": "You unleash a magnificent bureaucratic jungle cry. A drawer springs open in terror.",
+      "effects": {
+        "ape_chaos": 1,
+        "unlock_flag": "drawer_popped"
+      }
+    },
+    {
+      "weight": 3,
+      "conditions": ["room_tag:frank"],
+      "text": "You scream in Frank's vicinity. Frank waits for silence, then subtracts respect with his face.",
+      "effects": {
+        "reputation_frank": -1
+      }
+    }
+  ],
+  "queue": [
+    {
+      "weight": 60,
+      "conditions": [],
+      "text": "You join the queue properly. Time passes, but you feel orderly.",
+      "effects": {
+        "bureaucracy": 1,
+        "reputation_frank": 1
+      }
+    },
+    {
+      "weight": 30,
+      "conditions": ["high_ape_chaos"],
+      "text": "You queue chaotically, cutting in line. The system tolerates it.",
+      "effects": {
+        "ape_chaos": -2,
+        "reputation_frank": -1
+      }
+    },
+    {
+      "weight": 10,
+      "conditions": [],
+      "text": "You queue perfectly and get fast-tracked.",
+      "effects": {
+        "bureaucracy": 2,
+        "unlock_flag": "queue_master"
+      }
+    }
+  ],
+  "stamp": [
+    {
+      "weight": 50,
+      "conditions": ["has_item:official_stamp"],
+      "text": "You stamp a form officially. It becomes real paperwork.",
+      "effects": {
+        "bureaucracy": 1,
+        "unlock_flag": "official_stamp_used"
+      }
+    },
+    {
+      "weight": 30,
+      "conditions": [],
+      "text": "You stamp randomly. Frank disapproves.",
+      "effects": {
+        "reputation_frank": -2,
+        "unlock_flag": "stamp_abuse"
+      }
+    },
+    {
+      "weight": 20,
+      "conditions": ["high_bureaucracy"],
+      "text": "You stamp with authority. Frank nods approvingly.",
+      "effects": {
+        "reputation_frank": 2,
+        "unlock_flag": "stamp_expert"
+      }
+    }
+  ],
+  "appeal": [
+    {
+      "weight": 40,
+      "conditions": [],
+      "text": "You appeal a decision. The bureaucracy grinds slowly.",
+      "effects": {
+        "bureaucracy": 1
+      }
+    },
+    {
+      "weight": 30,
+      "conditions": ["high_reputation_frank"],
+      "text": "Frank personally handles your appeal favorably.",
+      "effects": {
+        "reputation_frank": 1,
+        "unlock_flag": "appeal_success"
+      }
+    },
+    {
+      "weight": 30,
+      "conditions": ["low_reputation_frank"],
+      "text": "Your appeal is denied. Frank is unmoved.",
+      "effects": {
+        "reputation_frank": -1
+      }
+    }
+  ],
+  "queue": [
+    {
+      "weight": 5,
+      "conditions": ["room_tag:bureaucratic"],
+      "text": "You join the line. The line accepts you as temporary matter.",
+      "effects": {
+        "bureaucracy": 1,
+        "unlock_flag": "properly_queued"
+      }
+    },
+    {
+      "weight": 2,
+      "conditions": ["room_tag:delay", "frank_rep_low"],
+      "text": "The queue folds around you for what feels like an hour. Frank's disapproval travels faster than paper.",
+      "effects": {
+        "alter": -1,
+        "bureaucracy": 1
+      }
+    }
+  ],
+  "stamp_form": [
+    {
+      "weight": 5,
+      "conditions": ["inventory_has:blank_form_27b", "inventory_has:provisional_stamp"],
+      "text": "You stamp the form. The impact sounds like a small legal thunderclap.",
+      "effects": {
+        "filed_status": "stamped",
+        "remove_item": "provisional_stamp",
+        "unlock_flag": "form_stamped"
+      }
+    },
+    {
+      "weight": 3,
+      "conditions": ["inventory_has:blank_form_27b"],
+      "text": "You try to stamp the form with pure conviction. Conviction leaves no ink.",
+      "effects": {
+        "reputation_frank": -1
+      }
+    }
+  ],
+  "appeal_denial": [
+    {
+      "weight": 4,
+      "conditions": ["flag:received_denial", "state:filed_status=denied"],
+      "text": "You file an appeal. The denial shivers and becomes procedural instead of absolute.",
+      "effects": {
+        "filed_status": "appealed",
+        "bureaucracy": 1,
+        "unlock_flag": "appeal_logged"
+      }
+    },
+    {
+      "weight": 2,
+      "conditions": ["flag:received_denial", "frank_rep_low"],
+      "text": "Your appeal is technically accepted and spiritually frowned upon.",
+      "effects": {
+        "filed_status": "appealed",
+        "reputation_frank": -1
+      }
+    }
+  ],
+  "ask_chicken_legal_advice": [
+    {
+      "weight": 5,
+      "conditions": ["npc_present:chicken"],
+      "text": "The chicken pecks three times at a mold-black cabinet. Records are never truly lost, only embarrassed.",
+      "effects": {
+        "unlock_flag": "hint_lost_records",
+        "alter": 1
+      }
+    },
+    {
+      "weight": 2,
+      "conditions": ["npc_present:chicken", "room_tag:goblin"],
+      "text": "The chicken issues a noise that sounds legally binding. The goblins pause, afraid to contest precedent.",
+      "effects": {
+        "reputation_goblins": 1
+      }
+    }
+  ]
+}

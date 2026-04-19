@@ -1,0 +1,106 @@
+[
+  {
+    "name": "chicken",
+    "description": "A chicken that seems unusually knowing.",
+    "role": "companion",
+    "temperament": "mysterious",
+    "topics": {
+      "advice": "The chicken clucks mysteriously about legal matters.",
+      "food": "The chicken eyes your inventory hungrily.",
+      "geometry": "The chicken pecks at architectural anomalies."
+    },
+    "commands": ["ask_chicken_for_legal_advice"],
+    "reputation_bands": {
+      "low": "The chicken regards you suspiciously.",
+      "mid": "The chicken clucks neutrally.",
+      "high": "The chicken seems pleased with you."
+    }
+  },
+  {
+    "name": "overseer",
+    "description": "A mathematical entity that watches.",
+    "role": "antagonist",
+    "temperament": "mathematical",
+    "topics": {
+      "numbers": "The overseer calculates probabilities.",
+      "geometry": "The overseer approves of clean angles.",
+      "chaos": "The overseer disapproves of irregularities."
+    },
+    "commands": [],
+    "reputation_bands": {
+      "low": "The overseer watches you coldly.",
+      "mid": "The overseer observes impartially.",
+      "high": "The overseer acknowledges your patterns."
+    }
+  },
+  {
+    "name": "minor_clerk",
+    "description": "A harried clerk managing the queue system.",
+    "role": "bureaucrat",
+    "temperament": "overworked",
+    "topics": {
+      "queue": "The clerk explains the queue system patiently.",
+      "forms": "The clerk sighs about paperwork.",
+      "waiting": "The clerk understands the necessity of waiting."
+    },
+    "commands": ["queue", "take_number"],
+    "reputation_bands": {
+      "low": "The clerk is curt with you.",
+      "mid": "The clerk is professionally polite.",
+      "high": "The clerk offers helpful shortcuts."
+    }
+  },
+  {
+    "name": "frank",
+    "description": "Frank Gate Clerk, the ultimate bureaucrat.",
+    "role": "clerk",
+    "temperament": "enduring",
+    "topics": {
+      "forms": "All things must pass through the Desk.",
+      "appeal": "Denial is not the end of a form. It is a stage.",
+      "chicken": "No poultry in active review. Unofficially, the bird has instincts.",
+      "stamps": "Stamps make things official.",
+      "files": "Proper filing is essential."
+    },
+    "commands": ["stamp", "deny", "approve", "explain"],
+    "reputation_bands": {
+      "low": "Your paperwork arrives with a smell of improvisation.",
+      "mid": "Try again. Properly.",
+      "high": "Frank slides the form back with one corrected mark already stamped."
+    }
+  },
+  {
+    "name": "goblin_stapler",
+    "description": "A goblin with surprisingly strong opinions about binding.",
+    "role": "chaotic_helper",
+    "temperament": "unpredictable",
+    "topics": {
+      "paper": "The goblin staples things without asking permission.",
+      "chaos": "The goblin cackles at regulatory confusion.",
+      "shortcuts": "The goblin knows paths the clerks don't monitor."
+    },
+    "commands": ["scream_at_bureaucracy"],
+    "reputation_bands": {
+      "low": "The goblin eyes you with suspicion.",
+      "mid": "The goblin grins mischievously.",
+      "high": "The goblin treats you like a fellow troublemaker."
+    }
+  },
+  {
+    "name": "records_moth",
+    "description": "A massive moth that tends the forgotten files.",
+    "role": "archive_keeper",
+    "temperament": "patient",
+    "topics": {
+      "records": "The moth knows where everything that was lost has gone.",
+      "hidden": "The moth's wings dust off secrets.",
+      "correction": "The moth has seen every form that was unfiled."
+    },
+    "commands": [],
+    "reputation_bands": {
+      "low": "The moth ignores you.",
+      "mid": "The moth acknowledges your presence.",
+      "high": "The moth guides you through the archives with gentle wingbeats."
+    }
+  }
+]

@@ -1,0 +1,9 @@
+[
+  {
+    "name": "item_name",
+    "weight": 1.0,
+    "description": "What the player sees and feels when examining this item.",
+    "edible": false,
+    "readable": false
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "normal_commands": [
+    "look", "go", "take", "drop", "inventory", "examine", "use", "talk", "save", "load"
+  ],
+  "interaction_commands": [
+    "open", "close", "unlock", "give", "throw", "search", "push", "pull", "light", "extinguish"
+  ],
+  "brother_ape_commands": [
+    "ape", "scream at wall", "eat random item", "befriend object", "accuse ceiling", "worship receipt", "insult geometry", "dance badly", "stamp self", "ask chicken for legal advice"
+  ],
+  "frank_bureaucracy_commands": [
+    "file form", "request appeal", "deny self", "stamp item", "queue", "take number", "audit", "submit complaint", "resubmit complaint", "notarize pebble"
+  ]
+}

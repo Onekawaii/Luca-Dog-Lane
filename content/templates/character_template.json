@@ -1,0 +1,16 @@
+{
+  "name": "character_name",
+  "description": "Sensory/behavioral description of this NPC.",
+  "role": "gatekeeper",
+  "temperament": "officious, dismissive, by-the-book",
+  "topics": {
+    "work": "Response when player talks about work.",
+    "forms": "Response when player talks about forms."
+  },
+  "commands": ["stamp", "deny", "approve"],
+  "reputation_bands": {
+    "low": "Flavor when reputation is negative.",
+    "mid": "Flavor when reputation is neutral.",
+    "high": "Flavor when reputation is positive."
+  }
+}

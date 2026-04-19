@@ -1,0 +1,26 @@
+{
+  "id": "ch0X_room_name",
+  "chapter": 2,
+  "level_index": 1,
+  "name": "Room Display Name",
+  "description": "Full sensory description of the room. Multiple sentences. Sets mood.",
+  "short_description": "Brief one-liner for look when revisited.",
+  "exits": {
+    "north": "ch0X_adjacent_room",
+    "south": "ch0X_adjacent_room"
+  },
+  "items": ["item_name_1", "item_name_2"],
+  "npcs": ["npc_name"],
+  "tags": ["bureaucratic", "entry", "hazardous"],
+  "hazards": [],
+  "required_flags": [],
+  "set_flags_on_enter": ["global:flag_name"],
+  "events": [],
+  "special_commands": {
+    "verb": "Response to that verb in this room."
+  },
+  "failure_table": [],
+  "success_table": [],
+  "chapter_progress_value": 0,
+  "visited": false
+}

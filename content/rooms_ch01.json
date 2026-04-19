@@ -1,0 +1,248 @@
+[
+  {
+    "id": "ch01_entry_mall",
+    "chapter": 1,
+    "level_index": 1,
+    "name": "Entry Mall",
+    "description": "Sliding doors gasp. Fog rolls out. Neon primes flicker overhead. A chicken pecks the tile and stares as if it knows the ending.",
+    "short_description": "Foggy mall entrance with a chicken.",
+    "exits": {
+      "east": "ch01_escalator_split"
+    },
+    "items": ["receipt", "rock"],
+    "npcs": ["chicken"],
+    "tags": ["entry", "mall", "foggy"],
+    "hazards": [],
+    "required_flags": [],
+    "set_flags_on_enter": ["global:entered_mall"],
+    "events": [],
+    "special_commands": {
+      "echo": "The mall's acoustics amplify your voice strangely."
+    },
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 0
+  },
+  {
+    "id": "ch01_escalator_split",
+    "chapter": 1,
+    "level_index": 2,
+    "name": "Escalator Split",
+    "description": "Two escalators spiral: one up, one down. The handrails hum a familiar note.",
+    "short_description": "Spiraling escalators up and down.",
+    "exits": {
+      "up": "ch01_storefront_eleven",
+      "down": "ch01_hive_concourse",
+      "west": "ch01_entry_mall"
+    },
+    "items": [],
+    "npcs": [],
+    "tags": ["escalator", "machine", "unstable"],
+    "hazards": ["trip"],
+    "required_flags": [],
+    "set_flags_on_enter": [],
+    "events": [],
+    "special_commands": {
+      "hum": "You hum along with the escalators. They seem pleased."
+    },
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 0
+  },
+  {
+    "id": "ch01_storefront_eleven",
+    "chapter": 1,
+    "level_index": 3,
+    "name": "Storefront Eleven",
+    "description": "A nameless storefront glows only the numeral 11. Glass unbroken, bargains unspoken.",
+    "short_description": "Glowing storefront with number 11.",
+    "exits": {
+      "down": "ch01_hive_concourse",
+      "south": "ch01_atrium_void"
+    },
+    "items": ["amber_shard"],
+    "npcs": [],
+    "tags": ["store", "neon", "numbered"],
+    "hazards": [],
+    "required_flags": [],
+    "set_flags_on_enter": [],
+    "events": [],
+    "special_commands": {},
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 0
+  },
+  {
+    "id": "ch01_hive_concourse",
+    "chapter": 1,
+    "level_index": 4,
+    "name": "Hive Concourse",
+    "description": "Overhead, a honeycomb vault drips bioluminescent amber. Footsteps echo in a rhythm the hive enjoys.",
+    "short_description": "Honeycomb vault with dripping amber.",
+    "exits": {
+      "up": "ch01_storefront_eleven",
+      "north": "ch01_atrium_void",
+      "west": "ch01_escalator_split",
+      "east": "ch01_queue_vestibule"
+    },
+    "items": [],
+    "npcs": [],
+    "tags": ["hive", "amber", "echoing"],
+    "hazards": ["amber_drip"],
+    "required_flags": [],
+    "set_flags_on_enter": [],
+    "events": [],
+    "special_commands": {},
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 0
+  },
+  {
+    "id": "ch01_atrium_void",
+    "chapter": 1,
+    "level_index": 5,
+    "name": "Atrium Void",
+    "description": "Black circular plaza. A tungsten beam pinholes the dust. Silence tastes metallic.",
+    "short_description": "Black plaza with tungsten beam.",
+    "exits": {
+      "east": "ch01_overseer_ring",
+      "west": "ch01_storefront_eleven",
+      "south": "ch01_hive_concourse"
+    },
+    "items": [],
+    "npcs": [],
+    "tags": ["void", "metallic", "silent"],
+    "hazards": ["time_slip"],
+    "required_flags": [],
+    "set_flags_on_enter": [],
+    "events": [],
+    "special_commands": {},
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 0
+  },
+  {
+    "id": "ch01_overseer_ring",
+    "chapter": 1,
+    "level_index": 6,
+    "name": "Overseer Ring",
+    "description": "A skyscraper made of staircases. Windows blink like hex eyes. You feel watched by math.",
+    "short_description": "Staircase skyscraper with blinking windows.",
+    "exits": {
+      "east": "ch01_core",
+      "west": "ch01_atrium_void"
+    },
+    "items": [],
+    "npcs": ["overseer"],
+    "tags": ["skyscraper", "math", "watched"],
+    "hazards": ["overseer_stir"],
+    "required_flags": [],
+    "set_flags_on_enter": [],
+    "events": [],
+    "special_commands": {},
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 1
+  },
+  {
+    "id": "ch01_queue_vestibule",
+    "chapter": 1,
+    "level_index": 7,
+    "name": "Queue Vestibule",
+    "description": "A velvet rope maze curls like intestines around a brass kiosk. Numbers glow on screens, promising order in chaos.",
+    "short_description": "A brass queue maze with glowing numbers.",
+    "exits": {
+      "west": "ch01_hive_concourse",
+      "east": "ch01_form_furnace"
+    },
+    "items": ["queue_ticket"],
+    "npcs": ["minor_clerk"],
+    "tags": ["bureaucratic", "crowded", "ritual"],
+    "hazards": ["delay", "misfile"],
+    "required_flags": [],
+    "set_flags_on_enter": ["seen_queue_system"],
+    "events": [],
+    "special_commands": {
+      "queue": "You join the queue, feeling the weight of bureaucratic inevitability.",
+      "take_number": "You take a number. It feels official.",
+      "wait": "You wait patiently. Time passes."
+    },
+    "failure_table": "bureaucracy_minor",
+    "success_table": "queue_success",
+    "chapter_progress_value": 1
+  },
+  {
+    "id": "ch01_form_furnace",
+    "chapter": 1,
+    "level_index": 8,
+    "name": "Form Furnace",
+    "description": "A cavern of filing cabinets breathes steam. Stamps thud like heartbeats. Frank's desk looms at the center.",
+    "short_description": "Steaming cavern of filing cabinets with Frank's desk.",
+    "exits": {
+      "west": "ch01_queue_vestibule",
+      "south": "ch01_chicken_tribunal"
+    },
+    "items": ["blank_form", "official_stamp"],
+    "npcs": ["frank"],
+    "tags": ["bureaucratic", "steamy", "official"],
+    "hazards": ["paper_cut", "steam_burn"],
+    "required_flags": ["seen_queue_system"],
+    "set_flags_on_enter": ["met_frank"],
+    "events": [],
+    "special_commands": {
+      "stamp": "You attempt to stamp something official.",
+      "file": "You attempt to file paperwork.",
+      "appeal": "You attempt to appeal a decision."
+    },
+    "failure_table": "bureaucracy_major",
+    "success_table": "frank_approval",
+    "chapter_progress_value": 1
+  },
+  {
+    "id": "ch01_chicken_tribunal",
+    "chapter": 1,
+    "level_index": 9,
+    "name": "Chicken Tribunal",
+    "description": "A courtroom of feathers and judgment. The chicken sits on a tiny bench, dispensing wisdom and condemnation.",
+    "short_description": "Feathered courtroom with the chicken judge.",
+    "exits": {
+      "north": "ch01_form_furnace",
+      "east": "ch01_core"
+    },
+    "items": ["feather_quill", "tiny_gavel"],
+    "npcs": ["chicken"],
+    "tags": ["judicial", "feathered", "absurd"],
+    "hazards": ["judgment", "peck"],
+    "required_flags": ["met_frank"],
+    "set_flags_on_enter": ["chicken_judgment"],
+    "events": [],
+    "special_commands": {
+      "ask_chicken_for_legal_advice": "The chicken clucks legal wisdom.",
+      "eat_random_item": "You consider eating something random.",
+      "scream_at_geometry": "You scream at the architectural nonsense."
+    },
+    "failure_table": "absurd_failure",
+    "success_table": "chicken_blessing",
+    "chapter_progress_value": 1
+  },
+  {
+    "id": "ch01_core",
+    "chapter": 1,
+    "level_index": 10,
+    "name": "Core",
+    "description": "The lattice collapses into a single pulsing node—like a heart that learned geometry.",
+    "short_description": "Pulsing geometric heart.",
+    "exits": {},
+    "items": [],
+    "npcs": [],
+    "tags": ["core", "final", "geometric"],
+    "hazards": [],
+    "required_flags": ["chicken_judgment"],
+    "set_flags_on_enter": ["global:reached_core"],
+    "events": [],
+    "special_commands": {},
+    "failure_table": [],
+    "success_table": [],
+    "chapter_progress_value": 10
+  }
+]

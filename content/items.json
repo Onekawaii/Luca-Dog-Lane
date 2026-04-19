@@ -1,0 +1,113 @@
+[
+  {
+    "name": "receipt",
+    "weight": 0.1,
+    "description": "A crumpled receipt from some forgotten purchase.",
+    "edible": true,
+    "readable": true
+  },
+  {
+    "name": "rock",
+    "weight": 2,
+    "description": "A shiny rock that might be important.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "amber_shard",
+    "weight": 1,
+    "description": "A piece of bioluminescent amber from the hive.",
+    "edible": true,
+    "readable": false
+  },
+  {
+    "name": "brass_bauble",
+    "weight": 3,
+    "description": "A decorative brass bauble.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "skeleton_key",
+    "weight": 0.5,
+    "description": "A key that might unlock things.",
+    "edible": false,
+    "readable": false  },
+  {
+    "name": "queue_ticket",
+    "weight": 0.1,
+    "description": "A numbered ticket for bureaucratic processing.",
+    "edible": false,
+    "readable": true
+  },
+  {
+    "name": "blank_form",
+    "weight": 0.2,
+    "description": "A blank bureaucratic form waiting to be filled.",
+    "edible": false,
+    "readable": true
+  },
+  {
+    "name": "official_stamp",
+    "weight": 1,
+    "description": "An official stamp for approving documents.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "feather_quill",
+    "weight": 0.3,
+    "description": "A quill pen made from chicken feathers.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "tiny_gavel",
+    "weight": 0.5,
+    "description": "A tiny gavel for judicial proceedings.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "queue_slip",
+    "weight": 0.05,
+    "description": "A numbered slip that grants you bureaucratic legitimacy.",
+    "edible": false,
+    "readable": true
+  },
+  {
+    "name": "blank_form_27b",
+    "weight": 0.1,
+    "description": "Form 27b, blank and waiting to be filled with intention.",
+    "edible": false,
+    "readable": true
+  },
+  {
+    "name": "misfiled_memo",
+    "weight": 0.15,
+    "description": "A memo that was filed in the wrong place and is all the better for it.",
+    "edible": false,
+    "readable": true
+  },
+  {
+    "name": "correction_ribbon",
+    "weight": 0.08,
+    "description": "A ribbon used for correcting mistakes on official documents.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "provisional_stamp",
+    "weight": 0.3,
+    "description": "A stamp that carries provisional authority.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "desk_appeal_token",
+    "weight": 0.05,
+    "description": "A token that proves you have the right to appeal.",
+    "edible": false,
+    "readable": false
+  }
+]
