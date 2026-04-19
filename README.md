@@ -1,79 +1,162 @@
 # Hive-Lattice Bard
 
-A text-based adventure game with Brother Ape flavored bureaucracy and weird commands.
+A surreal interactive text game built around bureaucracy, strange rituals, and Brother Ape flavored command chaos.
 
-## Project Structure
+You move through authored chapters, manipulate paperwork, trigger absurd consequence tables, and push through a world where forms, queues, denials, goblins, chickens, and clerk logic all matter.
 
-```
-game/
-  main.py                 # Main entry point
-  engine/                 # Core game systems
-    game_state.py         # Central state management
-    parser.py             # Input parsing and intent normalization
-    command_router.py     # Route intents to handlers
-    world_loader.py       # Load world data from JSON
-    save_system.py        # Save/load functionality
-    progression.py        # Chapter and level progression
-    combatless_resolution.py  # Resolve silly commands with consequences
-    random_events.py      # Random events system
-  content/                # Game content data
-    rooms_ch01.json       # Chapter 1 rooms
-    items.json            # Item definitions
-    characters.json       # NPC definitions
-    commands.json         # Command categories
-    level_rules.json      # Progression rules
-  writing/                # Flavor text and tables
-    flavor_tables.json    # Generic flavor text
-    bad_idea_results.json # Weighted result tables for silly commands
-    ape_voice_lines.json  # Brother Ape voice responses
-  tests/                  # Unit tests
-    test_parser.py        # Parser tests
-    test_room_graph.py    # Room connectivity tests
-    test_progression.py   # Progression tests
+## Current State
+
+This repository contains a modular Python text adventure engine with:
+
+* data-driven chapter content
+* intent-based parsing
+* consequence-table driven special actions
+* Chapter 1 vertical slice and Chapter 2 system wiring
+* validation tools and path tests
+* frozen content schemas for controlled expansion
+
+## Project Goals
+
+Hive-Lattice Bard is being built as a real interactive text game, not a fake sample sim.
+
+The long-term target is a 100-node authored experience organized into chapters, with:
+
+* multiple route styles
+* bureaucracy-based progression
+* absurd command interactions with real consequences
+* recurring NPC memory and route reactivity
+* testable chapter progression without softlocks
+
+## Repository Structure
+
+```text
+content/
+  rooms_ch01.json
+  rooms_ch02.json
+  rooms_ch03.json
+  items.json
+  characters.json
+  commands.json
+  level_rules.json
+  templates/
+    room_template.json
+    character_template.json
+    item_template.json
+    consequence_table_template.json
+
+engine/
+  combatless_resolution.py
+  command_router.py
+  game_state.py
+  parser.py
+  progression.py
+  random_events.py
+  save_system.py
+  validate_content.py
+  world_loader.py
+
+tests/
+  test_chapter1_minimal_path.py
+  test_chapter2_hybrid_path.py
+  test_chapter2_lawful_path.py
+  test_parser.py
+  test_progression.py
+  test_room_graph.py
+
+tools/
+  content_lint.py
+  generate_chapter_shell.py
+
+writing/
+  ape_voice_lines.json
+  bad_idea_results.json
+  flavor_tables.json
+
+main.py
+README.md
+ARCHITECTURE_FREEZE.md
+SCHEMA_VERSIONS.md
+SPRINT_SUMMARY.md
+.gitignore
+.gitattributes
 ```
 
 ## Running the Game
+
+From the repository root:
 
 ```bash
 python main.py
 ```
 
-## Development
+## Running Validation
 
-This is a refactored version of the original prototype, split into a modular architecture for easier expansion to 100 nodes across 10 chapters.
+Lint the content:
 
-### Key Features
-
-- Intent-based command parsing
-- JSON-driven world data
-- Weighted consequence tables for silly commands
-- Chapter-based progression
-- Comprehensive save system
-- Unit testing framework
-
-### Adding New Content
-
-1. **Rooms**: Add to `content/rooms_chXX.json` with the full schema
-2. **Items**: Add to `content/items.json`
-3. **Commands**: Add handlers in `command_router.py` and parsers in `parser.py`
-4. **Consequences**: Add weighted tables to `writing/bad_idea_results.json`
-
-### Testing
-
-Run tests with:
 ```bash
-python -m unittest discover tests/
+python tools/content_lint.py
 ```
 
-## Architecture Overview
+Run the full test suite:
 
-The game uses a layered architecture:
+```bash
+python -m unittest discover -s tests -p "test*.py"
+```
 
-1. **GameState**: Central state holder
-2. **World Data**: JSON-loaded content
-3. **Parser**: Input → Intent normalization
-4. **Command Router**: Intent → Handler resolution
-5. **Content Rules**: Consequence tables and logic
-6. **Testing**: Validation and reachability checks
+Run the spine tests directly:
 
-This structure supports scaling to 100 authored nodes with mechanical depth.
+```bash
+python tests/test_chapter1_minimal_path.py
+python tests/test_chapter2_lawful_path.py
+python tests/test_chapter2_hybrid_path.py
+```
+
+## Design Pillars
+
+### 1. Data-driven content
+
+Rooms, items, characters, and progression rules are authored outside the core engine so chapters can scale without turning the codebase into a swamp.
+
+### 2. Parser to intent flow
+
+Player input is normalized into intents and routed through command handlers instead of being trapped in one giant monolithic parse loop.
+
+### 3. Consequence tables
+
+Special actions such as screaming, filing, stamping, queuing, or asking a chicken for legal advice are resolved through weighted rule tables with actual state changes.
+
+### 4. Freeze before scale
+
+Schemas, validation, and chapter structure are being locked before large-scale chapter expansion. No schema drift. No decorative growth.
+
+## Current Chapter Focus
+
+### Chapter 1
+
+The introductory vertical slice. It establishes movement, item interactions, bureaucracy flavor, and weird-command behavior.
+
+### Chapter 2
+
+Frank and the Necessary Denials. This chapter introduces systemic Frank reputation, filing status, queue logic, appeals, and route differences between lawful, ape-chaos, and hybrid play.
+
+## Development Workflow
+
+1. Author content using the frozen templates.
+2. Validate content with `content_lint.py`.
+3. Run spine tests.
+4. Add or harden mechanics.
+5. Only then expand chapters.
+
+## Roadmap
+
+* finish Chapter 2 route polish
+* strengthen Frank reputation reactivity
+* complete Chapter 2 end-state reporting
+* expand Chapter 3 from shell to authored content
+* continue chapter-by-chapter until full 100-node structure is complete
+
+## Notes
+
+This project is intentionally weird, but the architecture is meant to stay disciplined.
+
+Small knife. Sharp edge.
