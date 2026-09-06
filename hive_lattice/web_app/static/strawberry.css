@@ -1064,3 +1064,66 @@ header {
     .item-use-btn { min-height: 48px; font-size: 0.95rem; }
     .inventory-desc { font-size: 0.88rem; }
 }
+
+/* ----------------------------------------------------------------------
+   v0.7 World in Motion vertical slice
+   ---------------------------------------------------------------------- */
+.world-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    touch-action: manipulation;
+    cursor: crosshair;
+    image-rendering: auto;
+}
+
+.world-hint {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 8;
+    max-width: calc(100% - 16px);
+    padding: 5px 9px;
+    border: 1px solid rgba(0, 243, 255, 0.45);
+    background: rgba(7, 8, 12, 0.82);
+    color: var(--accent-cyan);
+    font: 0.72rem var(--font-mono);
+    text-align: center;
+    pointer-events: none;
+}
+
+.world-interact-btn {
+    position: absolute;
+    z-index: 9;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    min-height: 48px;
+    min-width: min(82%, 320px);
+    padding: 10px 16px;
+    border: 2px solid var(--accent-cyan);
+    border-radius: var(--radius);
+    background: rgba(10, 12, 20, 0.94);
+    color: #fff;
+    font: 0.9rem var(--font-mono);
+    box-shadow: 0 0 16px rgba(0, 243, 255, 0.22);
+}
+
+.world-interact-btn:active {
+    background: var(--surface-highlight);
+    transform: translateX(-50%) scale(0.98);
+}
+
+@media (max-width: 768px) {
+    .world-hint {
+        font-size: 0.68rem;
+    }
+    .world-interact-btn {
+        bottom: 8px;
+        width: calc(100% - 24px);
+        max-width: 380px;
+    }
+}

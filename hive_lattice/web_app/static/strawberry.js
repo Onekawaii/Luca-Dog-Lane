@@ -3,6 +3,7 @@
 let currentState = null;
 let toastTimer = null;
 let activeMobileTab = "adventure";
+let worldClient = null;
 
 /* ── API layer ────────────────────────────────────────────────────────── */
 
@@ -130,6 +131,39 @@ function render(data) {
     renderSidebarLogs(data);
 }
 
+/* ── World in Motion action bridge ─────────────────────────────────────── */
+
+async function makeWorldAction(action, opts = {}) {
+    const data = await api("/api/action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(action)
+    });
+    if (!data || data.error) {
+        if (data && !opts.quiet) showToast("Error: " + data.error, true);
+        return data;
+    }
+    currentState = data;
+    if (opts.quiet) {
+        if (worldClient && data.world) worldClient.setSnapshot(data.world);
+    } else {
+        render(data);
+        if (data.result) showToast(data.result);
+    }
+    return data;
+}
+
+function ensureWorldClient() {
+    if (worldClient || !window.HiveWorldClient) return worldClient;
+    worldClient = new window.HiveWorldClient({
+        canvas: document.getElementById("world-canvas"),
+        interactButton: document.getElementById("world-interact-btn"),
+        hint: document.getElementById("world-hint"),
+        requestAction: makeWorldAction
+    });
+    return worldClient;
+}
+
 /* ── Visual Stage and 2D Layered Sprites ───────────────────────────────── */
 
 function renderVisualStage(data) {
@@ -140,6 +174,9 @@ function renderVisualStage(data) {
     const npcSpriteImg = document.getElementById("npc-sprite-img");
     const mapImg = document.getElementById("map-img");
     const mapBox = document.getElementById("map-box");
+    const worldCanvas = document.getElementById("world-canvas");
+    const worldHint = document.getElementById("world-hint");
+    const worldInteract = document.getElementById("world-interact-btn");
 
     /* Reset every mutually-exclusive stage layer before selecting one. */
     roomImg.classList.add("hidden");
@@ -148,6 +185,9 @@ function renderVisualStage(data) {
     arenaLoading.classList.add("hidden");
     npcSpriteImg.className = "npc-sprite hidden";
     npcSpriteImg.removeAttribute("src");
+    worldCanvas.classList.add("hidden");
+    worldHint.classList.add("hidden");
+    worldInteract.classList.add("hidden");
 
     const roomUrl = data.images && data.images.room ? data.images.room : null;
     const showRoomFallback = () => {
@@ -200,32 +240,31 @@ function renderVisualStage(data) {
         mapImg.removeAttribute("src");
     }
 
-    /* Active NPC detection and sprite mapping. */
-    let npcId = null;
-    const sceneId = data.scene.id;
-    if (sceneId.includes("keith_corner")) npcId = "keith";
-    else if (sceneId.includes("coffee_counter") || sceneId.includes("darla")) npcId = "darla";
-    else if (sceneId.includes("tammy") || (sceneId.includes("first_sighting") && data.flags.tammy_alerted)) npcId = "tammy";
-    else if (sceneId.includes("meet_moldric") || sceneId.includes("fridge_intro") || sceneId.includes("moldric")) npcId = "moldric";
-    else if (sceneId.includes("vendrick")) npcId = "vendrick";
-    else if (sceneId.includes("condiment_gate")) npcId = "condiment_guardian";
-    else if (sceneId.includes("casserole_throne")) npcId = "sentient_casserole";
-    else if (sceneId.includes("records_hall")) npcId = "clerk_pell";
-    else if (sceneId.includes("holding_pen")) npcId = "bailiff_gorrum";
-    else if (sceneId.includes("hearing_arena")) npcId = "magistrate_orla";
+    /* Walkable world owns the viewport when a campaign world is active. */
+    if (data.world && data.world.world && data.world.world.enabled) {
+        const client = ensureWorldClient();
+        if (client) client.setSnapshot(data.world);
+        roomImg.classList.add("hidden");
+        roomFallback.classList.add("hidden");
+        arenaImg.classList.add("hidden");
+        arenaLoading.classList.add("hidden");
+        npcSpriteImg.classList.add("hidden");
+        return;
+    }
 
-    let tokenName = null;
-    if (npcId === "moldric") tokenName = "token.moldric_guide";
-    else if (npcId) tokenName = `token.${npcId}`;
-
-    if (tokenName) {
-        npcSpriteImg.src = `/api/assets/tokens/${tokenName}.png`;
+    /* Non-walkable scenes use server-authored entity presentation — no scene-name inference. */
+    const activeEntities = data.presentation && Array.isArray(data.presentation.entities)
+        ? data.presentation.entities
+        : [];
+    const activeNpc = activeEntities.find(entity => entity.token_url);
+    if (activeNpc && activeNpc.token_url) {
+        npcSpriteImg.src = activeNpc.token_url;
         npcSpriteImg.classList.remove("hidden");
-        if (npcId === "moldric") npcSpriteImg.classList.add("animate-bobbing");
-        else if (npcId === "sentient_casserole") npcSpriteImg.classList.add("animate-glow");
-        else if (npcId === "vendrick") npcSpriteImg.classList.add("animate-flicker");
+        const behavior = activeNpc.dynamics && activeNpc.dynamics.behavior;
+        if (behavior === "agitated" || behavior === "strained") npcSpriteImg.classList.add("animate-flicker");
+        else if (activeNpc.id.includes("moldric")) npcSpriteImg.classList.add("animate-bobbing");
+        else if (activeNpc.id.includes("sentient_casserole")) npcSpriteImg.classList.add("animate-glow");
         else npcSpriteImg.classList.add("animate-pulse");
-
         npcSpriteImg.onerror = function () {
             this.classList.add("hidden");
             this.removeAttribute("src");
@@ -516,7 +555,9 @@ function showHelp() {
         <hr style='border-color:var(--border);margin:8px 0'>
         <p><strong>HOW TO SURVIVE:</strong></p>
         <ul>
-          <li>Tap the full-width choices in the Action Panel to make path decisions.</li>
+          <li>In walkable rooms, tap the floor to move. Desktop also supports WASD/arrow keys; press E/Enter near a target to interact.</li>
+          <li>Use the large interaction button when you are close to Keith, Darla, Wetberry, or another world target.</li>
+          <li>Full-width Action Panel choices remain available for dialogue, checks, and narrative decisions.</li>
           <li>Interact with Survivors (Keith, Darla) and Labyrinth Entities (Moldric) to unlock topics.</li>
           <li>Manage Procedural Pressure (Bureaucracy) vs. Feral Chaos (Ape Chaos) to reveal stat-gated paths.</li>
           <li>Items are active tools now. Open Gear & Archives and use contextual item actions when they appear.</li>
@@ -526,7 +567,7 @@ function showHelp() {
         <p><strong>UI INTERFACE LEGEND:</strong></p>
         <ul>
           <li><strong>Minimap:</strong> Tap the map window to open the larger preview.</li>
-          <li><strong>Stage:</strong> Tap room art for a larger preview. NPC and arena layers appear only when active.</li>
+          <li><strong>Stage:</strong> Walkable scenes are a live world surface. Legacy scenes fall back to room art/NPC/arena presentation.</li>
           <li><strong>Lore Archives:</strong> Discovered relics and clues unlock historic lore fragments automatically.</li>
         </ul>
         <hr style='border-color:var(--border);margin:8px 0'>

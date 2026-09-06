@@ -40,6 +40,14 @@
     "ask_for_evidence_bag": {
       "npc_delta": {
         "npc.keith_janitor": 2
+      },
+      "actor_signal": {
+        "npc.keith_janitor": {
+          "activation": -0.08,
+          "coherence": 0.14,
+          "social_openness": 0.18,
+          "recovery_potential": 0.08
+        }
       }
     },
     "inspect_stain": {
@@ -180,6 +188,16 @@
           "turns": 3
         }
       ]
+    },
+    "touch_the_mop": {
+      "actor_signal": {
+        "npc.keith_janitor": {
+          "activation": 0.28,
+          "fixation": 0.12,
+          "social_openness": -0.16,
+          "memory_pressure": 0.1
+        }
+      }
     }
   },
   "scene_choices": {
@@ -494,7 +512,16 @@
       "remove_conditions": [
         "condition.socially_stunned"
       ],
-      "triggers_table": "table.system.containment_aftershocks"
+      "triggers_table": "table.system.containment_aftershocks",
+      "actor_signal": {
+        "npc.keith_janitor": {
+          "activation": -0.12,
+          "coherence": 0.18,
+          "fixation": -0.12,
+          "social_openness": 0.12,
+          "recovery_potential": 0.16
+        }
+      }
     },
     {
       "id": "use.damp_napkin.frost",

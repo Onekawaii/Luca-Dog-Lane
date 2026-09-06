@@ -6,7 +6,9 @@ Usage:
 Endpoints:
     GET  /                    Mobile UI
     GET  /api/state           Current scene, choices, flags, stats, inventory, visuals
-    POST /api/choice          Apply a choice by id
+    GET  /api/world           Current versioned spatial presentation snapshot
+    POST /api/action          Apply a world movement/interaction action
+    POST /api/choice          Apply a narrative choice by id
     POST /api/save            Save current state
     POST /api/item/use        Use an available inventory action
     POST /api/load            Load the default save
@@ -27,12 +29,15 @@ from flask import Flask, jsonify, render_template, request, send_from_directory
 
 from engine.module_runtime import CampaignModule, ModuleState
 from engine.module_save_system import ModuleSaveSystem
+from engine.world_contracts import GameAction
+from engine.world_runtime import WorldRuntime
 from hive_lattice.web_app.presentation import derive_act_progression
 
 # Closure-scoped state — populated inside create_app()
 _state: Optional[ModuleState] = None
 _module: Optional[CampaignModule] = None
 _saves: Optional[ModuleSaveSystem] = None
+_world: Optional[WorldRuntime] = None
 
 
 def _get_ip() -> str:
@@ -52,13 +57,15 @@ def create_app(campaign_path: str | Path) -> Flask:
 
     Each call creates a *new* Flask instance so routes are never re-registered.
     """
-    global _module, _state, _saves
+    global _module, _state, _saves, _world
 
     campaign_root = Path(campaign_path)
     _module = CampaignModule(str(campaign_root))
     _state = _module.new_state()
     _module.enter_scene(_state)
     _saves = ModuleSaveSystem(_module)
+    _world = WorldRuntime(_module)
+    _world.ensure_state(_state)
 
     generated_dir = (campaign_root / "assets" / "generated").resolve()
     generated_dir.mkdir(parents=True, exist_ok=True)
@@ -78,6 +85,25 @@ def create_app(campaign_path: str | Path) -> Flask:
     @app.route("/api/state")
     def api_state():
         return jsonify(_build_state_response())
+
+    @app.route("/api/world")
+    def api_world():
+        return jsonify(_world.snapshot(_state))
+
+    @app.route("/api/action", methods=["POST"])
+    def api_action():
+        data = request.get_json(force=True)
+        try:
+            action = GameAction.from_mapping(data or {})
+        except (TypeError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
+        if not action.kind:
+            return jsonify({"error": "kind is required"}), 400
+        try:
+            resolved = _world.apply_action(_state, action)
+            return jsonify({"ok": True, **resolved, **_build_state_response()})
+        except (KeyError, PermissionError, ValueError) as exc:
+            return jsonify({"error": str(exc)}), 400
 
     @app.route("/api/choice", methods=["POST"])
     def api_choice():
@@ -116,6 +142,7 @@ def create_app(campaign_path: str | Path) -> Flask:
         if loaded is None:
             return jsonify({"ok": False, "error": "No save file found."}), 404
         _state = loaded
+        _world.ensure_state(_state)
         return jsonify({"ok": True, "message": "Game loaded.", **_build_state_response()})
 
     @app.route("/api/saves")
@@ -199,6 +226,11 @@ def _build_state_response() -> dict:
     room_url = _asset_url(visual.get("generated", {}).get("room"))
 
     is_arena_scene = scene.get("type") == "arena_encounter"
+    world_snapshot = _world.snapshot(_state) if _world is not None else {"world": {"enabled": False}}
+    presentation_entities = _world.presentation_entities(_state) if _world is not None else []
+    for entity in presentation_entities:
+        token = entity.get("token")
+        entity["token_url"] = f"/api/assets/tokens/{token}.png" if token else None
 
     return {
         "scene": {
@@ -227,6 +259,12 @@ def _build_state_response() -> dict:
         },
         "log": _state.log[-8:] if _state.log else [],
         "progression": derive_act_progression(_state.flags),
+        "world": world_snapshot,
+        "presentation": {"entities": presentation_entities},
+        "actor_dynamics": {
+            actor_id: _world._actor_view(_state, actor_id)
+            for actor_id in _state.actor_dynamics
+        } if _world is not None else {},
         "images": {
             "map": map_url,
             "room": room_url,
@@ -253,7 +291,7 @@ def run_server(campaign_path: str | Path, port: int = 8000) -> None:
     desktop, lan = _detect_urls(port)
     print()
     print("  ============================================")
-    print("   Strawberry Omen — Reactive Lattice (v0.6.0)")
+    print("   Strawberry Omen — World in Motion (v0.7-dev)")
     print("  ============================================")
     print()
     print(f"  Local (desktop): {desktop}")

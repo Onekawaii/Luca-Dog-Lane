@@ -191,24 +191,55 @@ class TestReactiveVerdict(unittest.TestCase, ReactiveHelpers):
         self.assertIn("use.evidence_ledger.hearing", actions)
 
 
-class TestReactiveSaveV2(unittest.TestCase, ReactiveHelpers):
-    def test_v2_round_trip_preserves_reactive_state(self):
+class TestReactiveSaveV3(unittest.TestCase, ReactiveHelpers):
+    def test_v3_round_trip_preserves_reactive_and_world_state(self):
         module, state = self.module_state()
         state.inventory.append("item.evidence_bag_not_my_business")
         module.use_item(state, "use.evidence_bag.wetberry")
         state.npc_memory["npc.tammy_hr"] = -2
         state.conditions["condition.under_scrutiny"] = 4
+        state.world_state = {"active_world": "world.breakroom.main", "player": {"x": 77.0, "y": 71.0}}
+        state.actor_dynamics = {"npc.keith_janitor": {"activation": 0.3, "coherence": 0.5}}
         with tempfile.TemporaryDirectory() as td:
             saves = ModuleSaveSystem(module, td)
             saves.save_game(state)
             loaded = saves.load_game()
-        self.assertEqual(SAVE_VERSION, 2)
+        self.assertEqual(SAVE_VERSION, 3)
         self.assertEqual(loaded.room_state, state.room_state)
         self.assertEqual(loaded.npc_memory, state.npc_memory)
         self.assertEqual(loaded.conditions, state.conditions)
         self.assertEqual(loaded.event_history, state.event_history)
         self.assertEqual(loaded.turn_count, state.turn_count)
         self.assertEqual(loaded.rng_seed, state.rng_seed)
+        self.assertEqual(loaded.world_state, state.world_state)
+        self.assertEqual(loaded.actor_dynamics, state.actor_dynamics)
+
+    def test_v2_save_is_backward_compatible(self):
+        module, state = self.module_state()
+        legacy = {
+            "save_version": 2,
+            "module_id": state.campaign_id,
+            "current_scene": state.current_scene,
+            "current_location": state.current_location,
+            "flags": state.flags,
+            "stats": state.stats,
+            "inventory": [],
+            "log": [],
+            "room_state": {"location.breakroom.central_table": {"visited": True}},
+            "npc_memory": {"npc.keith_janitor": 1},
+            "conditions": {},
+            "event_history": [],
+            "turn_count": 3,
+            "rng_seed": 6060,
+            "last_outcome": {},
+        }
+        with tempfile.TemporaryDirectory() as td:
+            path = Path(td) / "default_save.json"
+            path.write_text(json.dumps(legacy), encoding="utf-8")
+            loaded = ModuleSaveSystem(module, td).load_game()
+        self.assertEqual(loaded.turn_count, 3)
+        self.assertEqual(loaded.world_state, {})
+        self.assertEqual(loaded.actor_dynamics, {})
 
     def test_v1_save_is_backward_compatible(self):
         module, state = self.module_state()

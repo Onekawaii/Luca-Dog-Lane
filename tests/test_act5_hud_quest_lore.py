@@ -12,6 +12,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 ROOT = _REPO_ROOT / "campaigns" / "strawberry_omen"
 JS_PATH = _REPO_ROOT / "hive_lattice" / "web_app" / "static" / "strawberry.js"
+IDENTITY_PATH = ROOT / "game" / "character_identities.json"
 from hive_lattice.web_app.presentation import derive_act_progression
 
 
@@ -52,6 +53,7 @@ class TestAct5Quest(unittest.TestCase):
 class TestAct5HUD(unittest.TestCase):
     def setUp(self):
         self.js = JS_PATH.read_text()
+        self.identities = json.loads(IDENTITY_PATH.read_text())
 
     def test_act5_appears_in_progression_hud(self):
         p = derive_act_progression({"act4_complete": True})
@@ -64,14 +66,17 @@ class TestAct5HUD(unittest.TestCase):
         self.assertFalse(before["acts"][4]["active"])
         self.assertTrue(after["acts"][4]["active"])
 
-    def test_act5_npc_sprite_mappings_present(self):
-        for scene_fragment, npc in [
-            ("records_hall", "clerk_pell"),
-            ("holding_pen", "bailiff_gorrum"),
-            ("hearing_arena", "magistrate_orla"),
-        ]:
-            self.assertIn(f'sceneId.includes("{scene_fragment}")', self.js)
-            self.assertIn(f'npcId = "{npc}"', self.js)
+    def test_act5_npc_sprite_mappings_are_server_authored(self):
+        expected = {
+            "npc.clerk_pell": "token.clerk_pell",
+            "npc.bailiff_gorrum": "token.bailiff_gorrum",
+            "npc.magistrate_orla": "token.magistrate_orla",
+        }
+        chars = self.identities["characters"]
+        for npc_id, token in expected.items():
+            self.assertEqual(chars[npc_id]["token"], token)
+        self.assertIn("data.presentation.entities", self.js)
+        self.assertNotIn('sceneId.includes("records_hall")', self.js)
 
     def test_arena_render_hook_present(self):
         self.assertIn("arena-img", self.js)
@@ -82,6 +87,7 @@ class TestAct5HUD(unittest.TestCase):
 class TestAct5Lore(unittest.TestCase):
     def setUp(self):
         self.js = JS_PATH.read_text()
+        self.identities = json.loads(IDENTITY_PATH.read_text())
 
     def test_act5_lore_fragments_present_for_each_flag(self):
         for flag in [

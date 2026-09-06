@@ -110,7 +110,7 @@ class TestMobileMarkup(unittest.TestCase):
         self.assertIn('"orientation": "any"', MANIFEST)
 
     def test_service_worker_cache_is_release_bumped(self):
-        self.assertIn('wetberry-shell-v060-alive', SW)
+        self.assertIn('wetberry-shell-v070-world1', SW)
 
     def test_service_worker_shell_is_network_first(self):
         self.assertIn('network-first shell', SW)

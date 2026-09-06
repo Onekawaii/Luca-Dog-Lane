@@ -45,7 +45,7 @@ class TestReactiveContract(unittest.TestCase):
 
     def test_pwa_cache_bumped(self):
         sw = (ROOT / "hive_lattice/web_app/static/sw.js").read_text()
-        self.assertIn("wetberry-shell-v060-alive", sw)
+        self.assertIn("wetberry-shell-v070-world1", sw)
 
     def test_frozen_bard_schema_file_not_repurposed(self):
         schemas = (ROOT / "SCHEMA_VERSIONS.md").read_text()

@@ -80,7 +80,12 @@
                     <div class="panel-header">SURREAL VIEWPORT</div>
                     <div class="panel-body">
                         <div id="stage-viewport">
-                            <!-- Background Room Art -->
+                            <!-- Walkable World in Motion surface (v0.7 development slice) -->
+                            <canvas id="world-canvas" class="world-canvas hidden" aria-label="Walkable breakroom game world"></canvas>
+                            <div id="world-hint" class="world-hint hidden">Tap to walk · WASD/Arrows · E to interact</div>
+                            <button type="button" id="world-interact-btn" class="world-interact-btn hidden">Interact</button>
+
+                            <!-- Legacy/static background room art fallback -->
                             <img id="room-img" class="stage-bg-img hidden" src="" alt="Room art" onclick="openPreview('room')">
                             <div id="room-fallback" class="stage-fallback hidden">No Room Backdrop</div>
                             <img id="arena-img" class="stage-bg-img hidden" src="" alt="Hearing arena render">
@@ -175,6 +180,7 @@
         </div>
     </div>
 
+    <script src="/static/world_client.js"></script>
     <script src="/static/strawberry.js"></script>
     <script>
         if ("serviceWorker" in navigator) {

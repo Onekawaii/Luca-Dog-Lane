@@ -6,6 +6,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from engine.actor_dynamics import ActorDynamicsEngine, DEFAULT_ACTOR_STATE
+
 
 @dataclass
 class ModuleState:
@@ -23,6 +25,8 @@ class ModuleState:
     turn_count: int = 0
     rng_seed: int = 6060
     last_outcome: Dict[str, Any] = field(default_factory=dict)
+    world_state: Dict[str, Any] = field(default_factory=dict)
+    actor_dynamics: Dict[str, Dict[str, float]] = field(default_factory=dict)
 
     def room_memory(self, location_id: Optional[str] = None) -> Dict[str, Any]:
         return self.room_state.setdefault(location_id or self.current_location, {})
@@ -244,6 +248,25 @@ class CampaignModule:
         for condition_id in expired:
             state.conditions.pop(condition_id, None)
 
+    def apply_actor_signal(
+        self,
+        state: ModuleState,
+        actor_id: str,
+        signal: Dict[str, float],
+        *,
+        salt: str = "effect",
+    ) -> Dict[str, float]:
+        current = state.actor_dynamics.get(actor_id, DEFAULT_ACTOR_STATE.to_dict())
+        stepped = ActorDynamicsEngine.step(
+            current,
+            signal,
+            seed=state.rng_seed,
+            salt=f"{actor_id}:{state.turn_count}:{salt}:{current}",
+            noise_scale=float(signal.get("_noise_scale", 0.02)),
+        )
+        state.actor_dynamics[actor_id] = stepped.to_dict()
+        return state.actor_dynamics[actor_id]
+
     def apply_effects(self, state: ModuleState, effects: Dict[str, Any]) -> None:
         for key, value in effects.get("sets_flags", {}).items():
             state.flags[key] = value
@@ -260,6 +283,8 @@ class CampaignModule:
                 state.inventory.remove(item_id)
         for npc_id, delta in effects.get("npc_delta", {}).items():
             state.npc_memory[npc_id] = int(state.npc_memory.get(npc_id, 0)) + int(delta)
+        for actor_id, signal in effects.get("actor_signal", {}).items():
+            self.apply_actor_signal(state, actor_id, dict(signal), salt="apply_effects")
         if effects.get("room_state"):
             room = state.room_memory(effects.get("room_location"))
             room.update(effects["room_state"])

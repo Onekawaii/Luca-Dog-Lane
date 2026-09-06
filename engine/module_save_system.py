@@ -11,15 +11,16 @@ from typing import Any, Dict, List, Optional
 
 from engine.module_runtime import CampaignModule, ModuleState
 
-SAVE_VERSION = 2
+SAVE_VERSION = 3
 DEFAULT_SLOT = "default"
 
 
 class ModuleSaveSystem:
     """Save and restore ModuleState to/from JSON files.
 
-    Save v2 adds room memory, NPC memory, conditions and deterministic system
-    state.  v1 files remain loadable with sensible empty/default values.
+    Save v2 added room memory, NPC memory, conditions and deterministic system
+    state. Save v3 adds spatial world state and fictional actor dynamics. v1/v2
+    files remain loadable with sensible empty/default values.
     """
 
     def __init__(self, module: CampaignModule, save_dir: Optional[str | Path] = None):
@@ -48,6 +49,8 @@ class ModuleSaveSystem:
             "turn_count": int(state.turn_count),
             "rng_seed": int(state.rng_seed),
             "last_outcome": dict(state.last_outcome),
+            "world_state": dict(state.world_state),
+            "actor_dynamics": {k: dict(v) for k, v in state.actor_dynamics.items()},
         }
 
         target = self._save_path(slot)
@@ -99,6 +102,8 @@ class ModuleSaveSystem:
             turn_count=int(save_data.get("turn_count", 0)),
             rng_seed=int(save_data.get("rng_seed", self.module.campaign.get("rng_seed", 6060))),
             last_outcome=dict(save_data.get("last_outcome", {})),
+            world_state=dict(save_data.get("world_state", {})),
+            actor_dynamics={k: dict(v) for k, v in save_data.get("actor_dynamics", {}).items()},
         )
 
     def list_saves(self) -> List[Dict[str, Any]]:

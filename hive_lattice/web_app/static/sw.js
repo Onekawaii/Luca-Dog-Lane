@@ -1,10 +1,11 @@
 /* Strawberry Omen service worker — static shell cache only */
 
-const CACHE_NAME = "wetberry-shell-v060-alive";
+const CACHE_NAME = "wetberry-shell-v070-world1";
 const SHELL_ASSETS = [
   "/",
   "/static/strawberry.css",
   "/static/strawberry.js",
+  "/static/world_client.js",
   "/static/manifest.webmanifest",
   "/static/icons/icon-192.png",
   "/static/icons/icon-512.png"
