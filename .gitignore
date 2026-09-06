@@ -1,21 +1,48 @@
+# Python
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
-.python-version
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.venv/
-venv/
-env/
-ENV/
-saves/
-*.log
-.coverage
-.coverage.*
-htmlcov/
-.DS_Store
-Thumbs.db
+.Python
+
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+
+# Output / generated release artifacts only
+outputs/
+build/
+dist/
+
+# Temporary files
+*.tmp
+*.temp
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# Save files
+saves/
+saves/**
+*.save
+*.tmp
+save_*.tmp
+
+# NOTE: previously this file ignored campaigns/strawberry_omen/ and
+# campaigns/*/game/*.json / content/*.json despite comments saying otherwise.
+# Those rules silently blocked new authored campaign content and assets from
+# ever being tracked (caught during Act V development, 2026-08-08). Removed —
+# game/campaign content is the actual product and must be tracked.
+
+
+# Python virtual environments
+venv/
+env/
+*.egg-info/

@@ -1,0 +1,25 @@
+{
+  "id": "strawberry_omen",
+  "title": "The Strawberry Omen",
+  "subtitle": "A Breakroom Campaign of Moist Corporate Horror",
+  "version": "0.6.0",
+  "status": "reactive_gameplay",
+  "entry_scene": "scene.act1.first_sighting",
+  "entry_location": "location.breakroom.central_table",
+  "level_range": "1-8",
+  "active_slice": "Acts I-V — Reactive Lattice",
+  "schema": "hive_campaign_module_v1",
+  "book": "campaign.book.md",
+  "game_files": {
+    "campaign": "game/campaign.json",
+    "locations": "game/locations.json",
+    "items": "game/items.json",
+    "npcs": "game/npcs.json",
+    "encounters": "game/encounters.json",
+    "conditions": "game/conditions.json",
+    "random_tables": "game/random_tables.json",
+    "quests": "game/quests.json",
+    "interactions": "game/interactions.json"
+  },
+  "interaction_schema": "strawberry_interactions_v1"
+}

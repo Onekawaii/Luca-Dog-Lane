@@ -104,6 +104,15 @@ class CommandRouter:
             return self.handle_resubmit()
         elif intent_type == "SPECIAL":
             return self.handle_special(intent)
+        # Chapter 3: Department of Sustained Loss
+        elif intent_type == "REPORT_LOSS":
+            return self.handle_report_loss()
+        elif intent_type == "SURRENDER":
+            return self.handle_surrender(intent)
+        elif intent_type == "RECLAIM":
+            return self.handle_reclaim(intent)
+        elif intent_type == "CATALOGUE":
+            return self.handle_catalogue()
         else:
             return self.handle_unknown(intent)
 
@@ -409,6 +418,59 @@ class CommandRouter:
     def handle_special(self, intent):
         command = intent.get("command", "")
         return self.game_state.room["special_commands"].get(command, "Nothing happens.")
+
+    # --- Chapter 3: Department of Sustained Loss ---
+    def _in_chapter3(self):
+        return bool(self.game_state.room and self.game_state.room.get("chapter") == 3)
+
+    def handle_report_loss(self):
+        if not self._in_chapter3():
+            return "No department here will accept your loss report."
+        if self.game_state.loss_report_filed:
+            return "Your loss report is already filed. The ledger remembers."
+        self.game_state.mark_loss_report_filed()
+        # Filing creates an initial debt that must be processed
+        self.game_state.add_loss_debt(1)
+        return self.combatless_resolution.resolve_special_action("report_loss")
+
+    def handle_catalogue(self):
+        if not self._in_chapter3():
+            return "You catalogue nothing in particular."
+        # Deterministic mechanical effect for Chapter 3 hybrid route:
+        # cataloguing a loss increases debt by one (paperwork multiplies sorrow).
+        self.game_state.add_loss_debt(1)
+        return self.combatless_resolution.resolve_special_action("catalogue")
+
+    def handle_surrender(self, intent):
+        if not self._in_chapter3():
+            return "There is no department desk here to receive surrendered items."
+        item = self.parser.normalize_object(intent.get("item", "")).strip()
+        if not item:
+            return "Surrender what?"
+        if not self.game_state.surrender_item(item):
+            return f"You're not carrying {item}."
+        # Surrendering reduces debt by one (but does not guarantee release).
+        self.game_state.add_loss_debt(-1)
+        return self.combatless_resolution.resolve_special_action("surrender", target=item)
+
+    def handle_reclaim(self, intent):
+        if not self._in_chapter3():
+            return "You have nothing to reclaim here."
+        item = self.parser.normalize_object(intent.get("item", "")).strip()
+        if not item:
+            return "Reclaim what?"
+        if not self.game_state.loss_report_filed:
+            self.game_state.set_chapter3_release_status("retained_for_review")
+            return "No report on file. You are retained for review."
+        if item not in self.game_state.surrendered_items:
+            self.game_state.set_chapter3_release_status("retained_for_review")
+            return "That reclaim request does not match departmental records. You are retained for review."
+        # Reclaim is allowed only when debt is cleared.
+        if self.game_state.loss_debt > 0:
+            self.game_state.set_chapter3_release_status("retained_for_review")
+            return "Your debt is unresolved. Reclaim denied. You are retained for review."
+        self.game_state.reclaim_item(item)
+        return self.combatless_resolution.resolve_special_action("reclaim", target=item)
 
     def handle_unknown(self, intent):
         return f"I don't understand '{intent.get('input', '')}'."

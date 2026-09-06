@@ -1,0 +1,557 @@
+{
+  "id": "strawberry_omen_visual",
+  "title": "Strawberry Omen Visual Assets",
+  "version": "1.1.0",
+  "status": "vertical_slice",
+  "created": "2026-06-12",
+  "last_modified": "2026-08-08",
+  "assets": {
+    "maps": [
+      {
+        "asset_id": "map.breakroom",
+        "filename": "breakroom_battlemap_v0.png",
+        "path": "assets/maps/breakroom_battlemap_v0.png",
+        "type": "battlemap",
+        "orientation": "top-down",
+        "style": "dark fantasy workplace parchment map",
+        "needed_for": [
+          "Act I",
+          "Act IV"
+        ],
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "map.breakroom.placeholder",
+        "filename": "breakroom_map.placeholder.md",
+        "path": "assets/maps/breakroom_map.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder",
+        "needed_for": [
+          "Act I",
+          "Act IV"
+        ]
+      }
+    ],
+    "textures": [
+      {
+        "asset_id": "texture.wet_table",
+        "filename": "wet_table.placeholder.md",
+        "path": "assets/textures/wet_table.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "texture.fridge_frost",
+        "filename": "fridge_frost.placeholder.md",
+        "path": "assets/textures/fridge_frost.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "texture.cursed_fluorescent_light",
+        "filename": "cursed_fluorescent_light.placeholder.md",
+        "path": "assets/textures/cursed_fluorescent_light.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "texture.labyrinth_frost",
+        "filename": "labyrinth_frost.placeholder.md",
+        "path": "assets/textures/labyrinth_frost.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      }
+    ],
+    "items": [
+      {
+        "asset_id": "item.wetberry",
+        "filename": "wetberry.placeholder.md",
+        "path": "assets/items/wetberry.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "item.ancient_mayonnaise",
+        "filename": "ancient_mayonnaise.placeholder.md",
+        "path": "assets/items/ancient_mayonnaise.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "item.accountability_token",
+        "filename": "accountability_token.placeholder.md",
+        "path": "assets/items/accountability_token.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "item.condiment_sigil",
+        "filename": "condiment_sigil.placeholder.md",
+        "path": "assets/items/condiment_sigil.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "item.freezer_blessing",
+        "filename": "freezer_blessing.placeholder.md",
+        "path": "assets/items/freezer_blessing.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "item.casserole_lid_fragment",
+        "filename": "casserole_lid_fragment.placeholder.md",
+        "path": "assets/items/casserole_lid_fragment.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "item.writ_of_summons",
+        "filename": "item.writ_of_summons.png",
+        "path": "assets/generated/items/item.writ_of_summons.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "item.evidence_ledger",
+        "filename": "item.evidence_ledger.png",
+        "path": "assets/generated/items/item.evidence_ledger.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "item.verdict_seal",
+        "filename": "item.verdict_seal.png",
+        "path": "assets/generated/items/item.verdict_seal.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      }
+    ],
+    "tokens": [
+      {
+        "asset_id": "token.darla",
+        "filename": "darla.placeholder.md",
+        "path": "assets/characters/darla.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.keith",
+        "filename": "keith.placeholder.md",
+        "path": "assets/characters/keith.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.tammy",
+        "filename": "tammy.placeholder.md",
+        "path": "assets/characters/tammy.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.vendrick",
+        "filename": "vendrick.placeholder.md",
+        "path": "assets/characters/vendrick.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.snack_wraith",
+        "filename": "snack_wraith.placeholder.md",
+        "path": "assets/characters/snack_wraith.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.moldric_guide",
+        "filename": "moldric.placeholder.md",
+        "path": "assets/characters/moldric.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.condiment_guardian",
+        "filename": "moldric.placeholder.md",
+        "path": "assets/characters/moldric.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.sentient_casserole",
+        "filename": "moldric.placeholder.md",
+        "path": "assets/characters/moldric.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.kevin",
+        "filename": "kevin.placeholder.md",
+        "path": "assets/characters/kevin.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.mildred",
+        "filename": "mildred.placeholder.md",
+        "path": "assets/characters/mildred.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.glen",
+        "filename": "glen.placeholder.md",
+        "path": "assets/characters/glen.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.potluck_specter",
+        "filename": "potluck_specter.placeholder.md",
+        "path": "assets/characters/potluck_specter.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.boardroom_witness",
+        "filename": "boardroom_witness.placeholder.md",
+        "path": "assets/characters/boardroom_witness.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "token.clerk_pell",
+        "filename": "token.clerk_pell.png",
+        "path": "assets/generated/tokens/token.clerk_pell.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "token.bailiff_gorrum",
+        "filename": "token.bailiff_gorrum.png",
+        "path": "assets/generated/tokens/token.bailiff_gorrum.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "token.magistrate_orla",
+        "filename": "token.magistrate_orla.png",
+        "path": "assets/generated/tokens/token.magistrate_orla.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      }
+    ],
+    "rooms": [
+      {
+        "asset_id": "room.breakroom.central_table",
+        "filename": "central_table.placeholder.md",
+        "path": "assets/rooms/central_table.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.fridge",
+        "filename": "fridge.placeholder.md",
+        "path": "assets/rooms/fridge.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.coffee_counter",
+        "filename": "coffee_counter.placeholder.md",
+        "path": "assets/rooms/coffee_counter.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.utility_corner",
+        "filename": "utility_corner.placeholder.md",
+        "path": "assets/rooms/utility_corner.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.fridge.door_shelf",
+        "filename": "door_shelf.placeholder.md",
+        "path": "assets/rooms/door_shelf.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.fridge.leftover_marshes",
+        "filename": "leftover_marshes.placeholder.md",
+        "path": "assets/rooms/leftover_marshes.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.fridge.yogurt_catacombs",
+        "filename": "yogurt_catacombs.placeholder.md",
+        "path": "assets/rooms/yogurt_catacombs.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.fridge.back_corner",
+        "filename": "back_corner.placeholder.md",
+        "path": "assets/rooms/back_corner.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.hallway",
+        "filename": "hallway.placeholder.md",
+        "path": "assets/rooms/hallway.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.vending_machine",
+        "filename": "vending_machine.placeholder.md",
+        "path": "assets/rooms/vending_machine.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.accountability_slot",
+        "filename": "accountability_slot.placeholder.md",
+        "path": "assets/rooms/accountability_slot.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.breakroom.snack_wraith_aisle",
+        "filename": "snack_wraith_aisle.placeholder.md",
+        "path": "assets/rooms/snack_wraith_aisle.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.fridge_labyrinth.entry",
+        "filename": "labyrinth_entry.placeholder.md",
+        "path": "assets/rooms/labyrinth_entry.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.fridge_labyrinth.condiment_gate",
+        "filename": "condiment_gate.placeholder.md",
+        "path": "assets/rooms/condiment_gate.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.fridge_labyrinth.leftover_catacombs",
+        "filename": "leftover_catacombs.placeholder.md",
+        "path": "assets/rooms/leftover_catacombs.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.fridge_labyrinth.freezer_shrine",
+        "filename": "freezer_shrine.placeholder.md",
+        "path": "assets/rooms/freezer_shrine.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.fridge_labyrinth.casserole_throne",
+        "filename": "casserole_throne.placeholder.md",
+        "path": "assets/rooms/casserole_throne.placeholder.md",
+        "type": "placeholder",
+        "status": "placeholder"
+      },
+      {
+        "asset_id": "room.department_of_adjudication.antechamber",
+        "filename": "room.department_of_adjudication.antechamber.png",
+        "path": "assets/generated/rooms/room.department_of_adjudication.antechamber.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "room.department_of_adjudication.records_hall",
+        "filename": "room.department_of_adjudication.records_hall.png",
+        "path": "assets/generated/rooms/room.department_of_adjudication.records_hall.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "room.department_of_adjudication.holding_pen",
+        "filename": "room.department_of_adjudication.holding_pen.png",
+        "path": "assets/generated/rooms/room.department_of_adjudication.holding_pen.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "room.department_of_adjudication.hearing_arena",
+        "filename": "room.department_of_adjudication.hearing_arena.png",
+        "path": "assets/generated/rooms/room.department_of_adjudication.hearing_arena.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      },
+      {
+        "asset_id": "room.department_of_adjudication.verdict_vault",
+        "filename": "room.department_of_adjudication.verdict_vault.png",
+        "path": "assets/generated/rooms/room.department_of_adjudication.verdict_vault.png",
+        "type": "generated_placeholder_v1",
+        "status": "replaced_by_v0_image"
+      }
+    ],
+    "dependencies": {
+      "required_files": [
+        "assets/maps/breakroom_battlemap_v0.png",
+        "assets/maps/breakroom_map.placeholder.md",
+        "assets/textures/wet_table.placeholder.md",
+        "assets/textures/fridge_frost.placeholder.md",
+        "assets/textures/cursed_fluorescent_light.placeholder.md",
+        "assets/textures/labyrinth_frost.placeholder.md",
+        "assets/items/wetberry.placeholder.md",
+        "assets/items/ancient_mayonnaise.placeholder.md",
+        "assets/items/accountability_token.placeholder.md",
+        "assets/items/condiment_sigil.placeholder.md",
+        "assets/items/freezer_blessing.placeholder.md",
+        "assets/items/casserole_lid_fragment.placeholder.md",
+        "assets/characters/darla.placeholder.md",
+        "assets/characters/keith.placeholder.md",
+        "assets/characters/tammy.placeholder.md",
+        "assets/characters/vendrick.placeholder.md",
+        "assets/characters/snack_wraith.placeholder.md",
+        "assets/characters/moldric.placeholder.md",
+        "assets/rooms/central_table.placeholder.md",
+        "assets/rooms/fridge.placeholder.md",
+        "assets/rooms/coffee_counter.placeholder.md",
+        "assets/rooms/utility_corner.placeholder.md",
+        "assets/rooms/door_shelf.placeholder.md",
+        "assets/rooms/leftover_marshes.placeholder.md",
+        "assets/rooms/yogurt_catacombs.placeholder.md",
+        "assets/rooms/back_corner.placeholder.md",
+        "assets/rooms/hallway.placeholder.md",
+        "assets/rooms/vending_machine.placeholder.md",
+        "assets/rooms/accountability_slot.placeholder.md",
+        "assets/rooms/snack_wraith_aisle.placeholder.md",
+        "assets/rooms/labyrinth_entry.placeholder.md",
+        "assets/rooms/condiment_gate.placeholder.md",
+        "assets/rooms/leftover_catacombs.placeholder.md",
+        "assets/rooms/freezer_shrine.placeholder.md",
+        "assets/rooms/casserole_throne.placeholder.md"
+      ],
+      "used_by": {
+        "locations": [
+          {
+            "location": "location.breakroom",
+            "map_asset": "map.breakroom",
+            "room_assets": [
+              "room.breakroom.central_table",
+              "room.breakroom.fridge",
+              "room.breakroom.coffee_counter",
+              "room.breakroom.utility_corner",
+              "room.breakroom.fridge.door_shelf",
+              "room.breakroom.fridge.leftover_marshes",
+              "room.breakroom.fridge.yogurt_catacombs",
+              "room.breakroom.fridge.back_corner",
+              "room.breakroom.hallway",
+              "room.breakroom.vending_machine",
+              "room.breakroom.accountability_slot",
+              "room.breakroom.snack_wraith_aisle"
+            ]
+          },
+          {
+            "location": "location.fridge_labyrinth",
+            "map_asset": "map.breakroom",
+            "room_assets": [
+              "room.fridge_labyrinth.entry",
+              "room.fridge_labyrinth.condiment_gate",
+              "room.fridge_labyrinth.leftover_catacombs",
+              "room.fridge_labyrinth.freezer_shrine",
+              "room.fridge_labyrinth.casserole_throne"
+            ]
+          },
+          {
+            "location": "location.department_of_adjudication",
+            "map_asset": "map.breakroom",
+            "room_assets": [
+              "room.department_of_adjudication.antechamber",
+              "room.department_of_adjudication.records_hall",
+              "room.department_of_adjudication.holding_pen",
+              "room.department_of_adjudication.hearing_arena",
+              "room.department_of_adjudication.verdict_vault"
+            ]
+          }
+        ],
+        "encounters": [],
+        "items": [
+          {
+            "item": "item.wetberry",
+            "art_type": "item art"
+          },
+          {
+            "item": "item.accountability_token",
+            "art_type": "item art"
+          },
+          {
+            "item": "item.condiment_sigil",
+            "art_type": "item art"
+          },
+          {
+            "item": "item.freezer_blessing",
+            "art_type": "item art"
+          },
+          {
+            "item": "item.casserole_lid_fragment",
+            "art_type": "item art"
+          }
+        ],
+        "tokens": [
+          {
+            "token": "token.darla",
+            "character_name": "Darla"
+          },
+          {
+            "token": "token.keith",
+            "character_name": "Keith"
+          },
+          {
+            "token": "token.tammy",
+            "character_name": "Tammy"
+          },
+          {
+            "token": "token.vendrick",
+            "character_name": "Vendrick"
+          },
+          {
+            "token": "token.snack_wraith",
+            "character_name": "Snack Wraith"
+          },
+          {
+            "token": "token.moldric_guide",
+            "character_name": "Moldric Guide"
+          },
+          {
+            "token": "token.condiment_guardian",
+            "character_name": "Condiment Guardian"
+          },
+          {
+            "token": "token.sentient_casserole",
+            "character_name": "Sentient Casserole"
+          }
+        ]
+      }
+    }
+  },
+  "dependencies": {
+    "required_files": [
+      "assets/generated/maps/map.breakroom.png",
+      "assets/generated/rooms/room.department_of_adjudication.antechamber.png",
+      "assets/generated/rooms/room.department_of_adjudication.records_hall.png",
+      "assets/generated/rooms/room.department_of_adjudication.holding_pen.png",
+      "assets/generated/rooms/room.department_of_adjudication.hearing_arena.png",
+      "assets/generated/rooms/room.department_of_adjudication.verdict_vault.png",
+      "assets/generated/items/item.writ_of_summons.png",
+      "assets/generated/items/item.evidence_ledger.png",
+      "assets/generated/items/item.verdict_seal.png",
+      "assets/generated/tokens/token.clerk_pell.png",
+      "assets/generated/tokens/token.bailiff_gorrum.png",
+      "assets/generated/tokens/token.magistrate_orla.png"
+    ]
+  }
+}

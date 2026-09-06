@@ -1,162 +1,148 @@
-# Hive-Lattice Bard
+# Hive-Lattice Next — v0.6.0 Lattice Alive
 
-A surreal interactive text game built around bureaucracy, strange rituals, and Brother Ape flavored command chaos.
+Hive-Lattice is a Python campaign/game engine with JSON-driven content, save/load,
+a phone-first local Flask/PWA player, strict validators, and an optional image
+renderer. **Strawberry Omen is playable through Act V — Department of
+Adjudication.**
 
-You move through authored chapters, manipulate paperwork, trigger absurd consequence tables, and push through a world where forms, queues, denials, goblins, chickens, and clerk logic all matter.
+`v0.6.0-lattice-alive` freezes the accepted `v0.5.2-mobile-playtest` phone UX
+and makes the campaign materially reactive. Choices can now be hidden or locked
+by prior behavior, stats, items, conditions and relationships. Rooms remember,
+NPCs remember, inventory contains contextual actions, temporary conditions
+persist across turns, deterministic event tables can fire, and the Act V verdict
+is derived from the player's record rather than from a cosmetic verdict menu.
 
-## Current State
+## What actually became systemic
 
-This repository contains a modular Python text adventure engine with:
+- **Conditional choices** — requirements can depend on flags, inventory, stats,
+  conditions, current scene, NPC memory or persistent room state.
+- **Hidden routes** — qualifying actions appear only when earned (for example
+  Form 9-A or the feral seal-biting route at Vendrick).
+- **Active inventory** — Gear & Archives exposes contextual Use actions. The
+  Evidence Bag can actually contain Wetberry; the Damp Napkin can alter fridge
+  state; the Evidence Ledger can be submitted at the hearing.
+- **Persistent room memory** — visited rooms retain state such as contained
+  Wetberry, sampled stains and altered fridge seams.
+- **NPC memory** — Keith, Darla, Moldric, Vendrick, the Condiment Guardian,
+  Pell, Gorrum, Orla and others can accumulate relationship values.
+- **Conditions** — short-lived or persistent consequences survive scene changes
+  and save/load.
+- **Deterministic events** — seeded weighted tables produce reproducible reactive
+  aftershocks rather than uncontrolled randomness.
+- **Stat routes** — Bureaucracy and Ape Chaos now reveal alternate mechanical
+  solutions instead of functioning only as colored meters.
+- **Record-driven adjudication** — evidence, testimony quality, previous insults,
+  NPC memory and stats feed the Department's verdict rules.
+- **Save schema v2** — reactive state is persisted; existing v1 Strawberry saves
+  remain loadable.
 
-* data-driven chapter content
-* intent-based parsing
-* consequence-table driven special actions
-* Chapter 1 vertical slice and Chapter 2 system wiring
-* validation tools and path tests
-* frozen content schemas for controlled expansion
+The frozen Bard `room_schema_v1` / character / item / consequence schemas were
+**not changed**. Reactive mechanics live in the campaign-local
+`strawberry_interactions_v1` layer at
+`campaigns/strawberry_omen/game/interactions.json`.
 
-## Project Goals
+## Frozen mobile UX baseline
 
-Hive-Lattice Bard is being built as a real interactive text game, not a fake sample sim.
+The accepted `v0.5.2-mobile-playtest` behavior remains the UI contract:
 
-The long-term target is a 100-node authored experience organized into chapters, with:
+- ordinary mobile Chrome; Desktop Site not required;
+- one full-width choice per row in portrait;
+- large touch targets;
+- safe-area-aware bottom controls;
+- vertical mobile scrolling and readable landscape reflow;
+- canonical Act I–V header/protocol display;
+- deterministic stage-layer visibility;
+- accessible browser zoom.
 
-* multiple route styles
-* bureaucracy-based progression
-* absurd command interactions with real consequences
-* recurring NPC memory and route reactivity
-* testable chapter progression without softlocks
+v0.6.0 adds systems underneath that shell rather than redesigning it.
 
-## Repository Structure
+## Dependencies
+
+Core gameplay + local web player:
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+Optional hearing-arena tensor renderer:
+
+```bash
+python -m pip install -r requirements-renderer.txt
+```
+
+PyTorch remains optional. Core gameplay, saves and web play work without it.
+
+## Termux / Android
+
+```bash
+cd ~/storage/downloads
+unzip -o Hive-Lattice-Next-v0.6.0-lattice-alive.zip
+cd Hive-Lattice-Next-v0.6.0-lattice-alive
+pkg install python -y
+python -m pip install --break-system-packages -r requirements.txt
+python -m hive_lattice.cli web strawberry_omen
+```
+
+Open `http://127.0.0.1:8000` in normal mobile Chrome.
+
+CLI play:
+
+```bash
+python play_strawberry.py
+```
+
+## Windows
+
+```powershell
+cd $HOME\Downloads\Hive-Lattice-Next-v0.6.0-lattice-alive
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m hive_lattice.cli web strawberry_omen
+```
+
+## Validation
+
+```bash
+python tools/lattice_alive_gate.py
+```
+
+Or individually:
+
+```bash
+python -m tools.content_lint
+python -m tools.validate_campaign_module
+python -m tools.validate_visual_assets
+python -m hive_lattice.cli validate strawberry_omen
+python tests/test_act3_smoke.py
+python tests/test_act5_smoke.py
+python -m unittest tests.test_lattice_alive_runtime tests.test_lattice_alive_contract
+python -m unittest discover -s tests
+```
+
+This source defines **370 unittest cases**: 305 non-Flask cases executable in the
+artifact-build sandbox and 65 Flask-dependent web cases. The build sandbox has
+no Flask package and cannot reach a package index, so the 305 non-Flask cases
+are the independently executed automated receipt here. The web/PWA path is
+included for real-device acceptance in the same Android environment that
+accepted v0.5.2.
+
+## Project layout
 
 ```text
-content/
-  rooms_ch01.json
-  rooms_ch02.json
-  rooms_ch03.json
-  items.json
-  characters.json
-  commands.json
-  level_rules.json
-  templates/
-    room_template.json
-    character_template.json
-    item_template.json
-    consequence_table_template.json
-
-engine/
-  combatless_resolution.py
-  command_router.py
-  game_state.py
-  parser.py
-  progression.py
-  random_events.py
-  save_system.py
-  validate_content.py
-  world_loader.py
-
-tests/
-  test_chapter1_minimal_path.py
-  test_chapter2_hybrid_path.py
-  test_chapter2_lawful_path.py
-  test_parser.py
-  test_progression.py
-  test_room_graph.py
-
-tools/
-  content_lint.py
-  generate_chapter_shell.py
-
-writing/
-  ape_voice_lines.json
-  bad_idea_results.json
-  flavor_tables.json
-
-main.py
-README.md
-ARCHITECTURE_FREEZE.md
-SCHEMA_VERSIONS.md
-SPRINT_SUMMARY.md
-.gitignore
-.gitattributes
+engine/module_runtime.py                 Reactive campaign runtime
+engine/module_save_system.py             Save v2 + v1 compatibility
+campaigns/strawberry_omen/game/
+  encounters.json                        Existing authored scenes
+  interactions.json                      v0.6 reactive overlay (authoritative)
+  items.json / npcs.json / quests.json   Campaign content
+hive_lattice/web_app/                    Phone-first local web player
+tools/lattice_alive_gate.py              Complete v0.6 release gate
+tests/test_lattice_alive_*.py            Reactive-system acceptance
 ```
 
-## Running the Game
+## Scope
 
-From the repository root:
-
-```bash
-python main.py
-```
-
-## Running Validation
-
-Lint the content:
-
-```bash
-python tools/content_lint.py
-```
-
-Run the full test suite:
-
-```bash
-python -m unittest discover -s tests -p "test*.py"
-```
-
-Run the spine tests directly:
-
-```bash
-python tests/test_chapter1_minimal_path.py
-python tests/test_chapter2_lawful_path.py
-python tests/test_chapter2_hybrid_path.py
-```
-
-## Design Pillars
-
-### 1. Data-driven content
-
-Rooms, items, characters, and progression rules are authored outside the core engine so chapters can scale without turning the codebase into a swamp.
-
-### 2. Parser to intent flow
-
-Player input is normalized into intents and routed through command handlers instead of being trapped in one giant monolithic parse loop.
-
-### 3. Consequence tables
-
-Special actions such as screaming, filing, stamping, queuing, or asking a chicken for legal advice are resolved through weighted rule tables with actual state changes.
-
-### 4. Freeze before scale
-
-Schemas, validation, and chapter structure are being locked before large-scale chapter expansion. No schema drift. No decorative growth.
-
-## Current Chapter Focus
-
-### Chapter 1
-
-The introductory vertical slice. It establishes movement, item interactions, bureaucracy flavor, and weird-command behavior.
-
-### Chapter 2
-
-Frank and the Necessary Denials. This chapter introduces systemic Frank reputation, filing status, queue logic, appeals, and route differences between lawful, ape-chaos, and hybrid play.
-
-## Development Workflow
-
-1. Author content using the frozen templates.
-2. Validate content with `content_lint.py`.
-3. Run spine tests.
-4. Add or harden mechanics.
-5. Only then expand chapters.
-
-## Roadmap
-
-* finish Chapter 2 route polish
-* strengthen Frank reputation reactivity
-* complete Chapter 2 end-state reporting
-* expand Chapter 3 from shell to authored content
-* continue chapter-by-chapter until full 100-node structure is complete
-
-## Notes
-
-This project is intentionally weird, but the architecture is meant to stay disciplined.
-
-Small knife. Sharp edge.
+Acts I–V remain the authored campaign. v0.6.0 deepens their behavior; it does
+not add Act VI. Placeholder-tier generated art also remains deliberately out of
+scope for this systems release.

@@ -1,0 +1,85 @@
+{
+  "version": "0.6.0",
+  "tag": "v0.6.0-lattice-alive",
+  "release_name": "Lattice Alive \u2014 Reactive Gameplay Build",
+  "source_baseline": {
+    "version": "v0.5.2-mobile-playtest",
+    "artifact_sha256": "e8a951d6ad649acb5b6e06dbe9aaeaad68b773a71d15a3346bf12477d89305cc",
+    "source_baseline_commit": "f0c1d1ea76cc0a122d54c5e4ea4b7fdd530178f6"
+  },
+  "canonical_git_commit": null,
+  "canonical_git_note": "Built from the accepted v0.5.2 release archive, which contains no .git history. No descendant commit SHA is fabricated; commit/tag the accepted tree in the canonical repository.",
+  "runtime_requirements": {
+    "python": ">=3.10",
+    "core_dependencies_file": "requirements.txt",
+    "optional_renderer_dependencies_file": "requirements-renderer.txt",
+    "renderer_required_for_core_game": false
+  },
+  "campaign": {
+    "id": "strawberry_omen",
+    "complete_through": "Act V \u2014 Department of Adjudication",
+    "bard_schema_changes": false,
+    "interaction_schema": "strawberry_interactions_v1",
+    "save_version": 2
+  },
+  "mobile_build": {
+    "frozen_baseline": "v0.5.2-mobile-playtest",
+    "desktop_site_required": false,
+    "minimum_touch_target_css_px": 48,
+    "safe_area_footer": true,
+    "browser_zoom_allowed": true,
+    "pwa_cache": "wetberry-shell-v060-alive",
+    "real_android_baseline_accepted": true
+  },
+  "reactive_systems": {
+    "conditional_choices": true,
+    "item_actions": true,
+    "room_memory": true,
+    "npc_memory": true,
+    "conditions": true,
+    "deterministic_events": true,
+    "stat_routes": true,
+    "rule_driven_verdict": true,
+    "v1_save_compatibility": true
+  },
+  "test_summary": {
+    "full_suite_defined": 370,
+    "build_sandbox_executable_non_flask": 305,
+    "build_sandbox_non_flask_result": "PASSED",
+    "flask_dependent_cases": 65,
+    "flask_cases_build_sandbox_result": "NOT EXECUTED \u2014 Flask unavailable and package index inaccessible in this sandbox",
+    "reactive_acceptance_cases": 24,
+    "reactive_acceptance_result": "PASSED"
+  },
+  "validators": {
+    "content_lint": "PASSED",
+    "validate_campaign_module": "PASSED",
+    "validate_visual_assets": "PASSED",
+    "cli_validate_strawberry_omen": "PASSED",
+    "act4_smoke": "PASSED",
+    "act5_smoke": "PASSED",
+    "lattice_alive_gate": "PASSED"
+  },
+  "release_artifact": {
+    "filename": "Hive-Lattice-Next-v0.6.0-lattice-alive.zip",
+    "sha256": null,
+    "sha256_note": "Authoritative final ZIP hash is emitted as an external sibling .sha256 file after packaging; it is not self-embedded."
+  },
+  "build_timestamp_utc": "2026-08-09T15:42:00Z",
+  "repository_materialization": {
+    "target_repository": "Onekawaii/Hive-Lattice",
+    "pre_sync_main": "6b853f74d356289116d16e2ff5be6d3ad8b06516",
+    "source_release_zip_sha256": "859122ad26269542ba6e459f983bf0ebf536fcf4266c98d8494d052085707a83",
+    "battlemap_materialization": {
+      "path": "campaigns/strawberry_omen/assets/maps/breakroom_battlemap_v0.png",
+      "reason": "Canonical GitHub materialization reconstructs the large historical RGB battlemap from a quality-10 JPEG staging source to avoid a multi-megabyte connected-API bootstrap upload. Dimensions and gameplay role are preserved; the accepted release ZIP remains the byte-exact historical artifact.",
+      "release_artifact_sha256": "5188e57393fafefdda2e5e2317e44cf8854788fcbf02d5a3a6cada4154e6cb4c",
+      "staging_jpeg_sha256": "57bba080c7353a3485bb8f15af865ed7d7e96afb3ec0378b0bb04bf1692c6f46",
+      "staging_jpeg_bytes": 76446,
+      "dimensions": [
+        1334,
+        1179
+      ]
+    }
+  }
+}

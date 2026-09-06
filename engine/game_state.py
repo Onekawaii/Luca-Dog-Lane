@@ -83,6 +83,13 @@ class GameState:
         self.filed_status = "none"  # none, incomplete, filed, stamped, denied, appealed, approved
         self.queue_number = None  # str or None
 
+        # Chapter 3: Department of Sustained Loss (system state)
+        self.loss_debt = 0  # integer meter; higher means you "owe" more loss
+        self.loss_report_filed = False  # has the player filed a loss report this chapter?
+        self.reclaimed_losses = set()  # items successfully reclaimed
+        self.surrendered_items = set()  # items surrendered to the department
+        self.chapter3_release_status = None  # released_clean | released_with_loss | retained_for_review | None
+
     def load_world_data(self, content_dir="content"):
         """Load rooms, items, characters from JSON files."""
         # Load rooms for all chapters
@@ -414,6 +421,49 @@ class GameState:
         self.chapter_route_history.append(summary)
         self.chapters_completed.append(chapter_num)
         return summary
+
+    # --- Chapter 3 helpers (Department of Sustained Loss) ---
+    def add_loss_debt(self, delta):
+        self.loss_debt = max(0, int(self.loss_debt) + int(delta))
+        self.evaluate_chapter3_release_status()
+
+    def mark_loss_report_filed(self):
+        self.loss_report_filed = True
+        self.evaluate_chapter3_release_status()
+
+    def surrender_item(self, item):
+        if item in self.inventory:
+            self.inventory.remove(item)
+            self.surrendered_items.add(item)
+            self.evaluate_chapter3_release_status()
+            return True
+        return False
+
+    def reclaim_item(self, item):
+        if item in self.surrendered_items:
+            self.surrendered_items.remove(item)
+            self.inventory.add(item)
+            self.reclaimed_losses.add(item)
+            self.evaluate_chapter3_release_status()
+            return True
+        return False
+
+    def set_chapter3_release_status(self, status):
+        allowed = {"released_clean", "released_with_loss", "retained_for_review", None}
+        if status in allowed:
+            self.chapter3_release_status = status
+
+    def evaluate_chapter3_release_status(self):
+        if self.chapter3_release_status == "retained_for_review":
+            return self.chapter3_release_status
+        if not self.loss_report_filed:
+            self.chapter3_release_status = None
+            return self.chapter3_release_status
+        if self.loss_debt == 0 and not self.surrendered_items:
+            self.chapter3_release_status = "released_clean"
+        else:
+            self.chapter3_release_status = "released_with_loss"
+        return self.chapter3_release_status
 
     def check_requirements(self, requirements):
         """Check if player meets flag/item requirements."""

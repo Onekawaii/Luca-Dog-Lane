@@ -32,81 +32,89 @@
     "weight": 0.5,
     "description": "A key that might unlock things.",
     "edible": false,
-    "readable": false  },
+    "readable": false
+  },
   {
     "name": "queue_ticket",
     "weight": 0.1,
     "description": "A numbered ticket for bureaucratic processing.",
     "edible": false,
+    "readable": false
+  },
+  {
+    "name": "lost_note",
+    "weight": 0.2,
+    "description": "A folded note that trembles with unresolved loss.",
+    "edible": false,
     "readable": true
+  },
+  {
+    "name": "hollow_stamp",
+    "weight": 0.2,
+    "description": "A stamp missing its impression, as though it had been used too often.",
+    "edible": false,
+    "readable": false
+  },
+  {
+    "name": "ink_pot",
+    "weight": 0.8,
+    "description": "A pot of ink that seems to absorb the light around it.",
+    "edible": false,
+    "readable": false
   },
   {
     "name": "blank_form",
     "weight": 0.2,
-    "description": "A blank bureaucratic form waiting to be filled.",
+    "description": "A blank form that demands meaning.",
     "edible": false,
     "readable": true
   },
   {
     "name": "official_stamp",
-    "weight": 1,
-    "description": "An official stamp for approving documents.",
+    "weight": 0.6,
+    "description": "A stamp heavy with authority.",
     "edible": false,
     "readable": false
   },
   {
     "name": "feather_quill",
-    "weight": 0.3,
-    "description": "A quill pen made from chicken feathers.",
+    "weight": 0.1,
+    "description": "A quill that writes judgments you didn't agree to.",
     "edible": false,
     "readable": false
   },
   {
     "name": "tiny_gavel",
-    "weight": 0.5,
-    "description": "A tiny gavel for judicial proceedings.",
+    "weight": 0.4,
+    "description": "A tiny gavel with outsized consequences.",
     "edible": false,
     "readable": false
   },
   {
-    "name": "queue_slip",
-    "weight": 0.05,
-    "description": "A numbered slip that grants you bureaucratic legitimacy.",
-    "edible": false,
-    "readable": true
-  },
-  {
     "name": "blank_form_27b",
-    "weight": 0.1,
-    "description": "Form 27b, blank and waiting to be filled with intention.",
-    "edible": false,
-    "readable": true
-  },
-  {
-    "name": "misfiled_memo",
-    "weight": 0.15,
-    "description": "A memo that was filed in the wrong place and is all the better for it.",
+    "weight": 0.2,
+    "description": "Form 27b. Every line is mandatory, especially the ones you can't read.",
     "edible": false,
     "readable": true
   },
   {
     "name": "correction_ribbon",
-    "weight": 0.08,
-    "description": "A ribbon used for correcting mistakes on official documents.",
+    "weight": 0.1,
+    "description": "A ribbon that makes mistakes look like intent.",
     "edible": false,
     "readable": false
+  },
+  {
+    "name": "misfiled_memo",
+    "weight": 0.1,
+    "description": "A memo filed where it shouldn't be, waiting to be found.",
+    "edible": false,
+    "readable": true
   },
   {
     "name": "provisional_stamp",
-    "weight": 0.3,
-    "description": "A stamp that carries provisional authority.",
-    "edible": false,
-    "readable": false
-  },
-  {
-    "name": "desk_appeal_token",
-    "weight": 0.05,
-    "description": "A token that proves you have the right to appeal.",
+    "weight": 0.5,
+    "description": "A stamp that counts if nobody checks too closely.",
     "edible": false,
     "readable": false
   }

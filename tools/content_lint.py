@@ -32,7 +32,8 @@ class ContentLinter:
 
     def lint_all(self):
         """Lint all content files."""
-        print("🔍 Content Linter — Scanning...")
+        # Windows terminals may default to cp1252; avoid non-ASCII output here.
+        print("Content Linter - Scanning...")
         print()
         
         # Load reference data
@@ -127,36 +128,36 @@ class ContentLinter:
     def report(self):
         """Print formatted lint report."""
         print("=" * 70)
-        print("📋 CONTENT LINT REPORT")
+        print("CONTENT LINT REPORT")
         print("=" * 70)
         print()
         
         # Summary line
-        print(f"📦 {self.stats['total_rooms']} rooms")
-        print(f"📄 {self.stats['total_items']} items")
-        print(f"🎭 {self.stats['total_characters']} NPCs")
+        print(f"{self.stats['total_rooms']} rooms")
+        print(f"{self.stats['total_items']} items")
+        print(f"{self.stats['total_characters']} NPCs")
         print()
         
         # References
-        print(f"✓ {self.stats['valid_item_refs']} valid item references")
-        print(f"✓ {self.stats['valid_npc_refs']} valid NPC references")
+        print(f"OK {self.stats['valid_item_refs']} valid item references")
+        print(f"OK {self.stats['valid_npc_refs']} valid NPC references")
         print()
         
         # Errors
         if self.errors:
-            print(f"❌ {len(self.errors)} ERRORS:")
+            print(f"{len(self.errors)} ERRORS:")
             for error in self.errors:
-                print(f"   • {error}")
+                print(f"   - {error}")
             print()
         else:
-            print("✅ 0 schema failures")
-            print("✅ 0 broken exits")
-            print("✅ All references valid")
+            print("OK 0 schema failures")
+            print("OK 0 broken exits")
+            print("OK All references valid")
             print()
         
         # Per-chapter breakdown
         if self.stats["chapters"]:
-            print("📚 Chapters:")
+            print("Chapters:")
             for chapter in sorted(self.stats["chapters"].keys()):
                 ch = self.stats["chapters"][chapter]
                 print(f"   Ch{chapter}: {ch['rooms']:2d} rooms | {ch['item_refs']:2d} items | {ch['npc_refs']:2d} NPCs | {ch['broken_exits']} broken")
@@ -164,10 +165,10 @@ class ContentLinter:
         
         # Final status
         if len(self.errors) == 0:
-            print("✅ Content validation PASSED")
+            print("Content validation PASSED")
             return 0
         else:
-            print(f"❌ Content validation FAILED ({len(self.errors)} errors)")
+            print(f"Content validation FAILED ({len(self.errors)} errors)")
             return 1
 
 

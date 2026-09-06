@@ -137,6 +137,18 @@ class Parser:
             return {"intent": "DENY", "target": obj}
         elif input_lower.startswith("resubmit"):
             return {"intent": "RESUBMIT"}
+
+        # Chapter 3: Department of Sustained Loss commands
+        elif input_lower == "report loss":
+            return {"intent": "REPORT_LOSS"}
+        elif input_lower.startswith("surrender "):
+            obj = self.extract_object(input_lower, ["surrender"])
+            return {"intent": "SURRENDER", "item": obj}
+        elif input_lower.startswith("reclaim "):
+            obj = self.extract_object(input_lower, ["reclaim"])
+            return {"intent": "RECLAIM", "item": obj}
+        elif input_lower == "catalogue":
+            return {"intent": "CATALOGUE"}
         
         # Special room commands
         if self.game_state.room and input_lower in self.game_state.room.get("special_commands", {}):

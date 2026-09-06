@@ -40,7 +40,14 @@ class SaveSystem:
             "visited_nodes": list(self.game_state.visited_nodes),
             "bad_idea_counters": dict(self.game_state.bad_idea_counters),
             "curse_counters": dict(self.game_state.curse_counters),
-            "brother_ape_chaos_meter": self.game_state.brother_ape_chaos_meter
+            "brother_ape_chaos_meter": self.game_state.brother_ape_chaos_meter,
+
+            # Chapter 3: Department of Sustained Loss (persisted)
+            "loss_debt": self.game_state.loss_debt,
+            "loss_report_filed": self.game_state.loss_report_filed,
+            "reclaimed_losses": list(self.game_state.reclaimed_losses),
+            "surrendered_items": list(self.game_state.surrendered_items),
+            "chapter3_release_status": self.game_state.chapter3_release_status
         }
         
         filename = f"save_{slot}.json"
@@ -89,5 +96,12 @@ class SaveSystem:
         self.game_state.bad_idea_counters = save_data["bad_idea_counters"]
         self.game_state.curse_counters = save_data["curse_counters"]
         self.game_state.brother_ape_chaos_meter = save_data["brother_ape_chaos_meter"]
+
+        # Chapter 3: Department of Sustained Loss (persisted)
+        self.game_state.loss_debt = int(save_data.get("loss_debt", 0))
+        self.game_state.loss_report_filed = bool(save_data.get("loss_report_filed", False))
+        self.game_state.reclaimed_losses = set(save_data.get("reclaimed_losses", []))
+        self.game_state.surrendered_items = set(save_data.get("surrendered_items", []))
+        self.game_state.chapter3_release_status = save_data.get("chapter3_release_status", None)
         
         return f"Game loaded from {filename}."

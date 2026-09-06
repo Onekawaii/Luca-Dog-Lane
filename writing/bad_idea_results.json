@@ -262,4 +262,45 @@
       }
     }
   ]
+  ,
+  "report_loss": [
+    {
+      "weight": 1,
+      "conditions": [],
+      "text": "You file a loss report. The department accepts your sorrow and assigns it a number.",
+      "effects": {
+        "bureaucracy": 1
+      }
+    }
+  ],
+  "surrender": [
+    {
+      "weight": 1,
+      "conditions": [],
+      "text": "You surrender {item}. The department records it as sustained and payable.",
+      "effects": {
+        "bureaucracy": 1
+      }
+    }
+  ],
+  "reclaim": [
+    {
+      "weight": 1,
+      "conditions": [],
+      "text": "You reclaim {item}. The paper trail lets it return to you, slightly colder.",
+      "effects": {
+        "alter": 1
+      }
+    }
+  ],
+  "catalogue": [
+    {
+      "weight": 1,
+      "conditions": [],
+      "text": "You catalogue the loss. The ledger grows heavier with precision.",
+      "effects": {
+        "bureaucracy": 1
+      }
+    }
+  ]
 }
