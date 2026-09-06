@@ -1,0 +1,81 @@
+name: Materialize v0.6.0 Lattice Alive
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.bootstrap/**'
+      - '.github/workflows/materialize-v060.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch accepted v0.6 payload bridge
+        env:
+          PAYLOAD_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-22d4-81f5-893a-bc3e16516092/raw?se=2026-09-06T03%3A16%3A44Z&sp=r&sv=2026-02-06&sr=b&scid=0a268278-6e91-5cb0-9d1c-a2b6c5ebec10&skoid=d1cabc79-3240-4866-94fe-6005330cb49e&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-05T22%3A13%3A25Z&ske=2026-09-06T22%3A13%3A25Z&sks=b&skv=2026-02-06&sig=gij0dTfhNp2FNhMiP2j0/aJ8HnrKBlb0FvXmL%2B1Sy2I%3D'
+        run: |
+          mkdir -p .bootstrap
+          curl --fail --location --retry 3 "$PAYLOAD_URL" --output .bootstrap/payload.b64
+          test "$(wc -c < .bootstrap/payload.b64)" -eq 305064
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install materialization dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install Pillow flask
+
+      - name: Materialize canonical v0.6 tree
+        run: python .bootstrap/materialize_v060.py
+
+      - name: Install project dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: Validate campaign and content
+        run: |
+          python tools/content_lint.py
+          python -m tools.validate_campaign_module
+          python -m tools.validate_visual_assets
+          python -m hive_lattice.cli validate strawberry_omen
+
+      - name: Full test suite
+        run: python -m unittest discover -s tests -p 'test*.py'
+
+      - name: Remove bootstrap-only staging
+        run: |
+          rm -rf .bootstrap .bootstrap_assets
+          find . -type d -name __pycache__ -prune -exec rm -rf {} +
+          find . -type f -name '*.pyc' -delete
+
+      - name: Commit canonical v0.6 tree
+        env:
+          LEGACY_SHA: 6b853f74d356289116d16e2ff5be6d3ad8b06516
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'release: canonicalize v0.6.0 lattice alive'
+          FINAL_SHA="$(git rev-parse HEAD)"
+          git push origin HEAD:main
+          git tag -f legacy-bard-2026-04 "$LEGACY_SHA"
+          git tag -f v0.6.0-lattice-alive "$FINAL_SHA"
+          git push origin refs/tags/legacy-bard-2026-04 --force
+          git push origin refs/tags/v0.6.0-lattice-alive --force
+          echo "FINAL_SHA=$FINAL_SHA" >> "$GITHUB_ENV"
+
+      - name: Report final canonical SHA
+        run: echo "Canonical main is $FINAL_SHA"
