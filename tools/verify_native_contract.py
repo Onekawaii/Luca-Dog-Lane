@@ -93,6 +93,12 @@ def main() -> int:
         print("[ERROR] Godot binary not found in PATH or ~/.godot_bin!", file=sys.stderr)
         return 1
 
+    # Ensure Godot imports project and builds class cache
+    run_command(
+        [str(godot_bin), "--headless", "--path", "game_godot", "--editor", "--quit"],
+        "Godot Project Class & Asset Import",
+    )
+
     if not run_command(
         [str(godot_bin), "--headless", "--path", "game_godot", "--script", "res://tests/run_acceptance.gd"],
         "Native Godot Headless Acceptance Suite",

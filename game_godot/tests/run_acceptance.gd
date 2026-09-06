@@ -3,6 +3,11 @@ extends SceneTree
 # Headless Acceptance Test Suite for Native Hive-Lattice Game.
 # Run with: godot --headless --path game_godot --script res://tests/run_acceptance.gd
 
+const CampaignLoader = preload("res://scripts/campaign/CampaignLoader.gd")
+const ActionResolver = preload("res://scripts/runtime/ActionResolver.gd")
+const WorldState = preload("res://scripts/runtime/WorldState.gd")
+const SaveSystem = preload("res://scripts/save/SaveSystem.gd")
+
 var total_tests: int = 0
 var passed_tests: int = 0
 var failed_tests: int = 0
