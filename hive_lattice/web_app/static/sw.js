@@ -1,6 +1,6 @@
 /* Strawberry Omen service worker — static shell cache only */
 
-const CACHE_NAME = "wetberry-shell-v070-world1";
+const CACHE_NAME = "wetberry-shell-v070-rpg1";
 const SHELL_ASSETS = [
   "/",
   "/static/strawberry.css",
@@ -8,7 +8,20 @@ const SHELL_ASSETS = [
   "/static/world_client.js",
   "/static/manifest.webmanifest",
   "/static/icons/icon-192.png",
-  "/static/icons/icon-512.png"
+  "/static/icons/icon-512.png",
+  "/api/assets/rooms/room.breakroom.illustrated.png",
+  "/api/assets/rooms/room.breakroom.central_table.png",
+  "/api/assets/portraits/keith_neutral.png",
+  "/api/assets/portraits/keith_annoyed.png",
+  "/api/assets/portraits/keith_engaged.png",
+  "/api/assets/portraits/darla_neutral.png",
+  "/api/assets/portraits/darla_annoyed.png",
+  "/api/assets/portraits/darla_engaged.png",
+  "/api/assets/portraits/tammy_procedural.png",
+  "/api/assets/items/item.evidence_bag_not_my_business.png",
+  "/api/assets/items/item.bagged_wetberry_evidence.png",
+  "/api/assets/items/item.wetberry.png",
+  "/api/assets/items/item.damp_napkin.png"
 ];
 
 /* Install: pre-cache the app shell */

@@ -107,8 +107,8 @@ class TestActIVFreezeVerification(unittest.TestCase):
 
     def test_visual_manifest_resolves(self):
         """Every asset in visual_manifest must have a generated PNG or a valid placeholder."""
-        vm = json.loads((self.root / "visual_manifest.json").read_text())
-        gm = json.loads((self.root / "assets" / "generated_manifest.json").read_text())
+        vm = json.loads((self.root / "visual_manifest.json").read_text(encoding="utf-8"))
+        gm = json.loads((self.root / "assets" / "generated_manifest.json").read_text(encoding="utf-8"))
 
         gen_ids = {a["asset_id"] for a in gm.get("generated_assets", [])}
 
@@ -128,7 +128,7 @@ class TestActIVFreezeVerification(unittest.TestCase):
 
     def test_generated_manifest_paths_exist(self):
         """Every path in generated_manifest.json must exist on disk."""
-        gm = json.loads((self.root / "assets" / "generated_manifest.json").read_text())
+        gm = json.loads((self.root / "assets" / "generated_manifest.json").read_text(encoding="utf-8"))
         for asset in gm.get("generated_assets", []):
             full_path = self.root / asset["path"]
             self.assertTrue(full_path.exists(),
@@ -208,7 +208,7 @@ class TestActIVFreezeVerification(unittest.TestCase):
 
     def test_act4_locations_have_room_assets(self):
         """Every Act IV location must have a generated room PNG."""
-        gm = json.loads((self.root / "assets" / "generated_manifest.json").read_text())
+        gm = json.loads((self.root / "assets" / "generated_manifest.json").read_text(encoding="utf-8"))
         gen_room_ids = {a["asset_id"] for a in gm.get("generated_assets", [])
                         if a["category"] == "rooms"}
 

@@ -1,9 +1,10 @@
-/* Strawberry Omen — frontend logic (v0.6.0 Reactive Lattice) */
+/* Strawberry Omen — frontend logic (v0.7.0 Visual RPG Slice) */
 
 let currentState = null;
 let toastTimer = null;
 let activeMobileTab = "adventure";
 let worldClient = null;
+let selectedInventoryItem = null;
 
 /* ── API layer ────────────────────────────────────────────────────────── */
 
@@ -93,8 +94,11 @@ function render(data) {
     const progression = data.progression || {};
     actBar.textContent = progression.current_label || "Act I";
 
-    // Narration terminal
+    // Narration terminal & Dialogue frame
     document.getElementById("scene-text").textContent = data.scene.read_aloud || "";
+
+    // Render Character Dialogue Portrait
+    renderDialoguePortrait(data);
 
     // Render Choice buttons
     const panel = document.getElementById("choices-panel");
@@ -129,6 +133,121 @@ function render(data) {
     renderSidebarInventory(data);
     renderSidebarLore(data);
     renderSidebarLogs(data);
+}
+
+/* ── Dialogue Portrait Rendering ───────────────────────────────────────── */
+
+function renderDialoguePortrait(data) {
+    const portraitBox = document.getElementById("dialogue-portrait-box");
+    const portraitImg = document.getElementById("dialogue-portrait-img");
+    const speakerName = document.getElementById("dialogue-speaker-name");
+
+    if (!portraitBox || !portraitImg) return;
+
+    if (data.scene && data.scene.speaker_portrait) {
+        portraitImg.src = data.scene.speaker_portrait;
+        if (speakerName) speakerName.textContent = data.scene.speaker_name || "";
+        portraitBox.classList.remove("hidden");
+        portraitImg.onerror = () => { portraitBox.classList.add("hidden"); };
+    } else {
+        portraitBox.classList.add("hidden");
+        portraitImg.removeAttribute("src");
+    }
+}
+
+/* ── Adventure Verbs System ────────────────────────────────────────────── */
+
+async function executeVerb(verb) {
+    if (!currentState) return;
+    const client = ensureWorldClient();
+    const nearest = client ? client._nearestTarget() : null;
+
+    if (verb === "LOOK") {
+        if (nearest) {
+            showToast(`Examining ${nearest.name || nearest.id}...`);
+            await makeWorldAction({ kind: "interact", target_id: nearest.id });
+        } else {
+            showToast(`Looking around ${currentState.location.name || "the room"}...`);
+            await refresh();
+        }
+    } else if (verb === "TALK") {
+        const npcs = (currentState.world && currentState.world.entities) || [];
+        if (nearest && nearest.kind === "npc") {
+            await makeWorldAction({ kind: "interact", target_id: nearest.id });
+        } else if (npcs.length > 0) {
+            // Find closest NPC
+            const firstNpc = npcs[0];
+            showToast(`Approaching ${firstNpc.name}...`);
+            await makeWorldAction({ kind: "interact", target_id: firstNpc.id });
+        } else {
+            showToast("Nobody nearby to talk to.", true);
+        }
+    } else if (verb === "TAKE") {
+        if (nearest && (nearest.id.includes("wetberry") || nearest.kind === "hotspot")) {
+            // Check if player has evidence bag
+            const details = currentState.inventory_details || [];
+            let bagAction = null;
+            for (const item of details) {
+                for (const act of (item.actions || [])) {
+                    if (act.id && act.id.includes("evidence_bag.wetberry")) {
+                        bagAction = act.id;
+                    }
+                }
+            }
+            if (bagAction) {
+                showToast("Containing Wetberry with Evidence Bag...");
+                await useItemAction(bagAction);
+            } else {
+                await makeWorldAction({ kind: "interact", target_id: nearest.id });
+            }
+        } else if (nearest) {
+            await makeWorldAction({ kind: "interact", target_id: nearest.id });
+        } else {
+            showToast("Nothing nearby to take.", true);
+        }
+    } else if (verb === "USE") {
+        const details = currentState.inventory_details || [];
+        if (details.length === 0) {
+            showToast("Inventory is empty.", true);
+            return;
+        }
+        // If an item has an available contextual action in this scene, use it!
+        let used = false;
+        for (const item of details) {
+            for (const act of (item.actions || [])) {
+                if (act.available !== false) {
+                    showToast(`Using ${item.name}: ${act.label}`);
+                    await useItemAction(act.id);
+                    used = true;
+                    break;
+                }
+            }
+            if (used) break;
+        }
+        if (!used) {
+            showToast("Open Gear & Archives tab to select item action.");
+            switchMobileTab("gear");
+        }
+    } else if (verb === "OPEN") {
+        if (nearest) {
+            await makeWorldAction({ kind: "interact", target_id: nearest.id });
+        } else {
+            showToast("Nothing nearby to open.", true);
+        }
+    } else if (verb === "GO") {
+        showToast("Tap floor to walk or use WASD keys.");
+    }
+}
+
+/* ── Debug Mode ────────────────────────────────────────────────────────── */
+
+function toggleDebugMode() {
+    const client = ensureWorldClient();
+    if (!client) return;
+    const active = client.toggleDebug();
+    const indicator = document.getElementById("debug-indicator");
+    if (indicator) indicator.classList.toggle("hidden", !active);
+    showToast(`Developer Diagnostics: ${active ? "ENABLED" : "DISABLED"}`);
 }
 
 /* ── World in Motion action bridge ─────────────────────────────────────── */
@@ -358,12 +477,16 @@ function renderSidebarInventory(data) {
 
     let html = `<div class="inventory-list">`;
     for (const item of details) {
+        const iconUrl = item.icon_url || `/api/assets/items/${item.id}.png`;
         html += `<div class="inventory-card">
-            <div class="inventory-name"><span style="color:var(--accent-amber);">&#x2666;</span> ${esc(item.name)}</div>
+            <div class="inventory-card-header">
+                <img class="inventory-item-icon" src="${esc(iconUrl)}" alt="${esc(item.name)}" onerror="this.style.display='none'">
+                <div class="inventory-name"><span style="color:var(--accent-amber);">&#x2666;</span> ${esc(item.name)}</div>
+            </div>
             <div class="inventory-desc">${esc(item.description || "")}</div>`;
         for (const action of (item.actions || [])) {
             html += `<button class="item-use-btn" ${action.available === false ? "disabled" : ""}
-                onclick="useItemAction('${esc(action.id)}')">${esc(action.label)}${action.available === false ? " — " + esc(action.locked_reason || "LOCKED") : ""}</button>`;
+                onclick="useItemAction('${esc(action.id)}')">&#x2699; ${esc(action.label)}${action.available === false ? " — " + esc(action.locked_reason || "LOCKED") : ""}</button>`;
         }
         html += `</div>`;
     }
@@ -377,7 +500,7 @@ function renderSidebarLore(data) {
     
     let fragments = [];
     if (flags.wetberry_seen) {
-        fragments.push("<strong>[WETBERRY ANALYSIS]</strong>: Product box turns toward warmth. सोशल संकट level 2.");
+        fragments.push("<strong>[WETBERRY ANALYSIS]</strong>: Product box turns toward warmth. Social hazard level 2.");
     }
     if (flags.fridge_unlocked) {
         fragments.push("<strong>[MEMENTO FRIDGE]</strong>: Unlocked using damp containment napkins. social boundaries violated.");
@@ -551,26 +674,30 @@ function showHelp() {
     const body = document.getElementById("panel-body");
     title.textContent = "Systems Manual";
     body.innerHTML = `
-        <p><strong>Strawberry Omen</strong> — Cursed Breakroom Dungeon Crawler.</p>
+        <p><strong>Strawberry Omen</strong> — Illustrated Retro Adventure RPG.</p>
         <hr style='border-color:var(--border);margin:8px 0'>
         <p><strong>HOW TO SURVIVE:</strong></p>
         <ul>
-          <li>In walkable rooms, tap the floor to move. Desktop also supports WASD/arrow keys; press E/Enter near a target to interact.</li>
-          <li>Use the large interaction button when you are close to Keith, Darla, Wetberry, or another world target.</li>
-          <li>Full-width Action Panel choices remain available for dialogue, checks, and narrative decisions.</li>
-          <li>Interact with Survivors (Keith, Darla) and Labyrinth Entities (Moldric) to unlock topics.</li>
-          <li>Manage Procedural Pressure (Bureaucracy) vs. Feral Chaos (Ape Chaos) to reveal stat-gated paths.</li>
-          <li>Items are active tools now. Open Gear & Archives and use contextual item actions when they appear.</li>
-          <li>NPCs remember how you treated them; room state, conditions, and prior insults can follow you into later Acts.</li>
+          <li><strong>Movement:</strong> In walkable rooms, tap the floor to move. On desktop, WASD or arrow keys move your avatar.</li>
+          <li><strong>Proximity Interaction:</strong> Move close to Keith, Darla, or Wetberry. A glowing proximity ring and interaction prompt will appear. Press E / Enter or tap Interact.</li>
+          <li><strong>Classic Adventure Verbs:</strong> Use LOOK, TALK, TAKE, USE, OPEN, GO to interact seamlessly with the environment and characters.</li>
+          <li><strong>Evidence & Containment:</strong> Keith holds the Evidence Bag of Not My Business in the Utility Corner. Talk to Keith, obtain the bag, then use it on the Wetberry on the Central Table.</li>
+          <li><strong>Emotional Dynamics:</strong> Keith and Darla's portraits reflect their live emotional state (steady, annoyed, engaged) based on your interactions.</li>
+          <li><strong>Procedural Pressure vs Feral Chaos:</strong> Manage Bureaucracy and Ape Chaos to navigate institutional adjudication.</li>
         </ul>
         <br>
         <p><strong>UI INTERFACE LEGEND:</strong></p>
         <ul>
-          <li><strong>Minimap:</strong> Tap the map window to open the larger preview.</li>
-          <li><strong>Stage:</strong> Walkable scenes are a live world surface. Legacy scenes fall back to room art/NPC/arena presentation.</li>
-          <li><strong>Lore Archives:</strong> Discovered relics and clues unlock historic lore fragments automatically.</li>
+          <li><strong>Viewport:</strong> The primary illustrated adventure scene with real-time character depth sorting.</li>
+          <li><strong>Narration & Dialogue:</strong> Active NPC portraits and CRT terminal text.</li>
+          <li><strong>Gear & Archives:</strong> Tactile pixel inventory slots and unlocked Hive lore fragments.</li>
         </ul>
         <hr style='border-color:var(--border);margin:8px 0'>
+        <div style="margin: 12px 0; text-align: center;">
+            <button type="button" class="bar-btn" onclick="toggleDebugMode()" style="background:var(--surface-highlight);border:1px solid var(--accent);color:var(--accent);padding:8px 16px;">
+                Toggle Developer Debug Diagnostics
+            </button>
+        </div>
         <p style='color:var(--text-dim);font-size:0.75rem'>Phone-first controls: no Desktop Site mode required. Help is local and does not change game state.</p>
     `;
     overlay.classList.remove("hidden");

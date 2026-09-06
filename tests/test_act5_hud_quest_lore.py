@@ -52,8 +52,8 @@ class TestAct5Quest(unittest.TestCase):
 
 class TestAct5HUD(unittest.TestCase):
     def setUp(self):
-        self.js = JS_PATH.read_text()
-        self.identities = json.loads(IDENTITY_PATH.read_text())
+        self.js = JS_PATH.read_text(encoding="utf-8")
+        self.identities = json.loads(IDENTITY_PATH.read_text(encoding="utf-8"))
 
     def test_act5_appears_in_progression_hud(self):
         p = derive_act_progression({"act4_complete": True})
@@ -86,8 +86,8 @@ class TestAct5HUD(unittest.TestCase):
 
 class TestAct5Lore(unittest.TestCase):
     def setUp(self):
-        self.js = JS_PATH.read_text()
-        self.identities = json.loads(IDENTITY_PATH.read_text())
+        self.js = JS_PATH.read_text(encoding="utf-8")
+        self.identities = json.loads(IDENTITY_PATH.read_text(encoding="utf-8"))
 
     def test_act5_lore_fragments_present_for_each_flag(self):
         for flag in [

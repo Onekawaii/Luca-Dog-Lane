@@ -1044,11 +1044,25 @@ header {
     padding: 10px;
     border-radius: 6px;
 }
-.inventory-name { font-weight: 700; text-transform: capitalize; }
+.inventory-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.inventory-item-icon {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: #080c14;
+    padding: 2px;
+}
+.inventory-name { font-weight: 700; text-transform: capitalize; font-size: 0.9rem; }
 .inventory-desc { color: var(--text-dim); margin: 6px 0 8px; line-height: 1.4; font-size: 0.76rem; }
 .item-use-btn {
     width: 100%;
-    min-height: 44px;
+    min-height: 48px;
     margin-top: 6px;
     padding: 9px 12px;
     border: 1px solid var(--accent-cyan);
@@ -1057,17 +1071,110 @@ header {
     color: var(--text);
     font: inherit;
     text-align: left;
+    cursor: pointer;
 }
-.item-use-btn:disabled { opacity: 0.45; }
+.item-use-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 
 @media (max-width: 700px) {
-    .item-use-btn { min-height: 48px; font-size: 0.95rem; }
+    .item-use-btn { min-height: 56px; font-size: 0.95rem; }
     .inventory-desc { font-size: 0.88rem; }
 }
 
 /* ----------------------------------------------------------------------
-   v0.7 World in Motion vertical slice
+   v0.7 World in Motion Visual RPG slice
    ---------------------------------------------------------------------- */
+#verbs-panel {
+    height: auto;
+    border-color: var(--border);
+}
+
+.verb-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 2px;
+}
+
+.verb-btn {
+    min-height: 44px;
+    background: var(--surface-highlight);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.verb-btn:hover {
+    background: #1d2638;
+    border-color: var(--accent-cyan);
+    color: #fff;
+}
+
+.verb-btn:active {
+    background: #090e18;
+    transform: scale(0.96);
+}
+
+@media (max-width: 768px) {
+    .verb-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    .verb-btn {
+        min-height: 56px;
+        font-size: 0.9rem;
+    }
+}
+
+/* Dialogue frame with portrait */
+.dialogue-frame {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.portrait-box {
+    width: 80px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.portrait-img {
+    width: 76px;
+    height: 76px;
+    object-fit: cover;
+    border-radius: 4px;
+    border: 2px solid var(--accent-cyan);
+    background: #0a0e18;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.25);
+}
+
+.portrait-name {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dialogue-text-column {
+    flex: 1;
+    min-width: 0;
+}
+
 .world-canvas {
     position: absolute;
     inset: 0;
@@ -1075,7 +1182,7 @@ header {
     height: 100%;
     display: block;
     touch-action: manipulation;
-    cursor: crosshair;
+    cursor: default;
     image-rendering: auto;
 }
 
@@ -1101,15 +1208,20 @@ header {
     left: 50%;
     bottom: 10px;
     transform: translateX(-50%);
-    min-height: 48px;
-    min-width: min(82%, 320px);
+    min-height: 56px;
+    min-width: min(84%, 320px);
     padding: 10px 16px;
     border: 2px solid var(--accent-cyan);
     border-radius: var(--radius);
     background: rgba(10, 12, 20, 0.94);
     color: #fff;
-    font: 0.9rem var(--font-mono);
+    font: 0.95rem var(--font-mono);
     box-shadow: 0 0 16px rgba(0, 243, 255, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
 }
 
 .world-interact-btn:active {
@@ -1125,5 +1237,7 @@ header {
         bottom: 8px;
         width: calc(100% - 24px);
         max-width: 380px;
+        min-height: 56px;
     }
 }
+

@@ -232,12 +232,56 @@ def _build_state_response() -> dict:
         token = entity.get("token")
         entity["token_url"] = f"/api/assets/tokens/{token}.png" if token else None
 
+    # Enrich inventory items with local asset icon URLs
+    inventory_details = _module.item_details(_state)
+    for item in inventory_details:
+        item_id = item.get("id", "")
+        item["icon_url"] = f"/api/assets/items/{item_id}.png"
+
+    # Derive portrait URLs based on ActorDynamics behavior states
+    actor_dynamics_views = {
+        actor_id: _world._actor_view(_state, actor_id)
+        for actor_id in _state.actor_dynamics
+    } if _world is not None else {}
+
+    def _portrait_for(char_name: str) -> str:
+        dyn = actor_dynamics_views.get(f"npc.{char_name}_janitor" if char_name == "keith" else f"npc.{char_name}_microwave" if char_name == "darla" else f"npc.{char_name}_hr", {})
+        behavior = dyn.get("behavior", "steady")
+        if behavior in ("agitated", "strained"):
+            emo = "annoyed"
+        elif behavior in ("reintegrating", "open"):
+            emo = "engaged"
+        else:
+            emo = "procedural" if char_name == "tammy" else "neutral"
+        return f"/api/assets/portraits/{char_name}_{emo}.png"
+
+    active_portraits = {
+        "keith": _portrait_for("keith"),
+        "darla": _portrait_for("darla"),
+        "tammy": _portrait_for("tammy"),
+    }
+
+    # Determine speaker portrait and speaker name if current scene is an NPC scene
+    current_speaker_portrait = None
+    speaker_name = None
+    if "keith" in scene.get("id", ""):
+        current_speaker_portrait = active_portraits["keith"]
+        speaker_name = "KEITH (JANITOR)"
+    elif "darla" in scene.get("id", "") or "coffee" in scene.get("id", ""):
+        current_speaker_portrait = active_portraits["darla"]
+        speaker_name = "DARLA (ORACLE)"
+    elif "tammy" in scene.get("id", ""):
+        current_speaker_portrait = active_portraits["tammy"]
+        speaker_name = "TAMMY (HR)"
+
     return {
         "scene": {
             "id": scene["id"],
             "title": scene.get("title", ""),
             "read_aloud": scene.get("read_aloud", ""),
             "type": scene.get("type", "encounter"),
+            "speaker_portrait": current_speaker_portrait,
+            "speaker_name": speaker_name,
         },
         "choices": choices,
         "location": {
@@ -247,7 +291,7 @@ def _build_state_response() -> dict:
         "flags": dict(_state.flags),
         "stats": dict(_state.stats),
         "inventory": list(_state.inventory),
-        "inventory_details": _module.item_details(_state),
+        "inventory_details": inventory_details,
         "conditions": dict(_state.conditions),
         "npc_memory": dict(_state.npc_memory),
         "room_state": dict(_state.room_state.get(_state.current_location, {})),
@@ -261,13 +305,12 @@ def _build_state_response() -> dict:
         "progression": derive_act_progression(_state.flags),
         "world": world_snapshot,
         "presentation": {"entities": presentation_entities},
-        "actor_dynamics": {
-            actor_id: _world._actor_view(_state, actor_id)
-            for actor_id in _state.actor_dynamics
-        } if _world is not None else {},
+        "actor_dynamics": actor_dynamics_views,
+        "portraits": active_portraits,
         "images": {
             "map": map_url,
             "room": room_url,
+            "illustrated_room": "/api/assets/rooms/room.breakroom.illustrated.png",
         },
         "arena": {
             "active": is_arena_scene,

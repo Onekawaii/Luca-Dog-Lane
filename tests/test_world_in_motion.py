@@ -63,14 +63,14 @@ class TestWorldContract(unittest.TestCase):
         self.assertFalse(any(h["id"] == "hotspot.wetberry" for h in self.world.snapshot(self.state)["hotspots"]))
 
     def test_character_identity_file_is_versioned(self):
-        data = json.loads((CAMPAIGN / "game" / "character_identities.json").read_text())
+        data = json.loads((CAMPAIGN / "game" / "character_identities.json").read_text(encoding="utf-8"))
         self.assertEqual(data["schema"], "character_identity_v1")
         self.assertIn("npc.keith_janitor", data["characters"])
 
     def test_frontend_has_walkable_canvas_and_no_scene_name_npc_inference(self):
-        html = (ROOT / "hive_lattice/web_app/templates/index.html").read_text()
-        js = (ROOT / "hive_lattice/web_app/static/strawberry.js").read_text()
-        world_js = (ROOT / "hive_lattice/web_app/static/world_client.js").read_text()
+        html = (ROOT / "hive_lattice/web_app/templates/index.html").read_text(encoding="utf-8")
+        js = (ROOT / "hive_lattice/web_app/static/strawberry.js").read_text(encoding="utf-8")
+        world_js = (ROOT / "hive_lattice/web_app/static/world_client.js").read_text(encoding="utf-8")
         self.assertIn('id="world-canvas"', html)
         self.assertIn('/api/action', js)
         self.assertIn('class HiveWorldClient', world_js)

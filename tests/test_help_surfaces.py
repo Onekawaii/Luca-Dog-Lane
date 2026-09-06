@@ -192,15 +192,15 @@ class TestWebHelpSurface(unittest.TestCase):
         """The HTML template must contain a help button calling showHelp()."""
         html_path = Path("hive_lattice/web_app/templates/index.html")
         self.assertTrue(html_path.exists())
-        html = html_path.read_text()
+        html = html_path.read_text(encoding="utf-8")
         self.assertIn("showHelp()", html, "HTML must contain showHelp() call")
         self.assertIn("Help", html, "HTML must contain Help button")
 
-    def test_showHelp_function_exists_in_js(self):
+    def test_help_content_in_strawberry_js(self):
         """The JS must define a showHelp() function with help text."""
         js_path = Path("hive_lattice/web_app/static/strawberry.js")
         self.assertTrue(js_path.exists())
-        js = js_path.read_text()
+        js = js_path.read_text(encoding="utf-8")
         self.assertIn("function showHelp()", js, "JS must define showHelp()")
         self.assertIn("Strawberry Omen", js, "JS help must mention game title")
         self.assertIn("does not change game state", js,

@@ -378,12 +378,12 @@ class TestDungeonContractActIV(unittest.TestCase):
 
     def test_html_has_help_button(self):
         """The HTML template must contain a help button."""
-        html = Path("hive_lattice/web_app/templates/index.html").read_text()
+        html = Path("hive_lattice/web_app/templates/index.html").read_text(encoding="utf-8")
         self.assertIn("showHelp()", html)
 
     def test_js_has_showHelp(self):
         """The JS must define showHelp()."""
-        js = Path("hive_lattice/web_app/static/strawberry.js").read_text()
+        js = Path("hive_lattice/web_app/static/strawberry.js").read_text(encoding="utf-8")
         self.assertIn("function showHelp()", js)
 
     # ── 10. Required tests checklist ─────────────────────────────────
