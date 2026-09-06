@@ -26,18 +26,25 @@ from pathlib import Path
 
 
 def find_godot_binary() -> Path | None:
+    env_bin = os.environ.get("GODOT_BIN")
+    if env_bin and Path(env_bin).exists():
+        return Path(env_bin)
+
     # Check ~/.godot_bin
     home_bin = Path.home() / ".godot_bin"
     for candidate in [
         home_bin / "Godot_v4.3-stable_win64_console.exe",
+        home_bin / "Godot_v4.3-stable_win64.exe",
         home_bin / "godot.exe",
-        Path("godot"),
-        Path("godot4"),
+        home_bin / "godot",
+        home_bin / "Godot_v4.3-stable_linux.x86_64",
+        Path("/usr/local/bin/godot"),
+        Path("/usr/bin/godot"),
     ]:
         if candidate.exists() and candidate.is_file():
             return candidate
 
-    which = shutil.which("godot") or shutil.which("godot4")
+    which = shutil.which("godot") or shutil.which("godot4") or shutil.which("godot-headless")
     if which:
         return Path(which)
     return None

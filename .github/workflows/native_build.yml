@@ -1,0 +1,114 @@
+name: Hive-Lattice Native Build
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build & Package Native Deliverables
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install Pillow
+
+      - name: Install Godot 4.3 Engine & Export Templates
+        run: |
+          mkdir -p /tmp/godot ~/.local/share/godot/export_templates/4.3.stable
+          echo "Downloading Godot 4.3 stable Linux binary..."
+          curl -sSL -o /tmp/godot/godot.zip https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip
+          unzip -q /tmp/godot/godot.zip -d /tmp/godot
+          sudo cp /tmp/godot/Godot_v4.3-stable_linux.x86_64 /usr/local/bin/godot
+          sudo chmod +x /usr/local/bin/godot
+
+          echo "Downloading Godot 4.3 export templates..."
+          curl -sSL -o /tmp/godot/templates.tpz https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz
+          unzip -q /tmp/godot/templates.tpz -d /tmp/godot/templates_raw
+          cp -r /tmp/godot/templates_raw/templates/* ~/.local/share/godot/export_templates/4.3.stable/
+
+          godot --version
+
+      - name: Generate Visual Assets & Export Campaign Data
+        run: |
+          python tools/export_godot_campaign.py
+          python tools/generate_godot_assets.py
+
+      - name: Run Full Stack Contract & Native Headless Verification
+        run: |
+          python tools/verify_native_contract.py
+
+      - name: Export Windows Desktop Binary
+        run: |
+          mkdir -p dist/windows
+          godot --headless --path game_godot --export-release "Windows Desktop" ../dist/windows/Hive-Lattice.exe
+
+      - name: Build & Sign Android APK
+        run: |
+          python tools/build_android_apk.py
+
+      - name: Package Native Deliverables & Compute Checksums
+        run: |
+          python tools/package_native_playtest.py
+
+      - name: Validate Deliverable Integrity
+        run: |
+          echo "Verifying generated deliverables..."
+          ls -la dist/
+          test -s dist/Hive-Lattice-native-windows-playtest.zip
+          test -s dist/Hive-Lattice-native-windows-playtest.zip.sha256
+          test -s dist/Hive-Lattice-native-android-playtest.apk
+          test -s dist/Hive-Lattice-native-android-playtest.apk.sha256
+          test -s dist/Hive-Lattice-native-playtest-source.zip
+          test -s dist/Hive-Lattice-native-playtest-source.zip.sha256
+          echo "[OK] All deliverables validated."
+
+      - name: Upload Windows Native Playtest Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hive-Lattice-Native-Windows
+          path: |
+            dist/Hive-Lattice-native-windows-playtest.zip
+            dist/Hive-Lattice-native-windows-playtest.zip.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Android Native Playtest Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hive-Lattice-Native-Android
+          path: |
+            dist/Hive-Lattice-native-android-playtest.apk
+            dist/Hive-Lattice-native-android-playtest.apk.sha256
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Native Source Package Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hive-Lattice-Native-Source
+          path: |
+            dist/Hive-Lattice-native-playtest-source.zip
+            dist/Hive-Lattice-native-playtest-source.zip.sha256
+          if-no-files-found: error
+          retention-days: 30

@@ -104,9 +104,12 @@ def main() -> int:
     package_windows_zip(dist_dir / "windows", windows_zip)
 
     # 3. Android playtest
-    android_apk = dist_dir / "android" / "Hive-Lattice-native-playtest.apk"
+    android_apk = dist_dir / "Hive-Lattice-native-android-playtest.apk"
     if not android_apk.exists():
-        # check direct in dist
+        android_apk = dist_dir / "android" / "Hive-Lattice-native-android-playtest.apk"
+    if not android_apk.exists():
+        android_apk = dist_dir / "android" / "Hive-Lattice-native-playtest.apk"
+    if not android_apk.exists():
         android_apk = dist_dir / "Hive-Lattice-native-playtest.apk"
     package_android(android_apk)
 
