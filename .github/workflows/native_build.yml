@@ -12,6 +12,8 @@ jobs:
   build:
     name: Build & Package Native Deliverables
     runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: .
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
