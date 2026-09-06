@@ -1,0 +1,23 @@
+extends Node
+
+# Global Event Bus for Native Hive-Lattice Game Client
+
+signal action_requested(action_data: Dictionary)
+signal event_emitted(event_data: Dictionary)
+signal world_state_changed(delta_data: Dictionary)
+
+signal scene_transition_requested(scene_id: String)
+signal dialogue_started(actor_id: String, speaker_name: String, text: String, choices: Array)
+signal dialogue_choice_selected(choice_id: String)
+signal dialogue_closed()
+
+signal inventory_changed()
+signal item_armed(item_id: String)
+signal item_disarmed()
+
+signal overlay_opened(overlay_id: String)
+signal overlay_closed(overlay_id: String)
+signal notification_posted(message: String)
+signal debug_toggled(is_enabled: bool)
+signal camera_focus_requested(target_pos: Vector2, zoom_level: float)
+signal camera_reset_requested()

@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://b2m3n4p5q6r7s"]
+
+[ext_resource type="Script" path="res://scripts/actors/KeithActor.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/actors/keith.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/target_reticle.png" id="3_reticle"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_keith"]
+radius = 20.0
+height = 54.0
+
+[node name="Keith" type="CharacterBody2D"]
+y_sort_enabled = true
+input_pickable = true
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -88)
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_keith")
+
+[node name="Reticle" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -185)
+texture = ExtResource("3_reticle")

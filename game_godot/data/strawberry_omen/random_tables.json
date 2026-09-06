@@ -1,0 +1,153 @@
+{
+  "table.breakroom.weird_events": [
+    {
+      "weight": 10,
+      "text": "Someone microwaves fish. Everyone becomes worse."
+    },
+    {
+      "weight": 10,
+      "text": "The Wetberry label turns one degree toward the cleric."
+    },
+    {
+      "weight": 10,
+      "text": "A passive-aggressive note appears: PLEASE CLEAN UP AFTER YOUR SUMMONINGS."
+    },
+    {
+      "weight": 10,
+      "text": "The coffee maker produces prophecy and a small amount of burnt sludge."
+    }
+  ],
+  "table.breakroom.loot": [
+    {
+      "weight": 10,
+      "text": "A damp napkin",
+      "item": "item.damp_napkin"
+    },
+    {
+      "weight": 10,
+      "text": "Three crumbs of unknown origin"
+    },
+    {
+      "weight": 10,
+      "text": "A rumor that grows stronger every time it is repeated"
+    }
+  ],
+  "table.act2.fridge_weird_events": [
+    {
+      "weight": 10,
+      "text": "A jar spontaneously opens and releases a cloud of blue cheese mist."
+    },
+    {
+      "weight": 10,
+      "text": "The ancient mayonnaise hums and tells you a story about itself."
+    },
+    {
+      "weight": 10,
+      "text": "A voice whispers from the yogurt catacombs: 'Thank you for the offering.'"
+    },
+    {
+      "weight": 10,
+      "text": "The Fridge of Forgotten Things adjusts itself, revealing new shelves."
+    }
+  ],
+  "table.act2.moldric_quotes": [
+    {
+      "weight": 10,
+      "text": "'All things must be preserved, even memories.'"
+    },
+    {
+      "weight": 10,
+      "text": "'The back shelf is where the truly forgotten things live.'"
+    },
+    {
+      "weight": 10,
+      "text": "'Every good lunch deserves its own tomb.'"
+    },
+    {
+      "weight": 10,
+      "text": "'Mayonnaise is not just food. It's memory crystallized.'"
+    }
+  ],
+  "table.act4.labyrinth_weird_events": [
+    {
+      "weight": 10,
+      "text": "A forgotten yogurt cup rolls across the path, whispering 'Choose me next time.'"
+    },
+    {
+      "weight": 10,
+      "text": "The walls pulse with the memory of a thousand abandoned potlucks."
+    },
+    {
+      "weight": 10,
+      "text": "A ghostly fork floats past, still carrying a phantom olive."
+    },
+    {
+      "weight": 10,
+      "text": "The air smells faintly of someone else's meal prep from 2012."
+    }
+  ],
+  "table.act4.moldric_guide_quotes": [
+    {
+      "weight": 10,
+      "text": "'Every container here was opened with hope and closed with regret.'"
+    },
+    {
+      "weight": 10,
+      "text": "'The labyrinth does not forgive. But it does remember. That is worse.'"
+    },
+    {
+      "weight": 10,
+      "text": "'I once ruled the back shelf. Now I guide the lost through the fridge-space.'"
+    },
+    {
+      "weight": 10,
+      "text": "'The Casserole Throne awaits. It has been waiting since the potluck of 2007.'"
+    }
+  ],
+  "table.system.containment_aftershocks": [
+    {
+      "weight": 4,
+      "text": "The bag emits one offended crinkle. Moisture pressure drops another notch.",
+      "stat_delta": {
+        "moisture_pressure": -1
+      }
+    },
+    {
+      "weight": 3,
+      "text": "A tiny HR barcode appears on the bag. Bureaucracy approves despite itself.",
+      "stat_delta": {
+        "bureaucracy": 1
+      }
+    },
+    {
+      "weight": 3,
+      "text": "Wetberry rotates inside the sealed bag exactly one degree toward the nearest refrigerator.",
+      "sets_flags": {
+        "wetberry_still_aware": true
+      }
+    }
+  ],
+  "table.system.hearing_reactions": [
+    {
+      "weight": 4,
+      "text": "A court printer ejects a page reading OBJECTION REGISTERED, SOMEHOW.",
+      "stat_delta": {
+        "bureaucracy": 1
+      }
+    },
+    {
+      "weight": 3,
+      "text": "Gorrum coughs into one fist to hide what may have been a laugh.",
+      "npc_delta": {
+        "npc.bailiff_gorrum": 1
+      }
+    },
+    {
+      "weight": 3,
+      "text": "The arena lights flare green. The room has interpreted the slap as precedent.",
+      "sets_flags": {
+        "ape_objection_became_precedent": true
+      }
+    }
+  ]
+}

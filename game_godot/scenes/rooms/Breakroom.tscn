@@ -1,0 +1,137 @@
+[gd_scene load_steps=15 format=3 uid="uid://j9k0l1m2n3o4p"]
+
+[ext_resource type="Script" path="res://scripts/rooms/BreakroomScene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/breakroom.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Keith.tscn" id="4_keith"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Darla.tscn" id="5_darla"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Tammy.tscn" id="6_tammy"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="7_hotspot"]
+[ext_resource type="Texture2D" path="res://assets/props/central_table.png" id="8_table"]
+[ext_resource type="Texture2D" path="res://assets/props/wetberry_idle.png" id="9_wetberry"]
+[ext_resource type="Texture2D" path="res://assets/props/counter_appliances.png" id="10_appliances"]
+[ext_resource type="Texture2D" path="res://assets/props/mop_bucket.png" id="11_mop"]
+[ext_resource type="Texture2D" path="res://assets/ui/target_reticle.png" id="12_reticle"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_table"]
+radius = 80.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_counter"]
+size = Vector2(160, 80)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_utility"]
+radius = 55.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(80, 160)
+
+[node name="Breakroom" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_bg")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="YSortContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="CentralTableHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(640, 500)
+script = ExtResource("7_hotspot")
+hotspot_id = "relic.wetberry"
+display_name = "Wetberry on Central Table"
+scene_id = "scene.act1.first_sighting"
+approach_position = Vector2(640, 570)
+
+[node name="TableSprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
+position = Vector2(0, -30)
+texture = ExtResource("8_table")
+
+[node name="WetberrySprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
+position = Vector2(0, -52)
+texture = ExtResource("9_wetberry")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CentralTableHotspot"]
+position = Vector2(0, -20)
+shape = SubResource("CircleShape2D_table")
+
+[node name="Reticle" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
+visible = false
+position = Vector2(0, -110)
+texture = ExtResource("12_reticle")
+
+[node name="CoffeeCounterHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(400, 390)
+script = ExtResource("7_hotspot")
+hotspot_id = "location.breakroom.coffee_counter"
+display_name = "Coffee Counter & Microwave"
+scene_id = "scene.act1.coffee_counter"
+approach_position = Vector2(400, 445)
+
+[node name="AppliancesSprite" type="Sprite2D" parent="YSortContainer/CoffeeCounterHotspot"]
+position = Vector2(0, -35)
+texture = ExtResource("10_appliances")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CoffeeCounterHotspot"]
+position = Vector2(0, -20)
+shape = SubResource("RectangleShape2D_counter")
+
+[node name="Reticle" type="Sprite2D" parent="YSortContainer/CoffeeCounterHotspot"]
+visible = false
+position = Vector2(0, -85)
+texture = ExtResource("12_reticle")
+
+[node name="UtilityCornerHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(1040, 530)
+script = ExtResource("7_hotspot")
+hotspot_id = "location.breakroom.utility_corner"
+display_name = "Utility Corner & Mop Bucket"
+scene_id = "scene.act1.keith_corner"
+approach_position = Vector2(980, 540)
+
+[node name="MopSprite" type="Sprite2D" parent="YSortContainer/UtilityCornerHotspot"]
+position = Vector2(0, -30)
+texture = ExtResource("11_mop")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/UtilityCornerHotspot"]
+position = Vector2(0, -15)
+shape = SubResource("CircleShape2D_utility")
+
+[node name="Reticle" type="Sprite2D" parent="YSortContainer/UtilityCornerHotspot"]
+visible = false
+position = Vector2(0, -80)
+texture = ExtResource("12_reticle")
+
+[node name="ExitHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(1180, 440)
+script = ExtResource("7_hotspot")
+hotspot_id = "exit.breakroom.hallway"
+display_name = "Exit to Forgotten Hallway"
+is_exit = true
+approach_position = Vector2(1120, 450)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/ExitHotspot"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="Reticle" type="Sprite2D" parent="YSortContainer/ExitHotspot"]
+visible = false
+position = Vector2(0, -70)
+texture = ExtResource("12_reticle")
+
+[node name="Darla" parent="YSortContainer" instance=ExtResource("5_darla")]
+position = Vector2(490, 410)
+
+[node name="Keith" parent="YSortContainer" instance=ExtResource("4_keith")]
+position = Vector2(960, 520)
+
+[node name="Tammy" parent="YSortContainer" instance=ExtResource("6_tammy")]
+position = Vector2(820, 470)
+
+[node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
+position = Vector2(640, 590)
+
+[node name="DebugDraw" type="Node2D" parent="."]
+visible = false

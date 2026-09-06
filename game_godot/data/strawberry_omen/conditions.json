@@ -1,0 +1,32 @@
+[
+  {
+    "id": "condition.socially_stunned",
+    "name": "Socially Stunned",
+    "duration": "1 round",
+    "description": "The character can only point, stare, laugh nervously, or say, 'Bro, why is that here?'"
+  },
+  {
+    "id": "condition.recently_associated",
+    "name": "Recently Associated With This",
+    "duration": "24 hours",
+    "description": "The character has disadvantage on attempts to plausibly deny involvement. Brutal. Accurate."
+  },
+  {
+    "id": "condition.under_scrutiny",
+    "name": "Under Scrutiny",
+    "duration": "variable",
+    "description": "The Department is paying unusually close attention to subsequent behavior."
+  },
+  {
+    "id": "condition.frost_numb",
+    "name": "Frost-Numb Fingers",
+    "duration": "1 turn",
+    "description": "Fine motor confidence has been temporarily replaced by refrigerator regret."
+  },
+  {
+    "id": "condition.procedural_static",
+    "name": "Procedural Static",
+    "duration": "2 turns",
+    "description": "Your internal policy manual is temporarily receiving the wrong department."
+  }
+]

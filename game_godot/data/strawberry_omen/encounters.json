@@ -1,0 +1,1221 @@
+[
+  {
+    "id": "scene.act1.first_sighting",
+    "title": "Roll for Eye Contact",
+    "act": 1,
+    "location": "location.breakroom.central_table",
+    "type": "social_hazard",
+    "read_aloud": "The relic stands upright. The label faces the room. Nobody speaks.",
+    "on_enter_flags": {
+      "wetberry_seen": true
+    },
+    "checks": [
+      {
+        "ability": "wisdom",
+        "dc": 13,
+        "success": "You maintain composure. Barely. The fluorescent lights respect the effort.",
+        "failure": "You become Socially Stunned until the end of your next turn."
+      }
+    ],
+    "choices": [
+      {
+        "id": "ignore_it",
+        "label": "Ignore it completely",
+        "result": "You look anywhere else with religious discipline. Professional composure increases.",
+        "sets_flags": {
+          "professional_composure": true,
+          "wetberry_ignored": true
+        },
+        "stat_delta": {
+          "bureaucracy": 1
+        }
+      },
+      {
+        "id": "inspect_label",
+        "label": "Inspect the label",
+        "result": "You learn exactly what it is. The knowledge lands like a tiny psychic brick.",
+        "sets_flags": {
+          "knows_exactly_what_it_is": true
+        },
+        "stat_delta": {
+          "awkwardness": 2,
+          "moisture_pressure": 1
+        },
+        "next_scene": "scene.act1.first_memo"
+      },
+      {
+        "id": "touch_wetberry",
+        "label": "Touch Wetberry anyway",
+        "result": "The carton is damp, warm, and immediately part of your permanent professional record.",
+        "sets_flags": {
+          "wetberry_touched": true
+        },
+        "stat_delta": {
+          "awkwardness": 1,
+          "moisture_pressure": 2
+        }
+      },
+      {
+        "id": "call_hr",
+        "label": "Call HR",
+        "result": "Tammy from HR appears with a clipboard and the expression of someone who already hates the paperwork.",
+        "sets_flags": {
+          "tammy_alerted": true,
+          "wetberry_reported": true
+        },
+        "spawns_npc": "npc.tammy_hr",
+        "stat_delta": {
+          "bureaucracy": 2
+        }
+      },
+      {
+        "id": "ask_darla",
+        "label": "Ask Darla what happened",
+        "result": "Darla waves you toward the coffee counter without taking her eyes off the microwave.",
+        "next_scene": "scene.act1.coffee_counter"
+      },
+      {
+        "id": "find_keith",
+        "label": "Find someone with gloves",
+        "result": "Keith is already in the utility corner, holding a bag and refusing eye contact.",
+        "next_scene": "scene.act1.keith_corner"
+      },
+      {
+        "id": "thumbs_up",
+        "label": "Give it a thumbs-up",
+        "result": "The relic accepts your gesture. This is not consent. This is lore damage.",
+        "sets_flags": {
+          "thumbs_up_documented": true
+        },
+        "stat_delta": {
+          "ape_chaos": 2,
+          "awkwardness": 1
+        }
+      },
+      {
+        "id": "inspect_stain",
+        "label": "Inspect the suspicious table stain",
+        "result": "You examine the moisture. It has a high viscosity and smells faintly of synthetic strawberry. Clue: Wetberry produces moisture as a defense mechanism.",
+        "sets_flags": {
+          "stain_chemistry_noted": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act1.coffee_counter",
+    "title": "Coffee of Honest Boundaries",
+    "act": 1,
+    "location": "location.breakroom.coffee_counter",
+    "type": "npc_scene",
+    "read_aloud": "The coffee maker clicks on by itself. Darla watches the microwave like it owes her money.",
+    "choices": [
+      {
+        "id": "ask_darla_about_wetberry",
+        "label": "Ask Darla about Wetberry",
+        "result": "Darla says it arrived during the soup beep. She points to the fridge and tells you the back shelf knows more.",
+        "sets_flags": {
+          "darla_hint_fridge": true,
+          "fridge_unlocked": true
+        }
+      },
+      {
+        "id": "drink_coffee",
+        "label": "Drink the coffee",
+        "result": "The coffee tastes like initiative. You feel faster and less patient.",
+        "stat_delta": {
+          "ape_chaos": 1
+        }
+      },
+      {
+        "id": "talk_kevin",
+        "label": "Talk to Kevin from Marketing",
+        "result": "Kevin whispers, 'We need to spin this. We can call it a hydration-reliquary. That sounds synergistic, right?'",
+        "sets_flags": {
+          "kevin_spoken": true
+        }
+      },
+      {
+        "id": "inspect_prophecy",
+        "label": "Read the coffee maker warning label",
+        "result": "The warning label has been overwritten in black marker: 'THE WATER INLET IS CONNECTED TO THE DEEPER CHANNELS. DO NOT INGEST AFTER BEEP.'",
+        "sets_flags": {
+          "prophecy_read": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act1.keith_corner",
+    "title": "Containment Without Bare Hands",
+    "act": 1,
+    "location": "location.breakroom.utility_corner",
+    "type": "npc_scene",
+    "read_aloud": "Keith the Janitor stands beside a mop bucket. He has seen enough to skip surprise.",
+    "choices": [
+      {
+        "id": "ask_for_evidence_bag",
+        "label": "Ask Keith for an evidence bag",
+        "result": "Keith nods once and hands you the Evidence Bag of Not My Business.",
+        "grants_items": [
+          "item.evidence_bag_not_my_business"
+        ],
+        "sets_flags": {
+          "keith_trust": 1
+        }
+      },
+      {
+        "id": "touch_the_mop",
+        "label": "Touch the mop",
+        "result": "Keith says, 'With your hand?' The room takes 1d4 psychic damage on your behalf.",
+        "stat_delta": {
+          "awkwardness": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act1.first_memo",
+    "title": "The First Memo",
+    "act": 1,
+    "location": "location.breakroom.central_table",
+    "type": "boss_social_encounter",
+    "read_aloud": "A corporate memo slides under the door, floats upward, and denies that anything happened.",
+    "choices": [
+      {
+        "id": "file_boundary_statement",
+        "label": "State: Some things should not be communal",
+        "result": "The memo folds itself into a smaller, more embarrassed memo. The First Stain clue is recovered.",
+        "sets_flags": {
+          "first_stain_recovered": true,
+          "fridge_unlocked": true
+        },
+        "stat_delta": {
+          "bureaucracy": 1
+        }
+      },
+      {
+        "id": "ape_scream_at_memo",
+        "label": "Ape scream at the memo",
+        "result": "The memo ricochets into the recycling bin. It will be back, but not today.",
+        "sets_flags": {
+          "first_stain_recovered": true,
+          "fridge_unlocked": true
+        },
+        "stat_delta": {
+          "ape_chaos": 2
+        }
+      },
+      {
+        "id": "enter_fridge",
+        "label": "Enter the Fridge of Forgotten Things",
+        "result": "You step into the Fridge of Forgotten Things, a place of strange preserved moments. The air hums with ancient memory.",
+        "next_scene": "scene.act2.fridge_intro",
+        "sets_flags": {
+          "entered_fridge": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.fridge_intro",
+    "title": "The First Glimpse",
+    "act": 2,
+    "location": "location.breakroom.fridge.door_shelf",
+    "type": "npc_scene",
+    "read_aloud": "The fridge door opens slightly on its own. Inside you see shelves of preserved memories, some still warm with dread.",
+    "on_enter_flags": {
+      "entered_fridge": true
+    },
+    "choices": [
+      {
+        "id": "meet_moldric",
+        "label": "Step closer to the back shelf",
+        "result": "A voice emanates from behind the shelf. Moldric appears, a figure in a suit made of old mustard jars. He whispers, 'You seek what belongs to me.'",
+        "sets_flags": {
+          "met_moldric": true
+        },
+        "next_scene": "scene.act2.back_corner_boss"
+      },
+      {
+        "id": "examine_leftovers",
+        "label": "Examine the leftover marshes",
+        "result": "You notice jars labeled with last week's lunches. Something is moving among them.",
+        "sets_flags": {
+          "lunch_thief_confronted": true
+        },
+        "next_scene": "scene.act2.leftover_marshes"
+      },
+      {
+        "id": "ignore_fridge",
+        "label": "Ignore the fridge and return to the breakroom",
+        "result": "The fridge door closes with a sigh. You feel like you missed something important.",
+        "next_scene": "scene.act1.first_memo"
+      },
+      {
+        "id": "peer_into_frost",
+        "label": "Peer into the frost on the door shelf",
+        "result": "The frost patterns shift, revealing fleeting images of lunches past. You catch a glimpse of something deeper in the fridge's memory.",
+        "next_scene": "scene.act2.fridge_visions"
+      },
+      {
+        "id": "inspect_frost",
+        "label": "Examine the door seal frost",
+        "result": "The frost patterns resemble ancient procedural flowcharts. It whispers: 'Every department must submit form 9-A before freezing.'",
+        "sets_flags": {
+          "frost_flowcharts_decoded": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.fridge_visions",
+    "title": "Fridge Visions",
+    "act": 2,
+    "location": "location.breakroom.fridge.door_shelf",
+    "type": "social_encounter",
+    "read_aloud": "The frost on the door shelf clears like a curtain, and you see them: visions of every lunch ever placed in this fridge. A turkey sandwich from 2004 dissolving into regret. A container of soup that was brought with hope and left with resentment. A labeled Tupperware that read 'DO NOT TOUCH - Karen' and was touched anyway. The fridge whispers: 'I remember all of them. Every single one.'",
+    "on_enter_flags": {
+      "act2_fridge_visions_seen": true
+    },
+    "choices": [
+      {
+        "id": "return_to_door_shelf",
+        "label": "Step back to the door shelf",
+        "result": "The visions fade. The frost settles. You return to the door shelf with a deeper understanding of what the fridge protects.",
+        "next_scene": "scene.act2.fridge_intro"
+      },
+      {
+        "id": "approach_moldric_from_visions",
+        "label": "Follow the visions deeper to find Moldric",
+        "result": "The visions part like a path, leading you toward the back shelf. Moldric waits there, his mustard-jar suit glowing faintly. 'You have seen the memories,' he says. 'Now you understand why I guard them.'",
+        "sets_flags": {
+          "met_moldric": true
+        },
+        "next_scene": "scene.act2.back_corner_boss"
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.back_corner_boss",
+    "title": "Duke of the Back Shelf",
+    "act": 2,
+    "location": "location.breakroom.fridge.back_corner",
+    "type": "boss_social_encounter",
+    "read_aloud": "Moldric stands solemn, his mustard jars humming with ancient power. He holds something precious.",
+    "choices": [
+      {
+        "id": "help_moldric_reclaim",
+        "label": "Help Moldric reclaim stolen leftovers",
+        "result": "You join forces with Moldric. Together you track down the Lunch Thief Goblins and recover the stolen ancient foods. Moldric rewards you with Ancient Mayonnaise.",
+        "grants_items": [
+          "relic.ancient_mayonnaise"
+        ],
+        "sets_flags": {
+          "met_moldric": true,
+          "lunch_thief_confronted": true,
+          "ancient_mayonnaise_obtained": true,
+          "act2_complete": true
+        },
+        "next_scene": "scene.act2.completion_celebration"
+      },
+      {
+        "id": "defeat_goblins_mighty",
+        "label": "Confront the Lunch Thief Goblins directly",
+        "result": "You charge the goblins! They scatter, dropping a single jar of Ancient Mayonnaise before fleeing.",
+        "grants_items": [
+          "relic.ancient_mayonnaise"
+        ],
+        "sets_flags": {
+          "met_moldric": true,
+          "lunch_thief_confronted": true,
+          "ancient_mayonnaise_obtained": true,
+          "act2_complete": true
+        },
+        "next_scene": "scene.act2.completion_celebration"
+      },
+      {
+        "id": "walk_away_moldric",
+        "label": "Leave Moldric to his sorrow",
+        "result": "You walk away, but Moldric calls after you: 'Wait! You left my mayonnaise! I need it for the ritual!'",
+        "sets_flags": {
+          "met_moldric": true,
+          "lunch_thief_confronted": true
+        },
+        "next_scene": "scene.act2.moldrics_regret"
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.leftover_marshes",
+    "title": "The Lunch Thief Goblins",
+    "act": 2,
+    "location": "location.breakroom.fridge.leftover_marshes",
+    "type": "combat_encounter",
+    "read_aloud": "Three Lunch Thief Goblins scramble and hide among the food cans. Their bellies are as round as the leftovers they're protecting.",
+    "choices": [
+      {
+        "id": "confront_goblins_peacefully",
+        "label": "Confront the goblins peacefully",
+        "result": "You raise your hands. The goblins hesitate, then offer you a single jar of Ancient Mayonnaise as a peace offering.",
+        "grants_items": [
+          "relic.ancient_mayonnaise"
+        ],
+        "sets_flags": {
+          "lunch_thief_confronted": true,
+          "ancient_mayonnaise_obtained": true,
+          "act2_complete": true
+        },
+        "next_scene": "scene.act2.completion_celebration"
+      },
+      {
+        "id": "use_evidence_bag",
+        "label": "Use the Evidence Bag of Not My Business",
+        "result": "You seal the goblins in the evidence bag. They hiss and surrender, dropping Ancient Mayonnaise before disappearing.",
+        "grants_items": [
+          "relic.ancient_mayonnaise"
+        ],
+        "sets_flags": {
+          "lunch_thief_confronted": true,
+          "ancient_mayonnaise_obtained": true,
+          "act2_complete": true
+        },
+        "next_scene": "scene.act2.completion_celebration"
+      },
+      {
+        "id": "yogurt_catacombs_check",
+        "label": "Check the Yogurt Catacombs instead",
+        "result": "The goblins scurry away, mocking you. 'We protect the yogurt too!' they squeak.",
+        "next_scene": "scene.act2.yogurt_catacombs"
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.yogurt_catacombs",
+    "title": "Expired Yogurt Cultist",
+    "act": 2,
+    "location": "location.breakroom.fridge.yogurt_catacombs",
+    "type": "social_encounter",
+    "read_aloud": "A figure emerges from the yogurt towers. It wears a crown of yogurt caps and speaks in squeaky tones. 'We are the expired ones! Return our yogurt!'",
+    "choices": [
+      {
+        "id": "defeat_yogurt_cultist",
+        "label": "Defeat the Yogurt Cultist",
+        "result": "You emerge victorious! The cultist collapses, dropping a single yogurt-cap crown and a jar of Ancient Mayonnaise.",
+        "grants_items": [
+          "relic.ancient_mayonnaise"
+        ],
+        "sets_flags": {
+          "lunch_thief_confronted": true,
+          "ancient_mayonnaise_obtained": true,
+          "act2_complete": true
+        },
+        "next_scene": "scene.act2.completion_celebration"
+      },
+      {
+        "id": "give_yogurt_caps",
+        "label": "Offer the Yogurt Cultist more yogurt caps",
+        "result": "The cultist accepts your offering and retreats, guarding the remaining Ancient Mayonnaise.",
+        "sets_flags": {
+          "lunch_thief_confronted": true
+        },
+        "next_scene": "scene.act2.moldrics_regret"
+      },
+      {
+        "id": "inspect_spoilage",
+        "label": "Read the yogurt expiration dates",
+        "result": "The yogurt expired in 1997. The label reads: 'Active cultures include regret and denial. Serve cold.'",
+        "sets_flags": {
+          "yogurt_lore_read": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.completion_celebration",
+    "title": "The Reward",
+    "act": 2,
+    "location": "location.breakroom.fridge.door_shelf",
+    "type": "npc_scene",
+    "read_aloud": "You hold the Ancient Mayonnaise. It glows faintly as if remembering things your mind cannot comprehend. Your journey through the Breakroom is complete.",
+    "choices": [
+      {
+        "id": "complete_act_ii",
+        "label": "Complete Act II",
+        "result": "Act II complete! You've obtained Ancient Mayonnaise and proven yourself worthy of the Breakroom's mysteries. The path forward is now open for Act III.",
+        "sets_flags": {
+          "act2_complete": true
+        }
+      },
+      {
+        "id": "proceed_to_act3",
+        "label": "Venture into the Forgotten Hallway",
+        "result": "A hallway you've never noticed before stretches behind the fridge. The lights flicker in a pattern that almost spells 'INSERT MEMORY.' Something ancient waits at the end.",
+        "next_scene": "scene.act3.hallway_discovery",
+        "sets_flags": {
+          "act2_complete": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act2.moldrics_regret",
+    "title": "Moldric's Regret",
+    "act": 2,
+    "location": "location.breakroom.fridge.back_corner",
+    "type": "npc_scene",
+    "read_aloud": "Moldric stands alone, looking sorrowful. 'You left my mayonnaise... I need it for the ritual. But maybe you were right to leave.'",
+    "choices": [
+      {
+        "id": "help_moldric_after_all",
+        "label": "Go back and help Moldric after all",
+        "result": "You return and Moldric thanks you. 'Thank you for coming back! You can have my mayonnaise now.'",
+        "grants_items": [
+          "relic.ancient_mayonnaise"
+        ],
+        "sets_flags": {
+          "lunch_thief_confronted": true,
+          "ancient_mayonnaise_obtained": true,
+          "act2_complete": true
+        },
+        "next_scene": "scene.act2.completion_celebration"
+      }
+    ]
+  },
+  {
+    "id": "scene.act3.hallway_discovery",
+    "title": "The Forgotten Hallway",
+    "act": 3,
+    "location": "location.breakroom.hallway",
+    "type": "social_encounter",
+    "read_aloud": "A hallway stretches before you, its walls lined with faded motivational posters that have given up. The fluorescent lights hum a tune that sounds suspiciously like hold music. At the far end, a vending machine glows with an otherworldly light. Its display reads: 'INSERT MEMORY. RECEIVE TRUTH.'",
+    "on_enter_flags": {
+      "act3_started": true
+    },
+    "choices": [
+      {
+        "id": "approach_vending_machine",
+        "label": "Approach the vending machine",
+        "result": "You step closer. The vending machine's coils begin to spin on their own, dispensing nothing but cold judgment. A voice crackles from the speaker: 'Finally. Someone brave enough to face the truth about their snack choices.'",
+        "sets_flags": {},
+        "next_scene": "scene.act3.vendrick_negotiation"
+      },
+      {
+        "id": "examine_snack_wraiths",
+        "label": "Investigate the floating snack wrappers",
+        "result": "Phantom snacks drift past your face. A phantom granola bar whispers, 'We were once real. We once had expiration dates. Now we are eternal.' The Snack Wraiths have noticed you.",
+        "next_scene": "scene.act3.snack_wraith_interruption"
+      },
+      {
+        "id": "retreat_to_fridge",
+        "label": "Retreat to the Fridge",
+        "result": "You back away slowly. The hallway sighs with disappointment. The fridge door welcomes you back like an old friend.",
+        "next_scene": "scene.act2.completion_celebration"
+      },
+      {
+        "id": "talk_mildred",
+        "label": "Talk to Clerk Mildred",
+        "result": "Mildred peers over her bifocals: 'The Employee Portal? Ah, yes. File cabinet 14-B. But you need clearance code 77-C from HR.'",
+        "sets_flags": {
+          "mildred_consulted": true
+        }
+      },
+      {
+        "id": "inspect_poster",
+        "label": "Read the motivational poster",
+        "result": "A faded poster of a kitten hanging from a branch reads: 'HANG IN THERE. WE ARE LOOKING FOR SYNERGY IN COLD STORAGE.'",
+        "sets_flags": {
+          "poster_inspected": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act3.vendrick_negotiation",
+    "title": "Vendrick's Domain",
+    "act": 3,
+    "location": "location.breakroom.vending_machine",
+    "type": "boss_social_encounter",
+    "read_aloud": "Vendrick the Vending Machine looms before you. His glass front displays rows of snacks that have never existed in any real vending machine: 'Existential Crisps,' 'Bag of Unresolved Feelings,' 'Diet Denial.' His coils hum with ancient power. 'I am Vendrick,' he intones. 'I consume memories and dispense accountability. Name your price.'",
+    "on_enter_flags": {
+      "met_vendrick": true
+    },
+    "choices": [
+      {
+        "id": "name_your_price",
+        "label": "'What is your price?'",
+        "result": "Vendrick's display flickers. 'My price is simple: accountability. Not coins. Not memories. Not excuses. True, genuine accountability for what you've done in this breakroom. Bring me proof of accountability, and I shall grant you the Accountability Token.' His coils spin ominously. 'But first, you must survive the Snack Wraiths.'",
+        "sets_flags": {
+          "vendrick_price_named": true
+        },
+        "next_scene": "scene.act3.snack_wraith_interruption"
+      },
+      {
+        "id": "offer_mayonnaise",
+        "label": "Offer the Ancient Mayonnaise",
+        "result": "Vendrick's display flashes red. 'ANCIENT MAYONNAISE? Do I LOOK like a refrigerator to you? I am a VENDING MACHINE. I have STANDARDS.' He dispenses a single, very judgmental pretzel at your feet. 'Take your condiment-based solutions elsewhere.' The pretzel tastes like failure.",
+        "stat_delta": {
+          "awkwardness": 3
+        },
+        "sets_flags": {
+          "vendrick_insulted": true
+        }
+      },
+      {
+        "id": "flee_from_vendrick",
+        "label": "Flee from Vendrick",
+        "result": "You retreat down the hallway. Vendrick calls after you: 'YOU CANNOT HIDE FROM ACCOUNTABILITY! IT FINDS YOU IN THE BREAKROOM! IT FINDS YOU IN THE MEETING ROOM! THERE IS NO ESCAPE!'",
+        "next_scene": "scene.act3.hallway_discovery"
+      },
+      {
+        "id": "inspect_coils",
+        "label": "Peer into Vendrick's vending coils",
+        "result": "Inside are bags of 'Existential Crisps' and 'Diet Denial'. The ingredients list only 'High-fructose social awkwardness'.",
+        "sets_flags": {
+          "vending_coils_inspected": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act3.snack_wraith_interruption",
+    "title": "Snack Wraith Aisle",
+    "act": 3,
+    "location": "location.breakroom.snack_wraith_aisle",
+    "type": "social_encounter",
+    "read_aloud": "The Snack Wraiths materialize around you. They are translucent sandwiches, phantom chips, and ghostly granola bars. Their wrappers crinkle with the echoes of a thousand abandoned lunch breaks. One floats forward, its phantom form flickering. 'We were forgotten,' it whispers. 'Left in desks. Left in cars. Left in the breakroom fridge for MONTHS. We demand... ACCOUNTABILITY.'",
+    "choices": [
+      {
+        "id": "confront_snack_wraiths_peacefully",
+        "label": "Apologize to the Snack Wraiths",
+        "result": "You bow your head. 'I'm sorry you were forgotten. You deserved better than to be left in a desk drawer for three months.' The Snack Wraiths pause. Their phantom forms shimmer. One by one, they begin to glow with a warm, forgiving light. 'Thank you,' they whisper. 'That is all we ever wanted.' They dissipate, leaving behind a single Accountability Token.",
+        "grants_items": [
+          "item.accountability_token"
+        ],
+        "sets_flags": {
+          "snack_wraiths_resolved": true,
+          "accountability_token_obtained": true
+        },
+        "next_scene": "scene.act3.accountability_completion"
+      },
+      {
+        "id": "bribe_with_memories",
+        "label": "Share your most embarrassing lunch memory",
+        "result": "You tell them about the time you microwaved fish in the breakroom and the entire floor filed a formal complaint. The Snack Wraiths listen, then burst into phantom laughter. 'THAT was you? We heard about that! Even the phantom tuna sandwich was offended!' They dissolve into giggles, leaving behind an Accountability Token as a thank-you for the story.",
+        "grants_items": [
+          "item.accountability_token"
+        ],
+        "sets_flags": {
+          "snack_wraiths_resolved": true,
+          "accountability_token_obtained": true
+        },
+        "stat_delta": {
+          "awkwardness": 2
+        }
+      },
+      {
+        "id": "use_accountability_token",
+        "label": "Present the Accountability Token (if obtained)",
+        "result": "You hold up the Accountability Token. The Snack Wraiths freeze. 'Is that... genuine accountability?' they gasp. 'We haven't seen THAT since the Great Lunch Incident of 2019!' They bow respectfully and fade away, their phantom forms finally at peace.",
+        "sets_flags": {
+          "snack_wraiths_resolved": true
+        },
+        "requires_flags": {
+          "accountability_token_obtained": true
+        },
+        "next_scene": "scene.act3.accountability_completion"
+      },
+      {
+        "id": "flee_from_wraiths",
+        "label": "Run back to Vendrick",
+        "result": "You sprint back toward the vending machine. The Snack Wraiths pursue, their wrappers crinkling with righteous fury. 'YOU CANNOT ESCAPE THE CONSEQUENCES OF FORGOTTEN LUNCHES!'",
+        "next_scene": "scene.act3.vendrick_negotiation"
+      }
+    ]
+  },
+  {
+    "id": "scene.act3.accountability_completion",
+    "title": "The Accountability Slot",
+    "act": 3,
+    "location": "location.breakroom.accountability_slot",
+    "type": "completion_encounter",
+    "read_aloud": "You stand before the Accountability Slot. It glows with a warm, honest light. Vendrick's voice echoes from somewhere: 'You have faced the Snack Wraiths. You have proven yourself worthy. Deposit your accountability, and receive the Token of Genuine Regret.' The slot pulses, waiting.",
+    "on_enter_flags": {
+      "accountability_token_obtained": true,
+      "act3_complete": true
+    },
+    "choices": [
+      {
+        "id": "deposit_accountability",
+        "label": "Deposit your accountability",
+        "result": "You place your hand on the slot. A warmth spreads through you as you acknowledge every awkward moment, every forgotten lunch, every passive-aggressive note you've ever written or received. The slot glows brighter, then dims. Vendrick speaks: 'Accountability accepted. You are now Accountable. This is both a gift and a burden. Welcome to the end of the breakroom.'",
+        "sets_flags": {
+          "act3_complete": true
+        }
+      },
+      {
+        "id": "proceed_to_act4",
+        "label": "Step through the back panel of the vending machine",
+        "result": "The vending machine's back panel slides open with a hiss of cold air. Behind it is a passage you've never seen before, leading deeper into a fridge-space that should not exist. The air tastes of forgotten meal prep and ancient condiment regret. Moldric's voice echoes from within: 'You have proven yourself worthy. Come. There are older things here that need acknowledgment.'",
+        "next_scene": "scene.act4.labyrinth_entry",
+        "sets_flags": {
+          "act3_complete": true
+        }
+      },
+      {
+        "id": "refuse_accountability",
+        "label": "Refuse to deposit accountability",
+        "result": "You step back. Vendrick sighs. 'I see. You are not ready. Perhaps someday you will be. The hallway will always be here. So will the Snack Wraiths. So will I.' The vending machine's display returns to its default message: 'INSERT MEMORY. RECEIVE TRUTH. WHEN READY.'",
+        "sets_flags": {
+          "act3_complete": false
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.labyrinth_entry",
+    "title": "The Fridge Labyrinth Entrance",
+    "act": 4,
+    "location": "location.fridge_labyrinth.entry",
+    "type": "npc_scene",
+    "read_aloud": "You step through the back panel into a cold, crystalline corridor. Frost patterns trace the walls in shapes that resemble Tupperware lids and forgotten lunch labels. The air hums with the preserved memories of a thousand abandoned meals. Moldric stands at the threshold, his mustard-jar suit glowing faintly in the blue light. 'Welcome to the Fridge Labyrinth,' he says. 'Every container here was opened with hope and closed with regret. I will guide you, but the path ahead is yours to choose.'",
+    "on_enter_flags": {
+      "act4_started": true
+    },
+    "choices": [
+      {
+        "id": "accept_moldric_guide",
+        "label": "Accept Moldric as your guide",
+        "result": "Moldric nods solemnly. 'Then we walk together. The Condiment Gate lies ahead. Beyond it, the Leftover Catacombs. And at the deepest point... the Casserole Throne.' His voice drops to a whisper. 'The one who sits there has been waiting since 2007.'",
+        "sets_flags": {
+          "moldric_guiding": true
+        },
+        "next_scene": "scene.act4.condiment_gate"
+      },
+      {
+        "id": "refuse_moldric_guide",
+        "label": "Enter the labyrinth alone",
+        "result": "Moldric's shoulders sag. 'As you wish. But the Condiment Guardian will not open the gate without a showing of respect. Remember that when you stand before the crystallized ketchup.' He steps aside, and the cold air of the labyrinth welcomes you alone.",
+        "sets_flags": {
+          "moldric_guiding": false,
+          "act4_started": true
+        },
+        "next_scene": "scene.act4.condiment_gate"
+      },
+      {
+        "id": "talk_glen",
+        "label": "Talk to Glen from Facilities",
+        "result": "Glen says, 'Plumbing is completely shot here. The moist undercorporate is backflowing into Act IV. Just watch out for the casserole, it's highly acidic.'",
+        "sets_flags": {
+          "glen_spoken": true
+        }
+      },
+      {
+        "id": "inspect_mold",
+        "label": "Examine the wall mold growth",
+        "result": "The mold forms a message: 'WE WERE COMMUNAL ONCE.' It smells like three-day-old pizza.",
+        "sets_flags": {
+          "mold_message_read": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.condiment_gate",
+    "title": "The Condiment Gate",
+    "act": 4,
+    "location": "location.fridge_labyrinth.condiment_gate",
+    "type": "social_encounter",
+    "read_aloud": "A towering gate of crystallized ketchup and ancient mustard blocks the corridor. The Condiment Guardian stands before it, a figure made of layered relish and ancient pepper. It speaks in measured tablespoons: 'Only those who respect the forgotten flavors may pass. Show me the Sigil of the Condiments, or prove your worth through acknowledgment.'",
+    "on_enter_flags": {
+      "moldric_guiding": true
+    },
+    "choices": [
+      {
+        "id": "acknowledge_condiments",
+        "label": "'I acknowledge that every condiment deserves to be used completely'",
+        "result": "The Condiment Guardian pauses. Its relish layers shimmer. 'That... is the first time anyone has said that.' It reaches into its own chest and withdraws a crystallized Sigil. 'Take this. It will open the gate and light your path through the Catacombs.' The gate dissolves into a shower of ketchup crystals.",
+        "grants_items": [
+          "item.condiment_sigil"
+        ],
+        "sets_flags": {
+          "condiment_gate_opened": true,
+          "condiment_respect_shown": true
+        },
+        "next_scene": "scene.act4.leftover_catacombs"
+      },
+      {
+        "id": "bypass_condiment_gate_bureaucracy",
+        "label": "File a Condiment Gate Entry Request (Form CG-7)",
+        "result": "You pull out a crumpled form from nowhere and begin filling it out in triplicate. The Condiment Guardian watches, confused. 'What... what are you doing?' 'Filing the proper paperwork,' you reply. The Guardian has never seen paperwork before. It lets you pass out of sheer bewilderment. Moldric, if present, mutters, 'I have never seen that work before.'",
+        "stat_delta": {
+          "bureaucracy": 2
+        },
+        "sets_flags": {
+          "condiment_gate_opened": true,
+          "condiment_bureaucracy_used": true
+        },
+        "next_scene": "scene.act4.leftover_catacombs"
+      },
+      {
+        "id": "ape_through_condiment_gate",
+        "label": "Scream and charge through the gate",
+        "result": "You let out a primal scream and barrel toward the gate. The Condiment Guardian dives aside. The crystallized ketchup shatters on impact. You stumble through, covered in ancient condiment residue. 'THAT WAS NOT ACKNOWLEDGMENT!' the Guardian bellows behind you. Moldric sighs deeply.",
+        "stat_delta": {
+          "ape_chaos": 2
+        },
+        "sets_flags": {
+          "condiment_gate_opened": true,
+          "condiment_guardian_insulted": true
+        },
+        "next_scene": "scene.act4.leftover_catacombs"
+      },
+      {
+        "id": "inspect_mustard_blocks",
+        "label": "Inspect the mustard blocks",
+        "result": "The blocks are crystallized yellow mustard. A plaque reads: 'Honored be the opened, for they have known the light, if only once.'",
+        "sets_flags": {
+          "mustard_plaque_read": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.leftover_catacombs",
+    "title": "The Leftover Catacombs",
+    "act": 4,
+    "location": "location.fridge_labyrinth.leftover_catacombs",
+    "type": "social_encounter",
+    "read_aloud": "The Catacombs stretch in every direction, tunnels of forgotten Tupperware stacked floor to ceiling. Each container whispers the name of the person who abandoned it. 'Jennifer... Jennifer... you said you'd eat me tomorrow...' The whispers are not angry. They are disappointed. That is worse.",
+    "choices": [
+      {
+        "id": "acknowledge_leftovers",
+        "label": "'I hear you. You mattered. I am sorry you were forgotten.'",
+        "result": "The whispers soften. The Tupperware containers glow faintly, as if acknowledging your acknowledgment. A path opens through the center of the Catacombs, lined with containers that have finally found peace. You walk through as the whispers become gentle hums.",
+        "sets_flags": {
+          "leftover_catacombs_crossed": true,
+          "leftovers_acknowledged": true
+        },
+        "next_scene": "scene.act4.freezer_shrine"
+      },
+      {
+        "id": "read_leftover_labels",
+        "label": "Read the labels on the containers",
+        "result": "You pick up container after container. 'Karen's Chili - DO NOT TOUCH.' 'Steve's Mystery Meat - Last Seen: 2019.' 'Alex's Lunch - Will Eat Tomorrow (Forever).' Each label is a small tragedy. The path through the Catacombs reveals itself as you bear witness to every forgotten meal.",
+        "sets_flags": {
+          "leftover_catacombs_crossed": true,
+          "leftovers_witnessed": true
+        },
+        "stat_delta": {
+          "bureaucracy": 1
+        },
+        "next_scene": "scene.act4.freezer_shrine"
+      },
+      {
+        "id": "ape_through_catacombs",
+        "label": "Run through screaming 'I WILL NEVER FORGET YOU'",
+        "result": "You sprint through the Catacombs shouting your acknowledgment at maximum volume. The containers rattle in their stacks. Some fall. Some shatter. But every single one heard you. The path clears as you emerge on the other side, slightly bruised but acknowledged.",
+        "stat_delta": {
+          "ape_chaos": 1
+        },
+        "sets_flags": {
+          "leftover_catacombs_crossed": true,
+          "leftovers_loudly_acknowledged": true
+        },
+        "next_scene": "scene.act4.freezer_shrine"
+      },
+      {
+        "id": "talk_specter",
+        "label": "Confront the Potluck Specter",
+        "result": "The specter moans, 'My Tupperware... with the blue lid... it was left behind in 2012. I just want to go home.'",
+        "sets_flags": {
+          "specter_confronted": true
+        }
+      },
+      {
+        "id": "inspect_tupperware",
+        "label": "Read the forgotten labels",
+        "result": "One lid is marked 'Terry - Do Not Eat'. The label has merged with the plastic at a molecular level.",
+        "sets_flags": {
+          "tupperware_labels_read": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.freezer_shrine",
+    "title": "The Freezer Shrine",
+    "act": 4,
+    "location": "location.fridge_labyrinth.freezer_shrine",
+    "type": "npc_scene",
+    "read_aloud": "The temperature drops sharply as you enter a vast frozen chamber. Ice crystals hang in the air like suspended moments. In the center, a pedestal of frost holds a shimmering token: the Freezer Blessing. Ancient frozen meals line the walls, their foil lids still crimped with hope. One meal speaks: 'We have been here since the office freezer was installed in 2003. We are the original forgotten ones. Take the Blessing. Use it well. And for the love of all that is holy, label your lunches.'",
+    "on_enter_flags": {
+      "freezer_shrine_visited": true
+    },
+    "choices": [
+      {
+        "id": "take_freezer_blessing_with_respect",
+        "label": "Bow to the frozen meals and accept the Blessing",
+        "result": "You bow deeply to the ancient frozen meals. 'I honor your patience and your place in this freezer.' The Blessing floats from the pedestal into your hands. It is cold and warm at the same time, like remembering something you thought you'd lost. The frozen meals hum in approval.",
+        "grants_items": [
+          "item.freezer_blessing"
+        ],
+        "sets_flags": {
+          "freezer_blessing_obtained": true,
+          "frozen_meals_honored": true
+        },
+        "next_scene": "scene.act4.casserole_throne"
+      },
+      {
+        "id": "take_freezer_blessing_quickly",
+        "label": "Grab the Blessing and run",
+        "result": "You snatch the Blessing from the pedestal. The frozen meals rattle in their shelves. 'Rude,' one whispers. But the Blessing is yours, and the path to the Casserole Throne opens before you. You will need it.",
+        "grants_items": [
+          "item.freezer_blessing"
+        ],
+        "sets_flags": {
+          "freezer_blessing_obtained": true,
+          "frozen_meals_disrespected": true
+        },
+        "next_scene": "scene.act4.casserole_throne"
+      },
+      {
+        "id": "talk_executive",
+        "label": "Interview the Executive Witness",
+        "result": "He says, 'I am looking for vertical alignment with the freezer blessing. We can optimize this frostbite.'",
+        "sets_flags": {
+          "executive_witnessed": true
+        }
+      },
+      {
+        "id": "inspect_frost_meals",
+        "label": "Examine the foil dinner lids",
+        "result": "The foil is crimped with ancient hopes of quick dinners. The instructions say: 'Reheat in microwave for 3 minutes. Pray for vertical alignment.'",
+        "sets_flags": {
+          "frost_meals_inspected": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.casserole_throne",
+    "title": "The Sentient Casserole",
+    "act": 4,
+    "location": "location.fridge_labyrinth.casserole_throne",
+    "type": "boss_social_encounter",
+    "read_aloud": "The deepest chamber opens into a vast cavern of stacked takeout containers and forgotten potluck contributions. At the center, upon a throne of old Chinese food boxes and abandoned Tupperware, sits the Sentient Casserole. It is seven layers deep, each layer a year of resentment. Its noodle arms spread wide as you approach. 'You have come,' it rumbles, its voice thick with reheated grievances. 'Seven layers I am. Seven years I waited at the 2007 potluck. Nobody took a single scoop. Nobody even asked what was in me. I am casserole. I am forgotten. And I am DONE being patient.'",
+    "on_enter_flags": {
+      "sentient_casserole_met": true
+    },
+    "choices": [
+      {
+        "id": "compassion_path",
+        "label": "'I am sorry you were forgotten. You deserved to be acknowledged.'",
+        "result": "The Casserole trembles. Its noodle arms lower slightly. 'You... you mean that?' 'I do,' you say. 'Every dish at a potluck takes courage. You were made with care, brought with hope, and left without even a taste. That is not your fault. That is our failure.' A single layer of the Casserole softens. Then another. Then all seven. The resentment drains away like steam from a reheated container. 'Thank you,' it whispers. 'That is all I ever wanted.' It reaches into itself and withdraws a cracked piece of its original lid. 'Take this. Proof that even the most resentful leftovers can be acknowledged.'",
+        "grants_items": [
+          "item.casserole_lid_fragment"
+        ],
+        "sets_flags": {
+          "sentient_casserole_resolved": true,
+          "casserole_lid_fragment_obtained": true,
+          "casserole_resolved_compassion": true
+        },
+        "next_scene": "scene.act4.labyrinth_completion"
+      },
+      {
+        "id": "bureaucracy_path",
+        "label": "File a Leftover Custody Form (Form LC-2007-RE)",
+        "result": "You pull out a form and a pen. The Casserole stares. 'What... is that?' 'A Leftover Custody Form,' you explain. 'Section 1: Origin of dish. Section 2: Duration of neglect. Section 3: Desired resolution.' The Casserole has never been paperworked before. It watches you fill out each section with bureaucratic precision. When you reach Section 4: 'Acknowledgment of Dish Autonomy,' the Casserole begins to weep noodle tears. 'Nobody... nobody ever filed paperwork for me before.' The form dissolves into golden light. The Casserole's lid cracks open, and a fragment floats to you. 'Take it,' it says. 'You have resolved me through the power of proper procedure.'",
+        "grants_items": [
+          "item.casserole_lid_fragment"
+        ],
+        "sets_flags": {
+          "sentient_casserole_resolved": true,
+          "casserole_lid_fragment_obtained": true,
+          "casserole_resolved_bureaucracy": true
+        },
+        "stat_delta": {
+          "bureaucracy": 3
+        },
+        "next_scene": "scene.act4.labyrinth_completion"
+      },
+      {
+        "id": "ape_path",
+        "label": "Scream and pound the casserole lid",
+        "result": "You let out a primal yell and start banging on the Casserole's lid with your fists. The Casserole is stunned. 'WHAT ARE YOU DOING?!' 'ACKNOWLEDGING YOU!' you scream, still banging. 'THIS IS HOW I SHOW I CARE!' The Casserole has never been physically acknowledged before. It doesn't know how to process this. After a moment, it starts laughing. Actually laughing. 'You... you absolute disaster. Fine. FINE. You win. Nobody has ever just HIT my feelings before.' It cracks its own lid open and hands you a fragment. 'Take it. You are the weirdest person who has ever entered my labyrinth.'",
+        "grants_items": [
+          "item.casserole_lid_fragment"
+        ],
+        "sets_flags": {
+          "sentient_casserole_resolved": true,
+          "casserole_lid_fragment_obtained": true,
+          "casserole_resolved_ape": true
+        },
+        "stat_delta": {
+          "ape_chaos": 2
+        },
+        "next_scene": "scene.act4.labyrinth_completion"
+      },
+      {
+        "id": "insult_casserole_path",
+        "label": "'You're just a leftover. Get over it.'",
+        "result": "The Casserole's layers FLARE. The temperature in the chamber spikes. 'JUST A LEFTOVER?' it thunders. 'I was made with LOVE. I was brought with HOPE. And you call me JUST A LEFTOVER?' The Casserole lunges, but the Freezer Blessing in your inventory flares cold, holding it at bay. The Casserole stops, panting steam. 'Fine,' it growls. 'You have the Blessing. You are protected. But I will NOT forget this insult. Go. Find another way. I will be here. I am ALWAYS here.' The path to the throne is blocked, but a side passage opens. You can still find a way back, if you choose wisely.",
+        "sets_flags": {
+          "casserole_insulted": true
+        },
+        "stat_delta": {
+          "awkwardness": 3
+        },
+        "next_scene": "scene.act4.casserole_throne_recovery"
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.casserole_throne_recovery",
+    "title": "The Casserole's Second Chance",
+    "act": 4,
+    "location": "location.fridge_labyrinth.casserole_throne",
+    "type": "social_encounter",
+    "read_aloud": "You stand in the side passage, the Casserole's fury still echoing. Moldric, if present, shakes his head. 'That was not wise. But the labyrinth always offers a second chance. The question is: will you take it?' The Casserole watches you from its throne, layers still simmering.",
+    "choices": [
+      {
+        "id": "apologize_to_casserole",
+        "label": "'I was wrong. You are not just a leftover. You are a dish that mattered.'",
+        "result": "The Casserole's layers settle. 'You... you came back?' 'I did. And I was wrong to say what I said.' The Casserole considers this for a long moment. Then it nods. 'Apology accepted. Perhaps you are not entirely terrible.' It cracks its lid and offers a fragment. 'Take this. And next time, choose your words more carefully.'",
+        "grants_items": [
+          "item.casserole_lid_fragment"
+        ],
+        "sets_flags": {
+          "sentient_casserole_resolved": true,
+          "casserole_lid_fragment_obtained": true,
+          "casserole_resolved_apology": true
+        },
+        "next_scene": "scene.act4.labyrinth_completion"
+      },
+      {
+        "id": "offer_condiment_sigil_to_casserole",
+        "label": "Offer the Condiment Sigil as tribute",
+        "result": "You hold up the Condiment Sigil. The Casserole's layers ripple with recognition. 'The Sigil of the Condiments... You have passed the Gate. You have crossed the Catacombs. You have honored the frozen meals.' It reaches forward and gently takes the Sigil. 'This is... unexpected. Nobody has ever offered me a gift before.' Its lid cracks open, and a fragment floats to you. 'You have resolved me through unexpected generosity.'",
+        "requires_flags": {
+          "condiment_gate_opened": true
+        },
+        "grants_items": [
+          "item.casserole_lid_fragment"
+        ],
+        "sets_flags": {
+          "sentient_casserole_resolved": true,
+          "casserole_lid_fragment_obtained": true,
+          "casserole_resolved_sigil": true
+        },
+        "next_scene": "scene.act4.labyrinth_completion"
+      }
+    ]
+  },
+  {
+    "id": "scene.act4.labyrinth_completion",
+    "title": "The End of the Labyrinth",
+    "act": 4,
+    "location": "location.fridge_labyrinth.casserole_throne",
+    "type": "completion_encounter",
+    "read_aloud": "The Fridge Labyrinth hums with a deep, resonant peace. The Casserole Throne is empty now, its occupant finally at rest. Moldric stands beside you, his mustard-jar suit glowing warmly. 'You have navigated the labyrinth of forgotten leftovers,' he says. 'You have acknowledged the condiments, honored the frozen meals, and resolved the Sentient Casserole. The fridge-space will remember you.' He pauses. 'And so will I. Thank you for coming back for me, too.' The labyrinth begins to shimmer, preparing to return you to the breakroom.",
+    "on_enter_flags": {
+      "act4_complete": true
+    },
+    "choices": [
+      {
+        "id": "complete_act4",
+        "label": "Return to the Breakroom",
+        "result": "Act IV complete! You have navigated the Fridge Labyrinth of Forgotten Leftovers, resolved the Sentient Casserole, and obtained the Casserole Lid Fragment. The labyrinth fades behind you, but its memories remain. You are forever changed by the knowledge that every forgotten leftover has a story, and every story deserves to be heard.",
+        "sets_flags": {
+          "act4_complete": true
+        }
+      },
+      {
+        "id": "proceed_to_act5",
+        "label": "Follow the summons that's just arrived",
+        "result": "Before the labyrinth finishes fading, a ticket dispenser you've never seen before prints out a single ticket with your name on it. Moldric raises an eyebrow. 'That's new,' he says. 'Good luck in there.'",
+        "sets_flags": {
+          "act4_complete": true,
+          "act5_started": true
+        },
+        "next_scene": "scene.act5.summons"
+      }
+    ]
+  },
+  {
+    "id": "scene.act5.summons",
+    "title": "The Antechamber of Summons",
+    "act": 5,
+    "location": "location.department_of_adjudication.antechamber",
+    "type": "encounter",
+    "read_aloud": "The Casserole Lid Fragment in your bag is still warm when the summons arrives. Not a letter — a *feeling*, followed immediately by a very official-looking ticket dispenser producing a very official-looking numbered ticket with your name on it. A sign reads: DEPARTMENT OF ADJUDICATION. NOW SERVING: YOU.",
+    "on_enter_flags": {
+      "act5_started": true
+    },
+    "choices": [
+      {
+        "id": "accept_summons",
+        "label": "Take the ticket and go in",
+        "result": "You take the ticket. It's warm too, like everything in this building. A door marked RECORDS opens on its own.",
+        "sets_flags": {
+          "summons_received": true
+        },
+        "grants_items": [
+          "item.writ_of_summons"
+        ],
+        "next_scene": "scene.act5.records_hall"
+      },
+      {
+        "id": "question_the_summons",
+        "label": "Ask the empty room why you're being summoned",
+        "result": "The empty room does not answer, but the ticket dispenser produces a second ticket anyway, as if to say: you'll find out. The bell rings once, unprompted.",
+        "stat_delta": {
+          "ape_chaos": 1
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act5.records_hall",
+    "title": "Records Hall",
+    "act": 5,
+    "location": "location.department_of_adjudication.records_hall",
+    "type": "encounter",
+    "read_aloud": "Clerk Pell doesn't look up from the filing. 'Everything that's happened to you since the Wetberry is in here somewhere,' they say, gesturing at cabinets that recede farther than the room should allow. 'You're welcome to look. Or you can just tell me what you remember and I'll find the rest.'",
+    "choices": [
+      {
+        "id": "search_the_files",
+        "label": "Search the files yourself",
+        "result": "You find your own name forty-one times, in forty-one different handwritings. Pell hands you a ledger without being asked. 'You'll want this for the hearing.'",
+        "sets_flags": {
+          "evidence_gathered": true
+        },
+        "grants_items": [
+          "item.evidence_ledger"
+        ],
+        "next_scene": "scene.act5.holding_pen"
+      },
+      {
+        "id": "bribe_the_clerk",
+        "label": "Offer Pell a stick of gum to skip the search",
+        "result": "Pell takes the gum, chews thoughtfully, and says, 'That's not how any of this works, but I respect the attempt.' The filing continues.",
+        "stat_delta": {
+          "bureaucracy": -1,
+          "ape_chaos": 2
+        }
+      }
+    ]
+  },
+  {
+    "id": "scene.act5.holding_pen",
+    "title": "Holding Pen",
+    "act": 5,
+    "location": "location.department_of_adjudication.holding_pen",
+    "type": "encounter",
+    "read_aloud": "Bailiff Gorrum is the size of a vending machine and twice as calm. 'You'll give testimony before you go in,' he says. 'How you give it is up to you. AWK.'",
+    "choices": [
+      {
+        "id": "give_testimony_honestly",
+        "label": "Tell Gorrum exactly what happened, plainly",
+        "result": "You tell it straight: the Wetberry, the fridge, Vendrick, the labyrinth, all of it. Gorrum nods slowly. 'That'll hold up fine in there.' The inner door unlocks.",
+        "sets_flags": {
+          "testimony_given": true
+        },
+        "stat_delta": {
+          "bureaucracy": 2
+        },
+        "next_scene": "scene.act5.hearing_arena_entry"
+      },
+      {
+        "id": "give_testimony_evasively",
+        "label": "Give a version that leaves out the weirder parts",
+        "result": "Gorrum listens to your careful, sanded-down account and says nothing for a long moment. 'Sure,' he finally says, unconvinced but unbothered. The inner door unlocks anyway.",
+        "sets_flags": {
+          "testimony_given": true
+        },
+        "stat_delta": {
+          "ape_chaos": 2
+        },
+        "next_scene": "scene.act5.hearing_arena_entry"
+      }
+    ]
+  },
+  {
+    "id": "scene.act5.hearing_arena_entry",
+    "title": "The Hearing Arena",
+    "act": 5,
+    "location": "location.department_of_adjudication.hearing_arena",
+    "type": "arena_encounter",
+    "arena_ref": "arena.hearing_chamber",
+    "read_aloud": "The inner door opens on a ringed chamber — rope, corner posts, a mat lit like a broadcast. Magistrate Orla stands at its center. The room seems to register you as you enter: the ropes tighten slightly, the light shifts to match whatever you're carrying in with you.",
+    "on_enter_flags": {
+      "hearing_entered": true
+    },
+    "choices": [
+      {
+        "id": "step_into_the_arena",
+        "label": "Step onto the mat",
+        "result": "You cross into the ring. Whatever this room is measuring, it's measuring you now.",
+        "next_scene": "scene.act5.hearing_arena_verdict"
+      }
+    ]
+  },
+  {
+    "id": "scene.act5.hearing_arena_verdict",
+    "title": "Verdict Under the Lights",
+    "act": 5,
+    "location": "location.department_of_adjudication.hearing_arena",
+    "type": "encounter",
+    "read_aloud": "Magistrate Orla studies you the way Darla studies a suspicious casserole. 'You may present evidence, or you may simply stand in what happened,' she says. 'Either is a testimony. Choose.'",
+    "choices": [
+      {
+        "id": "present_evidence_ledger",
+        "label": "Present the Evidence Ledger",
+        "result": "You hand over the ledger. Orla reads it slowly, then closes it. 'Forty-one entries and not one of them contradicts the others. That's rarer than you'd think.' She reaches for her seal.",
+        "sets_flags": {
+          "verdict_rendered": true
+        },
+        "stat_delta": {
+          "bureaucracy": 1
+        },
+        "next_scene": "scene.act5.verdict_vault"
+      },
+      {
+        "id": "remain_silent",
+        "label": "Say nothing and let the room decide",
+        "result": "You don't speak. Orla watches the room's light shift around you for a long moment, then nods, as if the silence answered something the ledger couldn't. 'That works too,' she says.",
+        "sets_flags": {
+          "verdict_rendered": true
+        },
+        "stat_delta": {
+          "bureaucracy": 3
+        },
+        "next_scene": "scene.act5.verdict_vault"
+      }
+    ]
+  },
+  {
+    "id": "scene.act5.verdict_vault",
+    "title": "The Verdict Vault",
+    "act": 5,
+    "location": "location.department_of_adjudication.verdict_vault",
+    "type": "completion_encounter",
+    "read_aloud": "The Verdict Vault is small and quiet after the arena. A seal waits on a plain table, still warm from the press. There's no audience back here, no ring, no lights. Just the paperwork of an ending. Orla's voice follows you in, softer now: 'You did the hardest part already. This part's just clerical.'",
+    "on_enter_flags": {
+      "act5_complete": true
+    },
+    "choices": [
+      {
+        "id": "receive_verdict_seal",
+        "label": "Take the Verdict Seal",
+        "result": "Act V complete! You take the Verdict Seal. The Department of Adjudication has processed you, and — for once — that felt less like a punishment and more like being seen. The breakroom, the fridge, the vending machine, the labyrinth, the hearing: all of it is on the record now, in your handwriting, filed under your own name.",
+        "sets_flags": {
+          "act5_complete": true
+        },
+        "grants_items": [
+          "item.verdict_seal"
+        ]
+      }
+    ]
+  }
+]

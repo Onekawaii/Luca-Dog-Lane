@@ -1,0 +1,27 @@
+[gd_scene load_steps=5 format=3 uid="uid://d3e4f5g6h7i8j"]
+
+[ext_resource type="Script" path="res://scripts/actors/DarlaActor.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/actors/darla.png" id="2_tex"]
+[ext_resource type="Texture2D" path="res://assets/ui/target_reticle.png" id="3_reticle"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_darla"]
+radius = 18.0
+height = 48.0
+
+[node name="Darla" type="CharacterBody2D"]
+y_sort_enabled = true
+input_pickable = true
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -88)
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_darla")
+
+[node name="Reticle" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(0, -185)
+texture = ExtResource("3_reticle")

@@ -18,6 +18,11 @@ outputs/
 build/
 dist/
 
+# Godot engine cache
+.godot/
+game_godot/.godot/
+*.translation
+
 # Temporary files
 *.tmp
 *.temp
