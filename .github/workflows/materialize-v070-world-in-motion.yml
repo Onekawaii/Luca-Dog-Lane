@@ -22,7 +22,7 @@ jobs:
 
       - name: Fetch verified v0.7 patch
         env:
-          PATCH_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-a788-81f5-b490-6fcd4815e579/raw?se=2026-09-06T04%3A07%3A01Z&sp=r&sv=2026-02-06&sr=b&scid=e0e1244a-a334-5b57-8672-8a2a495489bd&skoid=d1cabc79-3240-4866-94fe-6005330cb49e&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-05T22%3A16%3A58Z&ske=2026-09-06T22%3A16%3A58Z&sks=b&skv=2026-02-06&sig=Mx71mqCESSTqrmmrzbN/BavSagbjV1s%2BgfzUpIs1NjI%3D'
+          PATCH_URL: 'https://sdmntprcentralus.oaiusercontent.com/files/00000000-0918-81f5-88b0-6f2d54c01778/raw?se=2026-09-06T04%3A08%3A53Z&sp=r&sv=2026-02-06&sr=b&scid=9d3bb70c-e587-5b8f-bba8-e673ac2de14c&skoid=d1cabc79-3240-4866-94fe-6005330cb49e&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-05T15%3A17%3A41Z&ske=2026-09-06T15%3A17%3A41Z&sks=b&skv=2026-02-06&sig=/tJ1o5HM5Nt5G2fIllMD2AD7Y2ko2y4SszhBKWBpKuU%3D'
         run: |
           curl --fail --location --retry 3 "$PATCH_URL" --output /tmp/v070_patch.txt
           test "$(wc -c < /tmp/v070_patch.txt)" -eq 56328
@@ -30,6 +30,7 @@ jobs:
           echo "bd62db772ccc689f96feaa7bff00d85e949dbe565e63d4ce0b0a9ff7454c950d  /tmp/v070_patch.tar.xz" | sha256sum -c -
           tar -xJf /tmp/v070_patch.tar.xz -C .
           rm -f .github/workflows/materialize-v070-world-in-motion.yml
+          rm -f .github/workflows/test.yml
 
       - name: Set up Python
         uses: actions/setup-python@v5
