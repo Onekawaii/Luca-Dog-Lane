@@ -32,3 +32,14 @@ jobs:
         run: |
           node --check hive_lattice/web_app/static/strawberry.js
           node --check hive_lattice/web_app/static/world_client.js
+      - name: Package Termux playtest
+        run: python tools/package_termux_bundle.py
+      - name: Upload Termux playtest
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hive-Lattice-Termux-playtest
+          path: |
+            outputs/Hive-Lattice-v0.7.0-visual-slice.zip
+            outputs/Hive-Lattice-v0.7.0-visual-slice.zip.sha256
+          if-no-files-found: error
+          retention-days: 14
