@@ -239,5 +239,161 @@ class TestWebAppRPGEndpoints(unittest.TestCase):
         i_res.close()
 
 
+class TestMechanicsHardeningEngine(unittest.TestCase):
+    def setUp(self):
+        self.module = CampaignModule(CAMPAIGN)
+        self.state = self.module.new_state()
+        self.module.enter_scene(self.state)
+        self.world = WorldRuntime(self.module)
+        self.world.ensure_state(self.state)
+
+    def test_blocked_regions_authored(self):
+        snapshot = self.world.snapshot(self.state)
+        world_data = snapshot["world"]
+        self.assertIn("blocked_regions", world_data)
+        regions = {b["name"]: b for b in world_data["blocked_regions"]}
+        self.assertIn("Central Table", regions)
+        self.assertIn("Coffee Counter & Microwave", regions)
+        self.assertIn("Vending Machine", regions)
+        self.assertIn("Utility Locker", regions)
+        self.assertIn("Back Wall", regions)
+
+        table = regions["Central Table"]
+        self.assertEqual(table["min_x"], 35)
+        self.assertEqual(table["max_x"], 65)
+        self.assertEqual(table["min_y"], 50)
+        self.assertEqual(table["max_y"], 68)
+
+    def test_movement_collision_clamping(self):
+        # Moving directly into the center of the central table (50.0, 60.0) must be blocked/clamped
+        res = self.world.apply_action(self.state, GameAction(kind="move", x=50.0, y=60.0))
+        player = self.state.world_state["player"]
+        # Position must not be inside the table interior
+        in_table = (35 <= player["x"] <= 65) and (50 <= player["y"] <= 68)
+        self.assertFalse(in_table, f"Player moved inside blocked table region: {player}")
+
+    def test_movement_boundary_clamping(self):
+        # Moving out of bounds
+        res = self.world.apply_action(self.state, GameAction(kind="move", x=120.0, y=-10.0))
+        player = self.state.world_state["player"]
+        self.assertLessEqual(player["x"], 94.0)
+        self.assertGreaterEqual(player["y"], 20.0)
+
+    def test_semantic_verb_execution(self):
+        # Move close to Keith (position x: 82, y: 72)
+        self.state.world_state["player"] = {"x": 80.0, "y": 72.0}
+
+        # LOOK at Keith
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="npc.keith_janitor",
+            payload={"verb": "LOOK"}
+        ))
+        self.assertIn("Keith stands beside his mop bucket", res["result"])
+
+        # TALK to Keith
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="npc.keith_janitor",
+            payload={"verb": "TALK"}
+        ))
+        self.assertTrue(len(res["result"]) > 0)
+
+        # USE on Keith without item
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="npc.keith_janitor",
+            payload={"verb": "USE", "item_id": None}
+        ))
+        self.assertIn("Select an item", res["result"])
+
+        # OPEN on Keith
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="npc.keith_janitor",
+            payload={"verb": "OPEN"}
+        ))
+        self.assertIn("personal boundaries remain sealed", res["result"])
+
+    def test_scenery_hotspots_and_verbs(self):
+        # Central Table approach
+        self.state.world_state["player"] = {"x": 50.0, "y": 72.0}
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="hotspot.central_table",
+            payload={"verb": "LOOK"}
+        ))
+        self.assertIn("Formica table", res["result"])
+
+        # Coffee machine approach
+        self.state.world_state["player"] = {"x": 50.0, "y": 36.0}
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="hotspot.coffee_machine",
+            payload={"verb": "LOOK"}
+        ))
+        self.assertIn("microwave", res["result"].lower())
+
+    def test_chronicle_log_idempotency(self):
+        self.state.world_state["player"] = {"x": 50.0, "y": 72.0}
+        initial_log_len = len(self.state.log)
+
+        # Applying a look action
+        res = self.world.apply_action(self.state, GameAction(
+            kind="verb",
+            target_id="hotspot.central_table",
+            payload={"verb": "LOOK"}
+        ))
+        log = self.state.log
+        # Log should increase by exactly 1 entry, never duplicated
+        self.assertEqual(len(log), initial_log_len + 1)
+        self.assertEqual(log[-1], res["result"])
+
+        # Choosing an action from module runtime
+        choices = self.module.choice_views(self.state)
+        choice_id = choices[0]["id"]
+        res_choice = self.module.choose(self.state, choice_id)
+        # Check that the last 2 log entries are not identical duplicates
+        self.assertNotEqual(self.state.log[-1], self.state.log[-2] if len(self.state.log) >= 2 else "")
+
+
+class TestMechanicsHardeningWeb(unittest.TestCase):
+    def setUp(self):
+        self.app = create_app(CAMPAIGN)
+        self.client = self.app.test_client()
+
+    def test_minimap_hidden_in_css(self):
+        res = self.client.get("/static/strawberry.css")
+        self.assertEqual(res.status_code, 200)
+        css = res.get_data(as_text=True)
+        res.close()
+        self.assertIn("#minimap-panel {", css)
+        self.assertIn("display: none;", css)
+        self.assertIn(".debug-active", css)
+
+    def test_stage_viewport_aspect_ratio(self):
+        res = self.client.get("/static/strawberry.css")
+        self.assertEqual(res.status_code, 200)
+        css = res.get_data(as_text=True)
+        res.close()
+        self.assertIn("aspect-ratio: 4 / 3;", css)
+        self.assertNotIn("aspect-ratio: 1 / 1;", css)
+
+    def test_verb_endpoint_via_api(self):
+        # Walk player closer to Keith first so verb has proximity
+        self.client.post("/api/action", json={"kind": "move", "x": 80.0, "y": 72.0})
+        res = self.client.post("/api/action", json={
+            "kind": "verb",
+            "target_id": "npc.keith_janitor",
+            "payload": {"verb": "LOOK"}
+        })
+        self.assertEqual(res.status_code, 200)
+        data = res.get_json()
+        res.close()
+        self.assertIn("result", data)
+        self.assertIn("Keith stands beside his mop bucket", data["result"])
+
+
 if __name__ == "__main__":
     unittest.main()
+

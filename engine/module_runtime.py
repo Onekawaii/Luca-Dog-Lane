@@ -324,7 +324,7 @@ class CampaignModule:
             "turn": state.turn_count,
         }
         state.event_history.append(event)
-        if event["text"]:
+        if event["text"] and (not state.log or state.log[-1] != event["text"]):
             state.log.append(event["text"])
         return event
 
@@ -383,6 +383,7 @@ class CampaignModule:
             if rule.get("next_scene"):
                 choice = {**choice, "next_scene": rule["next_scene"]}
 
+        event = None
         if choice.get("triggers_table"):
             event = self.trigger_table(state, choice["triggers_table"])
             if event and event.get("text"):
@@ -390,7 +391,10 @@ class CampaignModule:
             outcome["event"] = event
 
         if result:
-            state.log.append(result)
+            if not state.log or state.log[-1] != result:
+                if event and event.get("text") and state.log and state.log[-1] == event["text"]:
+                    state.log.pop()
+                state.log.append(result)
         state.last_outcome = outcome
 
         if choice.get("next_scene"):
@@ -434,12 +438,16 @@ class CampaignModule:
         if action.get("rule_table"):
             rule = self.resolve_rule_table(state, action["rule_table"])
             result = rule.get("result", result)
+        event = None
         if action.get("triggers_table"):
             event = self.trigger_table(state, action["triggers_table"])
             if event and event.get("text"):
                 result = (result + "\n\n" + event["text"]).strip()
         if result:
-            state.log.append(result)
+            if not state.log or state.log[-1] != result:
+                if event and event.get("text") and state.log and state.log[-1] == event["text"]:
+                    state.log.pop()
+                state.log.append(result)
         state.last_outcome = {"item_action": action_id, "turn": state.turn_count}
         if action.get("next_scene"):
             self.enter_scene(state, action["next_scene"])

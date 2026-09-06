@@ -157,86 +157,108 @@ function renderDialoguePortrait(data) {
 
 /* ── Adventure Verbs System ────────────────────────────────────────────── */
 
+function updateVerbAffordances(target) {
+    const buttons = document.querySelectorAll(".verb-btn");
+    if (!target) {
+        // No target selected: reset to default
+        buttons.forEach(btn => {
+            btn.classList.remove("suggested", "dimmed");
+        });
+        return;
+    }
+
+    // Determine suggested verbs based on target type
+    const targetId = target.id || "";
+    const isKeith = targetId.includes("keith");
+    const isDarla = targetId.includes("darla");
+    const isWetberry = targetId.includes("wetberry");
+    const isHotspot = target.kind === "hotspot" || targetId.startsWith("hotspot.");
+
+    let suggested = [];
+    if (isKeith || isDarla) {
+        suggested = ["LOOK", "TALK", "USE"];
+    } else if (isWetberry) {
+        suggested = ["LOOK", "TAKE", "USE"];
+    } else if (isHotspot) {
+        suggested = ["LOOK", "USE", "OPEN"];
+    } else {
+        suggested = ["LOOK", "USE"];
+    }
+
+    buttons.forEach(btn => {
+        const verb = btn.dataset.verb;
+        if (suggested.includes(verb)) {
+            btn.classList.add("suggested");
+            btn.classList.remove("dimmed");
+        } else {
+            btn.classList.remove("suggested");
+            btn.classList.add("dimmed");
+        }
+    });
+}
+
 async function executeVerb(verb) {
     if (!currentState) return;
     const client = ensureWorldClient();
-    const nearest = client ? client._nearestTarget() : null;
+    const target = (client && client.selectedTarget) || (client ? client._nearestTarget() : null);
 
-    if (verb === "LOOK") {
-        if (nearest) {
-            showToast(`Examining ${nearest.name || nearest.id}...`);
-            await makeWorldAction({ kind: "interact", target_id: nearest.id });
-        } else {
-            showToast(`Looking around ${currentState.location.name || "the room"}...`);
+    if (verb === "GO") {
+        showToast("Tap floor to walk or use WASD keys.");
+        return;
+    }
+
+    if (!target) {
+        if (verb === "LOOK") {
+            showToast(`Looking around ${currentState.location?.name || "the room"}...`);
             await refresh();
-        }
-    } else if (verb === "TALK") {
-        const npcs = (currentState.world && currentState.world.entities) || [];
-        if (nearest && nearest.kind === "npc") {
-            await makeWorldAction({ kind: "interact", target_id: nearest.id });
-        } else if (npcs.length > 0) {
-            // Find closest NPC
-            const firstNpc = npcs[0];
-            showToast(`Approaching ${firstNpc.name}...`);
-            await makeWorldAction({ kind: "interact", target_id: firstNpc.id });
-        } else {
-            showToast("Nobody nearby to talk to.", true);
-        }
-    } else if (verb === "TAKE") {
-        if (nearest && (nearest.id.includes("wetberry") || nearest.kind === "hotspot")) {
-            // Check if player has evidence bag
-            const details = currentState.inventory_details || [];
-            let bagAction = null;
-            for (const item of details) {
-                for (const act of (item.actions || [])) {
-                    if (act.id && act.id.includes("evidence_bag.wetberry")) {
-                        bagAction = act.id;
-                    }
-                }
-            }
-            if (bagAction) {
-                showToast("Containing Wetberry with Evidence Bag...");
-                await useItemAction(bagAction);
+        } else if (verb === "TALK") {
+            showToast("Nobody selected to talk to. Tap a character first.", true);
+        } else if (verb === "TAKE") {
+            showToast("Nothing selected to take. Tap an object first.", true);
+        } else if (verb === "USE") {
+            if (selectedInventoryItem) {
+                showToast(`Select a target in the room to use ${selectedInventoryItem.name} on.`);
             } else {
-                await makeWorldAction({ kind: "interact", target_id: nearest.id });
+                showToast("Select an item in Gear & Archives tab first, or tap an object in the room.");
+                switchMobileTab("gear");
             }
-        } else if (nearest) {
-            await makeWorldAction({ kind: "interact", target_id: nearest.id });
-        } else {
-            showToast("Nothing nearby to take.", true);
+        } else if (verb === "OPEN") {
+            showToast("Nothing selected to open. Tap a container or door first.", true);
         }
-    } else if (verb === "USE") {
+        return;
+    }
+
+    // Special object-on-object shortcut: Evidence Bag on Wetberry
+    if ((verb === "TAKE" || verb === "USE") && target.id.includes("wetberry")) {
         const details = currentState.inventory_details || [];
-        if (details.length === 0) {
-            showToast("Inventory is empty.", true);
-            return;
-        }
-        // If an item has an available contextual action in this scene, use it!
-        let used = false;
+        let bagAction = null;
         for (const item of details) {
             for (const act of (item.actions || [])) {
-                if (act.available !== false) {
-                    showToast(`Using ${item.name}: ${act.label}`);
-                    await useItemAction(act.id);
-                    used = true;
-                    break;
+                if (act.id && act.id.includes("evidence_bag.wetberry") && act.available !== false) {
+                    bagAction = act.id;
                 }
             }
-            if (used) break;
         }
-        if (!used) {
-            showToast("Open Gear & Archives tab to select item action.");
-            switchMobileTab("gear");
+        if (bagAction) {
+            showToast("Containing Wetberry with Evidence Bag...");
+            await useItemAction(bagAction);
+            return;
         }
-    } else if (verb === "OPEN") {
-        if (nearest) {
-            await makeWorldAction({ kind: "interact", target_id: nearest.id });
-        } else {
-            showToast("Nothing nearby to open.", true);
-        }
-    } else if (verb === "GO") {
-        showToast("Tap floor to walk or use WASD keys.");
     }
+
+    // Send kind: "verb" to authoritative engine
+    const payload = {
+        verb: verb,
+        item_id: selectedInventoryItem ? selectedInventoryItem.id : null
+    };
+
+    const targetLabel = target.name || target.id;
+    showToast(`${verb} ${targetLabel}...`);
+    await makeWorldAction({
+        kind: "verb",
+        target_id: target.id,
+        payload: payload
+    });
 }
 
 /* ── Debug Mode ────────────────────────────────────────────────────────── */
@@ -247,6 +269,10 @@ function toggleDebugMode() {
     const active = client.toggleDebug();
     const indicator = document.getElementById("debug-indicator");
     if (indicator) indicator.classList.toggle("hidden", !active);
+
+    const minimap = document.getElementById("minimap-panel");
+    if (minimap) minimap.classList.toggle("debug-active", active);
+
     showToast(`Developer Diagnostics: ${active ? "ENABLED" : "DISABLED"}`);
 }
 
@@ -280,6 +306,9 @@ function ensureWorldClient() {
         hint: document.getElementById("world-hint"),
         requestAction: makeWorldAction
     });
+    worldClient.onTargetSelected = (target) => {
+        updateVerbAffordances(target);
+    };
     return worldClient;
 }
 
@@ -466,6 +495,24 @@ function renderSidebarQuests(data) {
     container.innerHTML = html;
 }
 
+function selectInventoryItem(itemId) {
+    if (!currentState) return;
+    const details = currentState.inventory_details || [];
+    const item = details.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (selectedInventoryItem && selectedInventoryItem.id === itemId) {
+        selectedInventoryItem = null;
+        showToast(`Deselected ${item.name}`);
+    } else {
+        selectedInventoryItem = item;
+        showToast(`Armed ${item.name}. Tap a target in the room and use USE!`);
+        // On mobile, take player back to adventure tab
+        switchMobileTab("adventure");
+    }
+    renderSidebarInventory(currentState);
+}
+
 function renderSidebarInventory(data) {
     const container = document.getElementById("inventory-hud-body");
     const details = data.inventory_details || [];
@@ -478,15 +525,16 @@ function renderSidebarInventory(data) {
     let html = `<div class="inventory-list">`;
     for (const item of details) {
         const iconUrl = item.icon_url || `/api/assets/items/${item.id}.png`;
-        html += `<div class="inventory-card">
+        const isActive = selectedInventoryItem && selectedInventoryItem.id === item.id;
+        html += `<div class="inventory-card ${isActive ? "active-item" : ""}" onclick="selectInventoryItem('${esc(item.id)}')">
             <div class="inventory-card-header">
                 <img class="inventory-item-icon" src="${esc(iconUrl)}" alt="${esc(item.name)}" onerror="this.style.display='none'">
-                <div class="inventory-name"><span style="color:var(--accent-amber);">&#x2666;</span> ${esc(item.name)}</div>
+                <div class="inventory-name"><span style="color:var(--accent-amber);">&#x2666;</span> ${esc(item.name)}${isActive ? " [ARMED]" : ""}</div>
             </div>
             <div class="inventory-desc">${esc(item.description || "")}</div>`;
         for (const action of (item.actions || [])) {
             html += `<button class="item-use-btn" ${action.available === false ? "disabled" : ""}
-                onclick="useItemAction('${esc(action.id)}')">&#x2699; ${esc(action.label)}${action.available === false ? " — " + esc(action.locked_reason || "LOCKED") : ""}</button>`;
+                onclick="event.stopPropagation(); useItemAction('${esc(action.id)}')">&#x2699; ${esc(action.label)}${action.available === false ? " — " + esc(action.locked_reason || "LOCKED") : ""}</button>`;
         }
         html += `</div>`;
     }

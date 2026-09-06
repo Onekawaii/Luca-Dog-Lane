@@ -6,18 +6,20 @@
  */
 
 class HiveWorldClient {
-  constructor({ canvas, interactButton, hint, requestAction }) {
+  constructor({ canvas, interactButton, hint, requestAction, onTargetSelected }) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.interactButton = interactButton;
     this.hint = hint;
     this.requestAction = requestAction;
+    this.onTargetSelected = onTargetSelected;
     this.snapshot = null;
-    this.player = { x: 50, y: 70 };
+    this.player = { x: 50, y: 78 };
     this.playerFacing = "down"; // down, up, left, right
     this.playerMoving = false;
     this.walkCycle = 0;
     this.destination = null;
+    this.path = [];
     this.keys = new Set();
     this.lastFrame = performance.now();
     this.lastSync = 0;
@@ -25,6 +27,7 @@ class HiveWorldClient {
     this.visible = false;
     this.debugMode = new URLSearchParams(window.location.search).has("debug");
     this.animTime = 0;
+    this.viewRect = { ox: 0, oy: 0, rw: 800, rh: 600 };
 
     // Room background image caching
     this.roomBgImage = new Image();
@@ -36,8 +39,9 @@ class HiveWorldClient {
       this.roomBgImage.src = "/api/assets/rooms/room.breakroom.central_table.png";
     };
 
-    // Click target selection
+    // Target selection & destination markers
     this.hoverTarget = null;
+    this.selectedTarget = null;
     this.destinationMarker = null;
 
     this._bindInput();
@@ -90,29 +94,38 @@ class HiveWorldClient {
 
     const handlePointer = (event) => {
       if (!this.visible || !this.snapshot) return;
-      const rect = this.canvas.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 100;
-      const y = ((event.clientY - rect.top) / rect.height) * 100;
+      const worldPos = this._screenToWorld(event.clientX, event.clientY);
+      const clickedTarget = this._targetAt(worldPos.x, worldPos.y);
 
-      // Check if user clicked directly on an entity or hotspot
-      const clickedTarget = this._targetAt(x, y);
       if (clickedTarget) {
-        const p = clickedTarget.position;
-        const dist = Math.hypot(this.player.x - p.x, this.player.y - p.y);
-        const radius = clickedTarget.interaction_radius || 13;
+        this.selectedTarget = clickedTarget;
+        if (this.onTargetSelected) this.onTargetSelected(clickedTarget);
+        const approach = clickedTarget.approach_point || clickedTarget.position;
+        const dist = Math.hypot(this.player.x - clickedTarget.position.x, this.player.y - clickedTarget.position.y);
+        const radius = clickedTarget.interaction_radius || 18;
+
         if (dist <= radius) {
-          this._interact(clickedTarget);
-          return;
+          this.path = [];
+          this.destination = null;
+          this.playerMoving = false;
+          this.destinationMarker = { x: clickedTarget.position.x, y: clickedTarget.position.y, time: this.animTime };
+          this._updateInteractionPrompt();
         } else {
-          // Walk toward target
-          this.destination = { x: p.x, y: Math.min(92, p.y + 4), targetAfterWalk: clickedTarget };
-          this.destinationMarker = { x: p.x, y: p.y, time: this.animTime };
-          return;
+          // Walk toward approach point routing around obstacles
+          this.path = this._buildPath(this.player, approach);
+          this.destination = this.path.shift() || null;
+          this.destinationMarker = { x: clickedTarget.position.x, y: clickedTarget.position.y, time: this.animTime };
         }
+        return;
       }
 
-      this.destination = { x, y };
-      this.destinationMarker = { x, y, time: this.animTime };
+      // Empty floor tapped: clear selection, resolve valid walkable floor, pathfind there
+      this.selectedTarget = null;
+      if (this.onTargetSelected) this.onTargetSelected(null);
+      const floorPos = this._resolveValidFloorPoint(worldPos.x, worldPos.y);
+      this.path = this._buildPath(this.player, floorPos);
+      this.destination = this.path.shift() || null;
+      this.destinationMarker = { x: floorPos.x, y: floorPos.y, time: this.animTime };
     };
 
     this.canvas.addEventListener("pointerdown", handlePointer);
@@ -120,16 +133,14 @@ class HiveWorldClient {
     // Mouse hover detection for cursor & affordances
     this.canvas.addEventListener("pointermove", (event) => {
       if (!this.visible || !this.snapshot) return;
-      const rect = this.canvas.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 100;
-      const y = ((event.clientY - rect.top) / rect.height) * 100;
-      this.hoverTarget = this._targetAt(x, y);
+      const worldPos = this._screenToWorld(event.clientX, event.clientY);
+      this.hoverTarget = this._targetAt(worldPos.x, worldPos.y);
       this.canvas.style.cursor = this.hoverTarget ? "pointer" : "default";
     });
 
     if (this.interactButton) {
       this.interactButton.addEventListener("click", () => {
-        const target = this._nearestTarget();
+        const target = this.selectedTarget || this._nearestTarget();
         if (target) this._interact(target);
       });
     }
@@ -139,12 +150,29 @@ class HiveWorldClient {
     for (const target of this._targets()) {
       const p = target.position;
       if (!p) continue;
-      const r = (target.interaction_radius || 12) * 0.9;
+      const r = (target.interaction_radius || 14) * 0.95;
       if (Math.hypot(x - p.x, y - p.y) <= r) {
         return target;
       }
     }
     return null;
+  }
+
+  _updateViewRect() {
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+    const targetAspect = 4 / 3;
+    let rw = w;
+    let rh = w / targetAspect;
+    let ox = 0;
+    let oy = (h - rh) / 2;
+    if (rh > h) {
+      rh = h;
+      rw = h * targetAspect;
+      ox = (w - rw) / 2;
+      oy = 0;
+    }
+    this.viewRect = { ox, oy, rw, rh };
   }
 
   _resize() {
@@ -157,7 +185,27 @@ class HiveWorldClient {
       this.canvas.width = width;
       this.canvas.height = height;
     }
+    this._updateViewRect();
     this._draw();
+  }
+
+  _xy(point) {
+    const { ox, oy, rw, rh } = this.viewRect;
+    return {
+      x: ox + (point.x / 100) * rw,
+      y: oy + (point.y / 100) * rh,
+    };
+  }
+
+  _screenToWorld(clientX, clientY) {
+    const rect = this.canvas.getBoundingClientRect();
+    const dpr = this.canvas.width / rect.width;
+    const cx = (clientX - rect.left) * dpr;
+    const cy = (clientY - rect.top) * dpr;
+    const { ox, oy, rw, rh } = this.viewRect;
+    const wx = Math.max(0, Math.min(100, ((cx - ox) / rw) * 100));
+    const wy = Math.max(0, Math.min(100, ((cy - oy) / rh) * 100));
+    return { x: wx, y: wy };
   }
 
   _tick(now) {
@@ -175,7 +223,145 @@ class HiveWorldClient {
   }
 
   _bounds() {
-    return (this.snapshot && this.snapshot.world && this.snapshot.world.bounds) || { min_x: 6, max_x: 94, min_y: 8, max_y: 92 };
+    return (this.snapshot && this.snapshot.world && this.snapshot.world.bounds) || { min_x: 6, max_x: 94, min_y: 20, max_y: 92 };
+  }
+
+  _blockedRegions() {
+    const custom = (this.snapshot && this.snapshot.world && this.snapshot.world.blocked_regions) || [];
+    if (custom.length > 0) return custom;
+    return [
+      { id: "col.central_table", min_x: 35, max_x: 65, min_y: 50, max_y: 68 },
+      { id: "col.coffee_counter", min_x: 24, max_x: 76, min_y: 0, max_y: 32 },
+      { id: "col.vending_machine", min_x: 0, max_x: 18, min_y: 18, max_y: 58 },
+      { id: "col.utility_corner", min_x: 78, max_x: 100, min_y: 38, max_y: 68 },
+      { id: "col.back_wall", min_x: 0, max_x: 100, min_y: 0, max_y: 18 }
+    ];
+  }
+
+  _isBlocked(x, y, margin = 1.0) {
+    const b = this._bounds();
+    if (x < b.min_x || x > b.max_x || y < b.min_y || y > b.max_y) return true;
+    for (const r of this._blockedRegions()) {
+      if (x >= (r.min_x - margin) && x <= (r.max_x + margin) &&
+          y >= (r.min_y - margin) && y <= (r.max_y + margin)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  _resolveValidFloorPoint(x, y) {
+    const b = this._bounds();
+    x = Math.max(b.min_x, Math.min(b.max_x, x));
+    y = Math.max(b.min_y, Math.min(b.max_y, y));
+    for (const r of this._blockedRegions()) {
+      if (x >= r.min_x && x <= r.max_x && y >= r.min_y && y <= r.max_y) {
+        const dl = Math.abs(x - r.min_x);
+        const dr = Math.abs(x - r.max_x);
+        const dt = Math.abs(y - r.min_y);
+        const db = Math.abs(y - r.max_y);
+        const m = Math.min(dl, dr, dt, db);
+        if (m === dl) x = Math.max(b.min_x, r.min_x - 2);
+        else if (m === dr) x = Math.min(b.max_x, r.max_x + 2);
+        else if (m === dt) y = Math.max(b.min_y, r.min_y - 2);
+        else y = Math.min(b.max_y, r.max_y + 2);
+      }
+    }
+    return { x, y };
+  }
+
+  _waypoints() {
+    const wp = (this.snapshot && this.snapshot.world && this.snapshot.world.waypoints) || [];
+    if (wp.length > 0) return wp;
+    return [
+      { id: "wp.table_left", x: 26, y: 60 },
+      { id: "wp.table_right", x: 74, y: 60 },
+      { id: "wp.table_bottom", x: 50, y: 80 },
+      { id: "wp.table_top", x: 50, y: 40 },
+      { id: "wp.keith_approach", x: 76, y: 76 },
+      { id: "wp.darla_approach", x: 50, y: 38 },
+      { id: "wp.wetberry_approach", x: 50, y: 74 },
+      { id: "wp.vending_approach", x: 24, y: 48 }
+    ];
+  }
+
+  _lineBlocked(p1, p2) {
+    for (const r of this._blockedRegions()) {
+      if (this._segmentIntersectsRect(p1, p2, r)) return true;
+    }
+    return false;
+  }
+
+  _segmentIntersectsRect(p1, p2, r) {
+    if ((p1.x > r.min_x && p1.x < r.max_x && p1.y > r.min_y && p1.y < r.max_y) ||
+        (p2.x > r.min_x && p2.x < r.max_x && p2.y > r.min_y && p2.y < r.max_y)) {
+      return true;
+    }
+    const tl = { x: r.min_x, y: r.min_y };
+    const tr = { x: r.max_x, y: r.min_y };
+    const bl = { x: r.min_x, y: r.max_y };
+    const br = { x: r.max_x, y: r.max_y };
+    return this._linesCross(p1, p2, tl, tr) ||
+           this._linesCross(p1, p2, tr, br) ||
+           this._linesCross(p1, p2, br, bl) ||
+           this._linesCross(p1, p2, bl, tl);
+  }
+
+  _linesCross(a, b, c, d) {
+    const det = (b.x - a.x) * (d.y - c.y) - (b.y - a.y) * (d.x - c.x);
+    if (det === 0) return false;
+    const lambda = ((d.y - c.y) * (d.x - a.x) + (c.x - d.x) * (d.y - a.y)) / det;
+    const gamma = ((a.y - b.y) * (d.x - a.x) + (b.x - a.x) * (d.y - a.y)) / det;
+    return (0 <= lambda && lambda <= 1) && (0 <= gamma && gamma <= 1);
+  }
+
+  _buildPath(start, goal) {
+    if (!this._lineBlocked(start, goal)) {
+      return [goal];
+    }
+    const waypoints = this._waypoints();
+    const nodes = [start, ...waypoints, goal];
+    const n = nodes.length;
+    const dist = new Array(n).fill(Infinity);
+    const prev = new Array(n).fill(-1);
+    const visited = new Array(n).fill(false);
+
+    dist[0] = 0;
+    for (let step = 0; step < n; step++) {
+      let u = -1;
+      let best = Infinity;
+      for (let i = 0; i < n; i++) {
+        if (!visited[i] && dist[i] < best) {
+          best = dist[i];
+          u = i;
+        }
+      }
+      if (u === -1 || u === n - 1) break;
+      visited[u] = true;
+
+      for (let v = 0; v < n; v++) {
+        if (u === v || visited[v]) continue;
+        if (!this._lineBlocked(nodes[u], nodes[v])) {
+          const d = Math.hypot(nodes[u].x - nodes[v].x, nodes[u].y - nodes[v].y);
+          if (dist[u] + d < dist[v]) {
+            dist[v] = dist[u] + d;
+            prev[v] = u;
+          }
+        }
+      }
+    }
+
+    if (prev[n - 1] === -1) {
+      return [goal];
+    }
+
+    const path = [];
+    let curr = n - 1;
+    while (curr !== 0 && curr !== -1) {
+      path.unshift(nodes[curr]);
+      curr = prev[curr];
+    }
+    return path.length > 0 ? path : [goal];
   }
 
   _move(dt) {
@@ -189,11 +375,20 @@ class HiveWorldClient {
 
     if (dx || dy) {
       this.destination = null;
+      this.path = [];
       const mag = Math.hypot(dx, dy) || 1;
       dx /= mag;
       dy /= mag;
-      this.player.x += dx * speed * dt;
-      this.player.y += dy * speed * dt;
+      const targetX = this.player.x + dx * speed * dt;
+      const targetY = this.player.y + dy * speed * dt;
+      if (!this._isBlocked(targetX, targetY)) {
+        this.player.x = targetX;
+        this.player.y = targetY;
+      } else if (!this._isBlocked(targetX, this.player.y)) {
+        this.player.x = targetX; // slide horizontally
+      } else if (!this._isBlocked(this.player.x, targetY)) {
+        this.player.y = targetY; // slide vertically
+      }
       this.playerMoving = true;
       this.walkCycle += dt * 9;
       if (Math.abs(dx) > Math.abs(dy)) {
@@ -205,17 +400,24 @@ class HiveWorldClient {
       const vx = this.destination.x - this.player.x;
       const vy = this.destination.y - this.player.y;
       const dist = Math.hypot(vx, vy);
-      if (dist < 1.2) {
-        const targetToInteract = this.destination.targetAfterWalk;
-        this.destination = null;
-        this.playerMoving = false;
-        if (targetToInteract) {
-          this._interact(targetToInteract);
+      if (dist < 1.4) {
+        if (this.path && this.path.length > 0) {
+          this.destination = this.path.shift();
+        } else {
+          this.destination = null;
+          this.playerMoving = false;
         }
       } else {
         const step = Math.min(dist, speed * dt);
-        this.player.x += (vx / dist) * step;
-        this.player.y += (vy / dist) * step;
+        const nx = this.player.x + (vx / dist) * step;
+        const ny = this.player.y + (vy / dist) * step;
+        if (!this._isBlocked(nx, ny)) {
+          this.player.x = nx;
+          this.player.y = ny;
+        } else {
+          // Obstacle encountered: shift to next waypoint
+          this.destination = this.path.shift() || null;
+        }
         this.playerMoving = true;
         this.walkCycle += dt * 9;
         if (Math.abs(vx) > Math.abs(vy)) {
@@ -260,7 +462,7 @@ class HiveWorldClient {
       const p = target.position;
       if (!p) continue;
       const distance = Math.hypot(this.player.x - p.x, this.player.y - p.y);
-      const radius = target.interaction_radius || 13;
+      const radius = target.interaction_radius || 18;
       if (distance <= radius && distance < bestDistance) {
         best = target;
         bestDistance = distance;
@@ -271,7 +473,7 @@ class HiveWorldClient {
 
   _updateInteractionPrompt() {
     if (!this.interactButton) return;
-    const target = this._nearestTarget();
+    const target = this.selectedTarget || this._nearestTarget();
     if (!target) {
       this.interactButton.classList.add("hidden");
       return;
@@ -286,13 +488,6 @@ class HiveWorldClient {
     await this._syncPosition(performance.now(), true);
     if (!this.requestAction) return;
     await this.requestAction({ kind: "interact", target_id: target.id });
-  }
-
-  _xy(point) {
-    return {
-      x: (point.x / 100) * this.canvas.width,
-      y: (point.y / 100) * this.canvas.height,
-    };
   }
 
   _draw() {
@@ -314,7 +509,14 @@ class HiveWorldClient {
     // 3. Collect and Y-Sort all renderable scene actors/objects for depth ordering
     const renderList = [];
 
-    // Wetberry hotspot
+    // Table Surface Layer: Table top/chairs occlude actors whose feet/base are behind y: 62
+    renderList.push({
+      type: "table_surface",
+      y: 62,
+      data: null,
+    });
+
+    // Hotspots (Wetberry, etc.)
     for (const hotspot of this.snapshot.hotspots || []) {
       if (hotspot.position) {
         renderList.push({
@@ -354,7 +556,14 @@ class HiveWorldClient {
         this._drawActor(ctx, item.data);
       } else if (item.type === "player") {
         this._drawPlayer(ctx);
+      } else if (item.type === "table_surface") {
+        this._drawTableSurface(ctx);
       }
+    }
+
+    // Selection reticle on selected target
+    if (this.selectedTarget) {
+      this._drawSelectionReticle(ctx, this.selectedTarget);
     }
 
     // 4. Foreground Lighting & Ambient Fluorescent Overlay
@@ -367,39 +576,130 @@ class HiveWorldClient {
   }
 
   _drawRoom(ctx, w, h) {
+    const vr = this.viewRect || { ox: 0, oy: 0, rw: w, rh: h };
+    // Clear letterbox borders with deep cosmic void
+    ctx.fillStyle = "#070a10";
+    ctx.fillRect(0, 0, w, h);
+
     if (this.roomBgLoaded && this.roomBgImage.naturalWidth > 0) {
-      ctx.drawImage(this.roomBgImage, 0, 0, w, h);
+      ctx.drawImage(this.roomBgImage, vr.ox, vr.oy, vr.rw, vr.rh);
     } else {
-      // Procedural painterly fallback
+      // Procedural painterly fallback mapped inside viewRect
       const style = (this.snapshot.world && this.snapshot.world.style) || {};
       ctx.fillStyle = style.floor || "#111722";
-      ctx.fillRect(0, 0, w, h);
+      ctx.fillRect(vr.ox, vr.oy, vr.rw, vr.rh);
 
       // Back wall
       ctx.fillStyle = "#161c24";
-      ctx.fillRect(0, 0, w, h * 0.52);
+      ctx.fillRect(vr.ox, vr.oy, vr.rw, vr.rh * 0.52);
 
       // Coffee counter
       ctx.fillStyle = style.counter || "#4c3c35";
-      ctx.fillRect(w * 0.28, h * 0.26, w * 0.44, h * 0.16);
+      ctx.fillRect(vr.ox + vr.rw * 0.28, vr.oy + vr.rh * 0.26, vr.rw * 0.44, vr.rh * 0.16);
 
       // Vending machine
       ctx.fillStyle = style.fridge || "#2a3648";
-      ctx.fillRect(w * 0.04, h * 0.22, w * 0.16, h * 0.38);
+      ctx.fillRect(vr.ox + vr.rw * 0.04, vr.oy + vr.rh * 0.22, vr.rw * 0.16, vr.rh * 0.38);
 
       // Utility corner
       ctx.fillStyle = style.utility || "#1a2836";
-      ctx.fillRect(w * 0.74, h * 0.35, w * 0.22, h * 0.35);
+      ctx.fillRect(vr.ox + vr.rw * 0.74, vr.oy + vr.rh * 0.35, vr.rw * 0.22, vr.rh * 0.35);
 
-      // Central table
+      // Central table base
       ctx.fillStyle = style.table || "#384452";
       ctx.beginPath();
-      ctx.ellipse(w * 0.50, h * 0.64, w * 0.18, h * 0.11, 0, 0, Math.PI * 2);
+      ctx.ellipse(vr.ox + vr.rw * 0.50, vr.oy + vr.rh * 0.64, vr.rw * 0.18, vr.rh * 0.11, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = "#64768a";
-      ctx.lineWidth = Math.max(2, w / 260);
+      ctx.lineWidth = Math.max(2, vr.rw / 260);
       ctx.stroke();
     }
+  }
+
+  _drawTableSurface(ctx) {
+    // Renders the foreground lip/rim of the central table so characters walking behind y:62 are occluded
+    const vr = this.viewRect || { ox: 0, oy: 0, rw: this.canvas.width, rh: this.canvas.height };
+    const centerX = vr.ox + vr.rw * 0.50;
+    const centerY = vr.oy + vr.rh * 0.64;
+    const rx = vr.rw * 0.18;
+    const ry = vr.rh * 0.11;
+
+    ctx.save();
+    // Soft under-table shadow
+    ctx.fillStyle = "rgba(4, 7, 12, 0.4)";
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY + ry * 0.25, rx * 1.05, ry * 0.7, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Table rim & surface edge
+    const grad = ctx.createLinearGradient(centerX, centerY - ry, centerX, centerY + ry);
+    grad.addColorStop(0, "rgba(35, 48, 64, 0.65)");
+    grad.addColorStop(0.5, "rgba(22, 32, 45, 0.85)");
+    grad.addColorStop(1, "rgba(12, 18, 26, 0.95)");
+    ctx.fillStyle = grad;
+    ctx.strokeStyle = "rgba(0, 243, 255, 0.35)";
+    ctx.lineWidth = Math.max(1.5, vr.rw / 340);
+
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    // Fluorescent highlight along top edge
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.ellipse(centerX, centerY - ry * 0.3, rx * 0.75, ry * 0.4, 0, 0, Math.PI);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  _drawSelectionReticle(ctx, target) {
+    if (!target || !target.position) return;
+    const p = this._xy(target.position);
+    const scale = Math.max(0.85, Math.min(this.canvas.width, this.canvas.height) / 460);
+    const radius = ((target.interaction_radius || 16) * scale);
+    const time = this.animTime;
+
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.strokeStyle = "#ffb020";
+    ctx.lineWidth = 2 * scale;
+
+    // Corner brackets
+    const bracketLen = 7 * scale;
+    const offset = radius * 0.75 + Math.sin(time * 6) * 2 * scale;
+
+    // Top-Left
+    ctx.beginPath();
+    ctx.moveTo(-offset, -offset + bracketLen);
+    ctx.lineTo(-offset, -offset);
+    ctx.lineTo(-offset + bracketLen, -offset);
+    ctx.stroke();
+
+    // Top-Right
+    ctx.beginPath();
+    ctx.moveTo(offset - bracketLen, -offset);
+    ctx.lineTo(offset, -offset);
+    ctx.lineTo(offset, -offset + bracketLen);
+    ctx.stroke();
+
+    // Bottom-Left
+    ctx.beginPath();
+    ctx.moveTo(-offset, offset - bracketLen);
+    ctx.lineTo(-offset, offset);
+    ctx.lineTo(-offset + bracketLen, offset);
+    ctx.stroke();
+
+    // Bottom-Right
+    ctx.beginPath();
+    ctx.moveTo(offset - bracketLen, offset);
+    ctx.lineTo(offset, offset);
+    ctx.lineTo(offset, offset - bracketLen);
+    ctx.stroke();
+
+    ctx.restore();
   }
 
   _drawDestinationMarker(ctx) {
@@ -841,12 +1141,35 @@ class HiveWorldClient {
     for (const target of this._targets()) {
       if (!target.position) continue;
       const tp = this._xy(target.position);
-      const rad = ((target.interaction_radius || 12) / 100) * w;
+      const rad = ((target.interaction_radius || 12) / 100) * (this.viewRect ? this.viewRect.rw : w);
       ctx.strokeStyle = "rgba(0, 243, 255, 0.4)";
       ctx.beginPath();
       ctx.arc(tp.x, tp.y, rad, 0, Math.PI * 2);
       ctx.stroke();
       ctx.fillText(`${target.id}`, tp.x + 10, tp.y);
+    }
+
+    // Blocked regions
+    for (const b of this._blockedRegions()) {
+      const tl = this._xy({ x: b.min_x, y: b.min_y });
+      const br = this._xy({ x: b.max_x, y: b.max_y });
+      ctx.fillStyle = "rgba(255, 0, 50, 0.25)";
+      ctx.strokeStyle = "rgba(255, 0, 50, 0.75)";
+      ctx.lineWidth = 1;
+      ctx.fillRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+      ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+      ctx.fillStyle = "#ff0055";
+      ctx.fillText(b.name || "blocked", tl.x + 4, tl.y + 12);
+    }
+
+    // Waypoints
+    const wps = (this.snapshot.world && this.snapshot.world.waypoints) || [];
+    for (const wp of wps) {
+      const p = this._xy(wp);
+      ctx.fillStyle = "rgba(0, 255, 120, 0.8)";
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+      ctx.fill();
     }
     ctx.restore();
   }
