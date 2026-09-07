@@ -44,14 +44,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_in_dialogue or not player or not player.can_move:
 		return
 
+	var target_world = Vector2.ZERO
+	var has_target = false
+
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-		var click_world = get_global_mouse_position()
-		if _is_point_walkable(click_world):
-			player.walk_to(click_world)
+		target_world = get_global_mouse_position()
+		has_target = true
 	elif event is InputEventScreenTouch and event.pressed:
-		var touch_world = get_global_mouse_position()
-		if _is_point_walkable(touch_world):
-			player.walk_to(touch_world)
+		target_world = get_viewport().get_canvas_transform().affine_inverse() * event.position
+		has_target = true
+
+	if has_target:
+		var nav_map = get_world_2d().navigation_map
+		var closest = NavigationServer2D.map_get_closest_point(nav_map, target_world)
+		if closest != Vector2.ZERO:
+			player.walk_to(closest)
+		elif _is_point_walkable(target_world):
+			player.walk_to(target_world)
 
 
 func _is_point_walkable(pos: Vector2) -> bool:

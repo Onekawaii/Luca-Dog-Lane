@@ -30,7 +30,7 @@ func _ready() -> void:
 	_update_hud()
 
 	# Mobile virtual control presentation
-	var is_mobile = OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios")
+	var is_mobile = OS.has_feature("mobile") or OS.has_feature("android") or OS.has_feature("ios") or OS.has_feature("touchscreen")
 	if mobile_stick:
 		mobile_stick.visible = is_mobile
 	if is_mobile:
@@ -65,48 +65,3 @@ func _update_hud() -> void:
 	var loc_meta = GameRuntime.loader.get_location(loc_id)
 	room_title_label.text = loc_meta.get("name", "Breakroom of Inappropriate Discovery")
 
-
-func _gui_input(event: InputEvent) -> void:
-	if not mobile_stick or not mobile_stick.visible:
-		return
-
-	var base = mobile_stick.get_node_or_null("StickBase")
-	if not base:
-		return
-
-	var base_rect = base.get_global_rect()
-	var base_center = base_rect.position + base_rect.size * 0.5
-
-	if event is InputEventScreenTouch:
-		if event.pressed and base_rect.grow(20.0).has_point(event.position):
-			is_dragging_stick = true
-			stick_center = base_center
-			_update_stick_knob(event.position)
-			get_viewport().set_input_as_handled()
-		elif not event.pressed and is_dragging_stick:
-			is_dragging_stick = false
-			_reset_stick_knob()
-			get_viewport().set_input_as_handled()
-
-	elif event is InputEventScreenDrag and is_dragging_stick:
-		_update_stick_knob(event.position)
-		get_viewport().set_input_as_handled()
-
-
-func _update_stick_knob(touch_pos: Vector2) -> void:
-	var offset = touch_pos - stick_center
-	var dist = offset.length()
-	if dist > stick_radius:
-		offset = offset.normalized() * stick_radius
-
-	if stick_knob:
-		stick_knob.position = Vector2(24, 24) + offset
-
-	var input_vec = offset / stick_radius
-	EventBus.virtual_move_input.emit(input_vec)
-
-
-func _reset_stick_knob() -> void:
-	if stick_knob:
-		stick_knob.position = Vector2(24, 24)
-	EventBus.virtual_move_input.emit(Vector2.ZERO)

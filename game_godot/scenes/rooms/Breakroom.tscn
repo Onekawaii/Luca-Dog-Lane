@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://j9k0l1m2n3o4p"]
+[gd_scene load_steps=20 format=3 uid="uid://j9k0l1m2n3o4p"]
 
 [ext_resource type="Script" path="res://scripts/rooms/BreakroomScene.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/rooms/breakroom.png" id="2_bg"]
@@ -8,10 +8,12 @@
 [ext_resource type="PackedScene" path="res://scenes/actors/Tammy.tscn" id="6_tammy"]
 [ext_resource type="PackedScene" path="res://scenes/actors/Kevin.tscn" id="7_kevin"]
 [ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="8_hotspot"]
-[ext_resource type="Texture2D" path="res://assets/props/central_table.png" id="9_table"]
-[ext_resource type="Texture2D" path="res://assets/props/wetberry_idle.png" id="10_wetberry"]
-[ext_resource type="Texture2D" path="res://assets/props/counter_appliances.png" id="11_appliances"]
-[ext_resource type="Texture2D" path="res://assets/props/mop_bucket.png" id="12_mop"]
+[ext_resource type="Texture2D" path="res://assets/props/table_back.png" id="9_table_back"]
+[ext_resource type="Texture2D" path="res://assets/props/table_surface.png" id="10_table_surf"]
+[ext_resource type="Texture2D" path="res://assets/props/table_front_rim.png" id="11_table_rim"]
+[ext_resource type="Texture2D" path="res://assets/props/wetberry_idle.png" id="12_wetberry"]
+[ext_resource type="Texture2D" path="res://assets/props/counter_appliances.png" id="13_appliances"]
+[ext_resource type="Texture2D" path="res://assets/props/mop_bucket.png" id="14_mop"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_breakroom"]
 vertices = PackedVector2Array(80, 370, 1200, 370, 1200, 680, 80, 680, 560, 430, 720, 430, 720, 560, 560, 560, 260, 370, 520, 370, 520, 430, 260, 430, 960, 480, 1120, 480, 1120, 580, 960, 580)
@@ -72,6 +74,11 @@ position = Vector2(1100, 480)
 [node name="YSortContainer" type="Node2D" parent="."]
 y_sort_enabled = true
 
+[node name="TableBack" type="Sprite2D" parent="YSortContainer"]
+position = Vector2(640, 465)
+texture = ExtResource("9_table_back")
+offset = Vector2(0, 5)
+
 [node name="CentralTableHotspot" type="Area2D" parent="YSortContainer"]
 position = Vector2(640, 500)
 script = ExtResource("8_hotspot")
@@ -80,17 +87,22 @@ display_name = "Wetberry on Central Table"
 scene_id = "scene.act1.first_sighting"
 approach_position = Vector2(640, 570)
 
-[node name="TableSprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
+[node name="TableSurfaceSprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
 position = Vector2(0, -30)
-texture = ExtResource("9_table")
+texture = ExtResource("10_table_surf")
 
 [node name="WetberrySprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
 position = Vector2(0, -52)
-texture = ExtResource("10_wetberry")
+texture = ExtResource("12_wetberry")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CentralTableHotspot"]
 position = Vector2(0, -20)
 shape = SubResource("CircleShape2D_table")
+
+[node name="TableFrontRim" type="Sprite2D" parent="YSortContainer"]
+position = Vector2(640, 535)
+texture = ExtResource("11_table_rim")
+offset = Vector2(0, -65)
 
 [node name="CoffeeCounterHotspot" type="Area2D" parent="YSortContainer"]
 position = Vector2(400, 390)
@@ -102,7 +114,7 @@ approach_position = Vector2(400, 445)
 
 [node name="AppliancesSprite" type="Sprite2D" parent="YSortContainer/CoffeeCounterHotspot"]
 position = Vector2(0, -35)
-texture = ExtResource("11_appliances")
+texture = ExtResource("13_appliances")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CoffeeCounterHotspot"]
 position = Vector2(0, -20)
@@ -118,7 +130,7 @@ approach_position = Vector2(980, 540)
 
 [node name="MopSprite" type="Sprite2D" parent="YSortContainer/UtilityCornerHotspot"]
 position = Vector2(0, -30)
-texture = ExtResource("12_mop")
+texture = ExtResource("14_mop")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/UtilityCornerHotspot"]
 position = Vector2(0, -15)
@@ -138,7 +150,7 @@ approach_position = Vector2(1120, 460)
 shape = SubResource("RectangleShape2D_exit")
 
 [node name="Darla" parent="YSortContainer" instance=ExtResource("5_darla")]
-position = Vector2(490, 410)
+position = Vector2(480, 440)
 
 [node name="Keith" parent="YSortContainer" instance=ExtResource("4_keith")]
 position = Vector2(960, 520)

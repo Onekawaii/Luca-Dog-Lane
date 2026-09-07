@@ -64,6 +64,7 @@ func _run_all_tests() -> void:
 	test_scene_and_assets()
 	test_kevin_presence_and_dialogue()
 	test_multi_room_system()
+	test_mobile_controls_and_readability()
 
 
 func test_campaign_loading() -> void:
@@ -227,6 +228,9 @@ func test_scene_and_assets() -> void:
 		"res://assets/actors/darla.png",
 		"res://assets/actors/tammy.png",
 		"res://assets/props/central_table.png",
+		"res://assets/props/table_back.png",
+		"res://assets/props/table_surface.png",
+		"res://assets/props/table_front_rim.png",
 		"res://assets/props/wetberry_idle.png",
 		"res://assets/props/counter_appliances.png",
 		"res://assets/props/mop_bucket.png",
@@ -288,6 +292,61 @@ func test_multi_room_system() -> void:
 	assert_true(fridge != null, "FridgeLabyrinth instantiates successfully")
 	assert_true(fridge.find_child("DoorToHallway", true, false) != null, "FridgeLabyrinth has return door to Hallway")
 	fridge.queue_free()
+
+
+func test_mobile_controls_and_readability() -> void:
+	print("\n--- 11. Mobile Controls, Virtual Stick & Touch Readability ---")
+	# 1. VirtualStick and HUD tests
+	var hud_scene = load("res://scenes/ui/HUD.tscn")
+	assert_true(hud_scene != null, "HUD.tscn loads")
+	var hud = hud_scene.instantiate()
+	assert_true(hud != null, "HUD instantiates")
+	var mobile_stick = hud.find_child("MobileStick", true, false)
+	assert_true(mobile_stick != null, "HUD has MobileStick control")
+	assert_true(mobile_stick.get_script() != null, "MobileStick has VirtualStick script attached")
+	assert_true(mobile_stick.find_child("StickBase", true, false) != null, "MobileStick has StickBase")
+	assert_true(mobile_stick.find_child("StickKnob", true, false) != null, "MobileStick has StickKnob")
+
+	# Test topbar buttons sizing
+	var topbar = hud.find_child("TopBar", true, false)
+	assert_true(topbar.custom_minimum_size.y >= 48, "TopBar height is mobile touch friendly (>= 48px)")
+
+	hud.queue_free()
+
+	# 2. Split Table Depth & Darla Floor Positioning
+	var breakroom_scene = load("res://scenes/rooms/Breakroom.tscn")
+	var breakroom = breakroom_scene.instantiate()
+	var table_back = breakroom.find_child("TableBack", true, false)
+	var table_front = breakroom.find_child("TableFrontRim", true, false)
+	var table_hotspot = breakroom.find_child("CentralTableHotspot", true, false)
+	var darla = breakroom.find_child("Darla", true, false)
+
+	assert_true(table_back != null, "Breakroom has TableBack node for depth YSorting")
+	assert_true(table_front != null, "Breakroom has TableFrontRim node for depth YSorting")
+	assert_true(table_hotspot != null, "Breakroom has CentralTableHotspot")
+	assert_true(darla != null, "Breakroom has Darla actor")
+	assert_true(darla.position.y > 420.0, "Darla is positioned cleanly on the walkable floor (y > 420)")
+
+	breakroom.queue_free()
+
+	# 3. Virtual move event handling in PlayerActor
+	var player_scene = load("res://scenes/actors/Player.tscn")
+	var player = player_scene.instantiate()
+	assert_true(player != null, "Player instantiates")
+	player._on_virtual_move_input(Vector2(0.8, -0.6))
+	assert_equal(player.virtual_input_vector, Vector2(0.8, -0.6), "PlayerActor updates virtual_input_vector on stick input")
+	player._on_virtual_move_input(Vector2.ZERO)
+	assert_equal(player.virtual_input_vector, Vector2.ZERO, "PlayerActor resets virtual_input_vector on stick release")
+	player.queue_free()
+
+	# 4. Overlays Modal Sizing
+	var overlays_scene = load("res://scenes/ui/Overlays.tscn")
+	var overlays = overlays_scene.instantiate()
+	var status_modal = overlays.find_child("StatusModal", true, false)
+	assert_true(status_modal.custom_minimum_size.x >= 600, "StatusModal width is mobile friendly (>= 600px)")
+	var status_close = status_modal.find_child("CloseButton", true, false)
+	assert_true(status_close.custom_minimum_size.y >= 44, "Status close button height is touch friendly (>= 44px)")
+	overlays.queue_free()
 
 
 func assert_false(condition: bool, test_name: String) -> void:

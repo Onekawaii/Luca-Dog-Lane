@@ -47,11 +47,12 @@ func display_dialogue(actor_id: String, speaker_name: String, text: String, choi
 	for child in choices_container.get_children():
 		child.queue_free()
 
-	# Populate choice buttons
+	# Populate choice buttons with mobile touch sizing
 	if choices.is_empty():
 		var dismiss_btn = Button.new()
 		dismiss_btn.text = "Continue..."
-		dismiss_btn.custom_minimum_size = Vector2(0, 38)
+		dismiss_btn.custom_minimum_size = Vector2(0, 48)
+		dismiss_btn.add_theme_font_size_override("font_size", 15)
 		dismiss_btn.pressed.connect(close_dialogue)
 		choices_container.add_child(dismiss_btn)
 	else:
@@ -62,7 +63,8 @@ func display_dialogue(actor_id: String, speaker_name: String, text: String, choi
 				label_text += " [LOCKED: " + ch.get("locked_reason", "Unavailable") + "]"
 				btn.disabled = true
 			btn.text = label_text
-			btn.custom_minimum_size = Vector2(0, 38)
+			btn.custom_minimum_size = Vector2(0, 48)
+			btn.add_theme_font_size_override("font_size", 15)
 			btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			var choice_id = ch.get("id")
 			btn.pressed.connect(func(): _on_choice_selected(choice_id))
@@ -85,7 +87,8 @@ func _on_choice_selected(choice_id: String) -> void:
 	if views.is_empty() or outcome.has("next_scene"):
 		var done_btn = Button.new()
 		done_btn.text = "Step away."
-		done_btn.custom_minimum_size = Vector2(0, 38)
+		done_btn.custom_minimum_size = Vector2(0, 48)
+		done_btn.add_theme_font_size_override("font_size", 15)
 		done_btn.pressed.connect(close_dialogue)
 		choices_container.add_child(done_btn)
 	else:
@@ -96,7 +99,8 @@ func _on_choice_selected(choice_id: String) -> void:
 				label_text += " [LOCKED: " + ch.get("locked_reason", "Unavailable") + "]"
 				btn.disabled = true
 			btn.text = label_text
-			btn.custom_minimum_size = Vector2(0, 38)
+			btn.custom_minimum_size = Vector2(0, 48)
+			btn.add_theme_font_size_override("font_size", 15)
 			btn.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 			var ch_id = ch.get("id")
 			btn.pressed.connect(func(): _on_choice_selected(ch_id))

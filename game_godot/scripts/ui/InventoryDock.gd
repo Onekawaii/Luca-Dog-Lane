@@ -33,18 +33,17 @@ func refresh_inventory() -> void:
 		slots_container.add_child(empty_lbl)
 		return
 
-	for itm in items:
+	for item in items:
+		var item_id = item.get("id", "")
+		var item_name = item.get("name", item_id)
 		var btn = Button.new()
-		btn.custom_minimum_size = Vector2(56, 56)
-		btn.tooltip_text = itm["name"] + "\n" + itm["description"]
-
-		var itm_id = itm["id"]
-		var icon_path = itm["icon"]
-		if ResourceLoader.exists(icon_path):
-			btn.icon = load(icon_path)
-			btn.expand_icon = true
-
-		btn.pressed.connect(func(): _on_slot_clicked(itm_id))
+		btn.text = item_name
+		btn.custom_minimum_size = Vector2(100, 52)
+		btn.add_theme_font_size_override("font_size", 14)
+		var current_armed = GameRuntime.inventory_system.get_armed_item()
+		if item_id == current_armed:
+			btn.modulate = Color(1.2, 0.8, 0.2, 1.0)
+		btn.pressed.connect(func(): _on_slot_clicked(item_id))
 		slots_container.add_child(btn)
 		slot_buttons.append(btn)
 

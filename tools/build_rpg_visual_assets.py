@@ -907,34 +907,6 @@ def create_breakroom_background(width: int = 1024, height: int = 768) -> Image.I
     draw.ellipse([bucket_x + 30, bucket_y + 32, bucket_x + 38, bucket_y + 40], fill=(20, 20, 20, 255))
     draw.line([bucket_x + 32, bucket_y + 8, bucket_x + 48, bucket_y - 12], fill=(160, 160, 160, 255), width=3)
 
-    # 6. Central Table (The focal centerpiece where Wetberry rests)
-    tbl_cx, tbl_cy = int(width * 0.50), int(height * 0.64)
-    tbl_rx, tbl_ry = int(width * 0.18), int(height * 0.11)
-
-    shadow = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    sh_draw = ImageDraw.Draw(shadow)
-    sh_draw.ellipse([tbl_cx - tbl_rx - 10, tbl_cy + 15, tbl_cx + tbl_rx + 10, tbl_cy + tbl_ry + 45], fill=(5, 8, 12, 160))
-    img = Image.alpha_composite(img, shadow)
-    draw = ImageDraw.Draw(img)
-
-    # Table legs
-    leg_w = 12
-    draw.rectangle([tbl_cx - tbl_rx + 30, tbl_cy, tbl_cx - tbl_rx + 30 + leg_w, tbl_cy + 55], fill=(45, 52, 62, 255), outline=(20, 25, 30, 255))
-    draw.rectangle([tbl_cx + tbl_rx - 42, tbl_cy, tbl_cx + tbl_rx - 42 + leg_w, tbl_cy + 55], fill=(45, 52, 62, 255), outline=(20, 25, 30, 255))
-    draw.rectangle([tbl_cx - leg_w // 2, tbl_cy + 10, tbl_cx + leg_w // 2, tbl_cy + 58], fill=(35, 42, 50, 255), outline=(15, 20, 25, 255))
-
-    # Tabletop Oval
-    draw.ellipse([tbl_cx - tbl_rx, tbl_cy - tbl_ry + 8, tbl_cx + tbl_rx, tbl_cy + tbl_ry + 8], fill=(35, 42, 52, 255), outline=(20, 25, 32, 255), width=2)
-    draw.ellipse([tbl_cx - tbl_rx, tbl_cy - tbl_ry, tbl_cx + tbl_rx, tbl_cy + tbl_ry], fill=(56, 68, 82, 255), outline=(100, 118, 138, 255), width=3)
-    draw.ellipse([tbl_cx - tbl_rx + 6, tbl_cy - tbl_ry + 4, tbl_cx + tbl_rx - 6, tbl_cy + tbl_ry - 4], outline=(75, 90, 108, 255), width=1)
-
-    # Table Stain / Wetberry Moisture Ring
-    stain = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-    stain_draw = ImageDraw.Draw(stain)
-    stain_draw.ellipse([tbl_cx - 35, tbl_cy - 18, tbl_cx + 35, tbl_cy + 18], fill=(255, 30, 100, 70))
-    stain_draw.ellipse([tbl_cx - 22, tbl_cy - 12, tbl_cx + 22, tbl_cy + 12], fill=(255, 60, 130, 95))
-    img = Image.alpha_composite(img, stain)
-
     return img
 
 
