@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3 uid="uid://j9k0l1m2n3o4p"]
+[gd_scene load_steps=18 format=3 uid="uid://j9k0l1m2n3o4p"]
 
 [ext_resource type="Script" path="res://scripts/rooms/BreakroomScene.gd" id="1_script"]
 [ext_resource type="Texture2D" path="res://assets/rooms/breakroom.png" id="2_bg"]
@@ -6,24 +6,29 @@
 [ext_resource type="PackedScene" path="res://scenes/actors/Keith.tscn" id="4_keith"]
 [ext_resource type="PackedScene" path="res://scenes/actors/Darla.tscn" id="5_darla"]
 [ext_resource type="PackedScene" path="res://scenes/actors/Tammy.tscn" id="6_tammy"]
-[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="7_hotspot"]
-[ext_resource type="Texture2D" path="res://assets/props/central_table.png" id="8_table"]
-[ext_resource type="Texture2D" path="res://assets/props/wetberry_idle.png" id="9_wetberry"]
-[ext_resource type="Texture2D" path="res://assets/props/counter_appliances.png" id="10_appliances"]
-[ext_resource type="Texture2D" path="res://assets/props/mop_bucket.png" id="11_mop"]
-[ext_resource type="Texture2D" path="res://assets/ui/target_reticle.png" id="12_reticle"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Kevin.tscn" id="7_kevin"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="8_hotspot"]
+[ext_resource type="Texture2D" path="res://assets/props/central_table.png" id="9_table"]
+[ext_resource type="Texture2D" path="res://assets/props/wetberry_idle.png" id="10_wetberry"]
+[ext_resource type="Texture2D" path="res://assets/props/counter_appliances.png" id="11_appliances"]
+[ext_resource type="Texture2D" path="res://assets/props/mop_bucket.png" id="12_mop"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_breakroom"]
+vertices = PackedVector2Array(80, 370, 1200, 370, 1200, 680, 80, 680, 560, 430, 720, 430, 720, 560, 560, 560, 260, 370, 520, 370, 520, 430, 260, 430, 960, 480, 1120, 480, 1120, 580, 960, 580)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(80, 370, 1200, 370, 1200, 680, 80, 680)])
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_table"]
-radius = 80.0
+radius = 45.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_counter"]
-size = Vector2(160, 80)
+size = Vector2(160, 40)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utility"]
-radius = 55.0
+radius = 35.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
-size = Vector2(80, 160)
+size = Vector2(60, 120)
 
 [node name="Breakroom" type="Node2D"]
 script = ExtResource("1_script")
@@ -35,12 +40,41 @@ texture = ExtResource("2_bg")
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(640, 360)
 
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_breakroom")
+
+[node name="StaticBodies" type="Node2D" parent="."]
+
+[node name="TableBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(640, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/TableBody"]
+shape = SubResource("CircleShape2D_table")
+
+[node name="CounterBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(400, 400)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/CounterBody"]
+shape = SubResource("RectangleShape2D_counter")
+
+[node name="UtilityBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(1040, 540)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/UtilityBody"]
+shape = SubResource("CircleShape2D_utility")
+
+[node name="Entrance_Default" type="Marker2D" parent="."]
+position = Vector2(640, 600)
+
+[node name="Entrance_Hallway" type="Marker2D" parent="."]
+position = Vector2(1100, 480)
+
 [node name="YSortContainer" type="Node2D" parent="."]
 y_sort_enabled = true
 
 [node name="CentralTableHotspot" type="Area2D" parent="YSortContainer"]
 position = Vector2(640, 500)
-script = ExtResource("7_hotspot")
+script = ExtResource("8_hotspot")
 hotspot_id = "relic.wetberry"
 display_name = "Wetberry on Central Table"
 scene_id = "scene.act1.first_sighting"
@@ -48,24 +82,19 @@ approach_position = Vector2(640, 570)
 
 [node name="TableSprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
 position = Vector2(0, -30)
-texture = ExtResource("8_table")
+texture = ExtResource("9_table")
 
 [node name="WetberrySprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
 position = Vector2(0, -52)
-texture = ExtResource("9_wetberry")
+texture = ExtResource("10_wetberry")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CentralTableHotspot"]
 position = Vector2(0, -20)
 shape = SubResource("CircleShape2D_table")
 
-[node name="Reticle" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
-visible = false
-position = Vector2(0, -110)
-texture = ExtResource("12_reticle")
-
 [node name="CoffeeCounterHotspot" type="Area2D" parent="YSortContainer"]
 position = Vector2(400, 390)
-script = ExtResource("7_hotspot")
+script = ExtResource("8_hotspot")
 hotspot_id = "location.breakroom.coffee_counter"
 display_name = "Coffee Counter & Microwave"
 scene_id = "scene.act1.coffee_counter"
@@ -73,20 +102,15 @@ approach_position = Vector2(400, 445)
 
 [node name="AppliancesSprite" type="Sprite2D" parent="YSortContainer/CoffeeCounterHotspot"]
 position = Vector2(0, -35)
-texture = ExtResource("10_appliances")
+texture = ExtResource("11_appliances")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CoffeeCounterHotspot"]
 position = Vector2(0, -20)
 shape = SubResource("RectangleShape2D_counter")
 
-[node name="Reticle" type="Sprite2D" parent="YSortContainer/CoffeeCounterHotspot"]
-visible = false
-position = Vector2(0, -85)
-texture = ExtResource("12_reticle")
-
 [node name="UtilityCornerHotspot" type="Area2D" parent="YSortContainer"]
 position = Vector2(1040, 530)
-script = ExtResource("7_hotspot")
+script = ExtResource("8_hotspot")
 hotspot_id = "location.breakroom.utility_corner"
 display_name = "Utility Corner & Mop Bucket"
 scene_id = "scene.act1.keith_corner"
@@ -94,32 +118,24 @@ approach_position = Vector2(980, 540)
 
 [node name="MopSprite" type="Sprite2D" parent="YSortContainer/UtilityCornerHotspot"]
 position = Vector2(0, -30)
-texture = ExtResource("11_mop")
+texture = ExtResource("12_mop")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/UtilityCornerHotspot"]
 position = Vector2(0, -15)
 shape = SubResource("CircleShape2D_utility")
 
-[node name="Reticle" type="Sprite2D" parent="YSortContainer/UtilityCornerHotspot"]
-visible = false
-position = Vector2(0, -80)
-texture = ExtResource("12_reticle")
-
 [node name="ExitHotspot" type="Area2D" parent="YSortContainer"]
-position = Vector2(1180, 440)
-script = ExtResource("7_hotspot")
+position = Vector2(1180, 460)
+script = ExtResource("8_hotspot")
 hotspot_id = "exit.breakroom.hallway"
 display_name = "Exit to Forgotten Hallway"
 is_exit = true
-approach_position = Vector2(1120, 450)
+target_room = "hallway"
+target_entrance = "Breakroom"
+approach_position = Vector2(1120, 460)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/ExitHotspot"]
 shape = SubResource("RectangleShape2D_exit")
-
-[node name="Reticle" type="Sprite2D" parent="YSortContainer/ExitHotspot"]
-visible = false
-position = Vector2(0, -70)
-texture = ExtResource("12_reticle")
 
 [node name="Darla" parent="YSortContainer" instance=ExtResource("5_darla")]
 position = Vector2(490, 410)
@@ -129,6 +145,9 @@ position = Vector2(960, 520)
 
 [node name="Tammy" parent="YSortContainer" instance=ExtResource("6_tammy")]
 position = Vector2(820, 470)
+
+[node name="Kevin" parent="YSortContainer" instance=ExtResource("7_kevin")]
+position = Vector2(330, 430)
 
 [node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
 position = Vector2(640, 590)

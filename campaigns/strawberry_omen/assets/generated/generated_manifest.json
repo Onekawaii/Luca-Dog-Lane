@@ -125,6 +125,16 @@
       "asset_id": "item.verdict_seal",
       "category": "items",
       "path": "assets/generated/items/item.verdict_seal.png"
+    },
+    {
+      "asset_id": "portrait.kevin.neutral",
+      "category": "portraits",
+      "path": "assets/generated/portraits/kevin_neutral.png"
+    },
+    {
+      "asset_id": "token.kevin",
+      "category": "tokens",
+      "path": "assets/generated/tokens/token.kevin.png"
     }
   ]
 }

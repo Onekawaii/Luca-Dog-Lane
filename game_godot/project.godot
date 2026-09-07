@@ -24,6 +24,7 @@ config/icon="res://assets/props/wetberry_idle.png"
 EventBus="*res://scripts/runtime/EventBus.gd"
 GameRuntime="*res://scripts/runtime/GameRuntime.gd"
 AudioManager="*res://scripts/audio/AudioManager.gd"
+RoomManager="*res://scripts/runtime/RoomManager.gd"
 
 [display]
 

@@ -12,37 +12,28 @@ var is_hovered: bool = false
 var is_focused: bool = false
 
 @onready var sprite: Sprite2D = $Sprite2D
-@onready var highlight: Sprite2D = get_node_or_null("Highlight")
-@onready var reticle: Sprite2D = get_node_or_null("Reticle")
+
+var base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
+var highlight_modulate: Color = Color(1.2, 1.25, 1.35, 1.0)
 
 
 func _ready() -> void:
-	# Enable YSort on parent container
 	y_sort_enabled = true
-	# Ensure input pickable
 	input_pickable = true
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
-
-	if highlight:
-		highlight.visible = false
-	if reticle:
-		reticle.visible = false
-
 	_update_presentation()
 
 
 func _on_mouse_entered() -> void:
 	is_hovered = true
-	if highlight:
-		highlight.visible = true
+	_update_presentation()
 	_update_cursor()
 
 
 func _on_mouse_exited() -> void:
 	is_hovered = false
-	if highlight and not is_focused:
-		highlight.visible = false
+	_update_presentation()
 	_reset_cursor()
 
 
@@ -59,10 +50,7 @@ func _reset_cursor() -> void:
 
 func set_focus(focused: bool) -> void:
 	is_focused = focused
-	if highlight:
-		highlight.visible = focused or is_hovered
-	if reticle:
-		reticle.visible = focused
+	_update_presentation()
 
 
 func get_foot_position() -> Vector2:
@@ -73,28 +61,27 @@ func get_approach_position() -> Vector2:
 	return global_position + approach_offset
 
 
-func get_head_screen_position(camera: Camera2D = null) -> Vector2:
-	# Return approximate head position in screen coordinates for anchoring dialogue bubbles
+func get_head_screen_position(_camera: Camera2D = null) -> Vector2:
 	var head_world = global_position + Vector2(0, -180)
 	var canvas_transform = get_viewport().get_canvas_transform()
 	return canvas_transform * head_world
 
 
-func _input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
+func _input_event(viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		viewport.set_input_as_handled()
 		_handle_interaction()
 	elif event is InputEventScreenTouch and event.pressed:
+		viewport.set_input_as_handled()
 		_handle_interaction()
 
 
 func _handle_interaction() -> void:
 	AudioManager.play_ui_click()
 	if GameRuntime.inventory_system.is_item_armed():
-		# Use armed item on this actor
 		GameRuntime.use_armed_item_on(actor_id)
 		return
 
-	# Normal click: notify room / player to approach this actor and trigger interaction
 	EventBus.action_requested.emit({
 		"type": "approach_and_interact_actor",
 		"actor": self,
@@ -104,4 +91,15 @@ func _handle_interaction() -> void:
 
 
 func _update_presentation() -> void:
-	pass
+	if sprite:
+		if is_focused or is_hovered:
+			sprite.modulate = highlight_modulate
+		else:
+			sprite.modulate = base_modulate
+
+
+func _draw() -> void:
+	if GameRuntime.debug_mode:
+		draw_circle(Vector2.ZERO, 6.0, Color(0.2, 0.9, 0.3, 0.8)) # Foot anchor at origin
+		draw_line(Vector2(-12, 0), Vector2(12, 0), Color(0.2, 0.9, 0.3, 1.0), 2.0)
+		draw_line(Vector2(0, -12), Vector2(0, 12), Color(0.2, 0.9, 0.3, 1.0), 2.0)

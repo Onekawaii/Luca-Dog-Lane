@@ -10,10 +10,13 @@ extends Area2D
 @export var is_exit: bool = false
 @export var target_room: String = ""
 
+@export var target_entrance: String = "Entrance"
+
 var is_hovered: bool = false
 var is_selected: bool = false
 
-@onready var reticle: Sprite2D = get_node_or_null("Reticle")
+var base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
+var highlight_modulate: Color = Color(1.2, 1.25, 1.35, 1.0)
 
 
 func _ready() -> void:
@@ -21,22 +24,18 @@ func _ready() -> void:
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	input_event.connect(_on_input_event)
-
-	if reticle:
-		reticle.visible = false
+	_update_presentation()
 
 
 func _on_mouse_entered() -> void:
 	is_hovered = true
-	if reticle:
-		reticle.visible = true
+	_update_presentation()
 	_update_cursor()
 
 
 func _on_mouse_exited() -> void:
 	is_hovered = false
-	if reticle and not is_selected:
-		reticle.visible = false
+	_update_presentation()
 	Input.set_default_cursor_shape(Input.CURSOR_ARROW)
 
 
@@ -47,10 +46,12 @@ func _update_cursor() -> void:
 		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
 
 
-func _on_input_event(_viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
+func _on_input_event(viewport: Viewport, event: InputEvent, _shape_idx: int) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		viewport.set_input_as_handled()
 		_handle_activation()
 	elif event is InputEventScreenTouch and event.pressed:
+		viewport.set_input_as_handled()
 		_handle_activation()
 
 
@@ -58,11 +59,9 @@ func _handle_activation() -> void:
 	AudioManager.play_ui_click()
 
 	if GameRuntime.inventory_system.is_item_armed():
-		# Use armed item on this hotspot / object (e.g. Evidence Bag on Wetberry)
 		GameRuntime.use_armed_item_on(hotspot_id)
 		return
 
-	# Normal click: approach hotspot and open interaction
 	var app_pos = approach_position if approach_position != Vector2.ZERO else global_position + Vector2(0, 40)
 	EventBus.action_requested.emit({
 		"type": "approach_and_interact_hotspot",
@@ -71,11 +70,28 @@ func _handle_activation() -> void:
 		"scene_id": scene_id,
 		"is_exit": is_exit,
 		"target_room": target_room,
+		"target_entrance": target_entrance,
 		"approach_pos": app_pos
 	})
 
 
 func set_selected(selected: bool) -> void:
 	is_selected = selected
-	if reticle:
-		reticle.visible = selected or is_hovered
+	_update_presentation()
+
+
+func _update_presentation() -> void:
+	for child in get_children():
+		if child is Sprite2D and child.name != "Reticle":
+			if is_selected or is_hovered:
+				child.modulate = highlight_modulate
+			else:
+				child.modulate = base_modulate
+
+
+func _draw() -> void:
+	if GameRuntime.debug_mode:
+		draw_circle(Vector2.ZERO, 5.0, Color(0.9, 0.7, 0.1, 0.8)) # Hotspot center
+		var app_rel = to_local(approach_position) if approach_position != Vector2.ZERO else Vector2(0, 40)
+		draw_circle(app_rel, 4.0, Color(0.2, 0.6, 1.0, 0.8)) # Approach anchor
+		draw_line(Vector2.ZERO, app_rel, Color(0.2, 0.6, 1.0, 0.5), 1.0)

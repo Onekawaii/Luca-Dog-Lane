@@ -7,6 +7,7 @@ const CampaignLoader = preload("res://scripts/campaign/CampaignLoader.gd")
 const ActionResolver = preload("res://scripts/runtime/ActionResolver.gd")
 const WorldState = preload("res://scripts/runtime/WorldState.gd")
 const SaveSystem = preload("res://scripts/save/SaveSystem.gd")
+const RoomBaseClass = preload("res://scripts/rooms/RoomBase.gd")
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -61,6 +62,8 @@ func _run_all_tests() -> void:
 	test_wetberry_containment_loop()
 	test_save_load_persistence()
 	test_scene_and_assets()
+	test_kevin_presence_and_dialogue()
+	test_multi_room_system()
 
 
 func test_campaign_loading() -> void:
@@ -234,11 +237,59 @@ func test_scene_and_assets() -> void:
 		"res://assets/audio/item_pickup.wav",
 		"res://assets/audio/wetberry_pulse.wav",
 		"res://assets/audio/footstep.wav",
+		"res://scenes/rooms/Hallway.tscn",
+		"res://scenes/rooms/FridgeLabyrinth.tscn",
+		"res://scenes/actors/Kevin.tscn",
+		"res://assets/actors/kevin.png",
+		"res://assets/portraits/kevin_neutral.png",
+		"res://assets/rooms/hallway.png",
+		"res://assets/rooms/fridge_labyrinth.png"
 	]
 
 	for path in required_files:
 		assert_true(ResourceLoader.exists(path) or FileAccess.file_exists(path), "Local asset exists: " + path)
 
 
+func test_kevin_presence_and_dialogue() -> void:
+	print("\n--- 9. Kevin Actor Presence & Dialogue Dispatch ---")
+	var kevin_scene = load("res://scenes/actors/Kevin.tscn")
+	assert_true(kevin_scene != null, "Kevin.tscn loads successfully")
+	var kevin = kevin_scene.instantiate()
+	assert_true(kevin is CharacterBody2D, "Kevin is a CharacterBody2D actor")
+	assert_equal(kevin.actor_id, "npc.kevin_marketing", "Kevin actor_id is correct")
+	assert_equal(kevin.display_name, "Kevin (Marketing)", "Kevin display_name is correct")
+	kevin.queue_free()
+
+
+func test_multi_room_system() -> void:
+	print("\n--- 10. Multi-Room Instantiation & Transitions ---")
+	var breakroom_scene = load("res://scenes/rooms/Breakroom.tscn")
+	var hallway_scene = load("res://scenes/rooms/Hallway.tscn")
+	var fridge_scene = load("res://scenes/rooms/FridgeLabyrinth.tscn")
+
+	assert_true(breakroom_scene != null, "Breakroom.tscn loads")
+	assert_true(hallway_scene != null, "Hallway.tscn loads")
+	assert_true(fridge_scene != null, "FridgeLabyrinth.tscn loads")
+
+	var breakroom = breakroom_scene.instantiate()
+	assert_true(breakroom != null, "Breakroom instantiates successfully")
+	assert_true(breakroom.find_child("StaticBodies", true, false) != null, "Breakroom has StaticBodies")
+	assert_true(breakroom.find_child("NavigationRegion2D", true, false) != null, "Breakroom has NavigationRegion2D")
+	assert_true(breakroom.find_child("ExitHotspot", true, false) != null, "Breakroom has exit door to Hallway")
+	breakroom.queue_free()
+
+	var hallway = hallway_scene.instantiate()
+	assert_true(hallway != null, "Hallway instantiates successfully")
+	assert_true(hallway.find_child("DoorToBreakroom", true, false) != null, "Hallway has return door to Breakroom")
+	assert_true(hallway.find_child("DoorToFridge", true, false) != null, "Hallway has door to Fridge")
+	hallway.queue_free()
+
+	var fridge = fridge_scene.instantiate()
+	assert_true(fridge != null, "FridgeLabyrinth instantiates successfully")
+	assert_true(fridge.find_child("DoorToHallway", true, false) != null, "FridgeLabyrinth has return door to Hallway")
+	fridge.queue_free()
+
+
 func assert_false(condition: bool, test_name: String) -> void:
 	assert_true(not condition, test_name)
+

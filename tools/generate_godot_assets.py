@@ -305,6 +305,152 @@ def draw_tammy_sprite(width: int = 128, height: int = 192) -> Image.Image:
     return img
 
 
+def draw_kevin_sprite(width: int = 128, height: int = 192) -> Image.Image:
+    """Generate Kevin from Marketing sprite. Foot anchor is at (width/2, height-8)."""
+    img = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    cx = width // 2
+    ground_y = height - 8
+
+    # Shadow
+    draw.ellipse([cx - 26, ground_y - 8, cx + 26, ground_y + 4], fill=(10, 12, 16, 120))
+    # Shoes (brown business loafers)
+    draw.rectangle([cx - 16, ground_y - 12, cx - 4, ground_y - 2], fill=(60, 40, 25, 255))
+    draw.rectangle([cx + 4, ground_y - 12, cx + 16, ground_y - 2], fill=(60, 40, 25, 255))
+
+    # Trousers (beige chinos #c4b59d)
+    leg_top = ground_y - 65
+    draw.polygon([(cx - 20, leg_top), (cx - 4, leg_top), (cx - 4, ground_y - 10), (cx - 18, ground_y - 10)], fill=(196, 181, 157, 255), outline=(140, 125, 105, 255), width=2)
+    draw.polygon([(cx + 4, leg_top), (cx + 20, leg_top), (cx + 18, ground_y - 10), (cx + 4, ground_y - 10)], fill=(196, 181, 157, 255), outline=(140, 125, 105, 255), width=2)
+
+    # Pastel polo shirt (bright marketing salmon #e76f51)
+    torso_top = ground_y - 124
+    draw.polygon([(cx - 24, torso_top), (cx + 24, torso_top), (cx + 22, leg_top + 8), (cx - 22, leg_top + 8)], fill=(231, 111, 81, 255), outline=(180, 70, 45, 255), width=2)
+    draw.polygon([(cx - 8, torso_top), (cx + 8, torso_top), (cx, torso_top + 16)], fill=(255, 255, 255, 255))
+    # Corporate lanyard & badge
+    draw.line([cx - 10, torso_top, cx, torso_top + 32], fill=(56, 189, 248, 255), width=2)
+    draw.line([cx + 10, torso_top, cx, torso_top + 32], fill=(56, 189, 248, 255), width=2)
+    draw.rectangle([cx - 7, torso_top + 32, cx + 7, torso_top + 48], fill=(255, 255, 255, 255), outline=(100, 100, 100, 255), width=1)
+    draw.rectangle([cx - 5, torso_top + 34, cx + 5, torso_top + 40], fill=(56, 189, 248, 255))
+
+    # Head & anxious marketing haircut (styled side-part, gelled)
+    head_cy = torso_top - 20
+    draw.ellipse([cx - 18, head_cy - 20, cx + 18, head_cy + 16], fill=(235, 190, 150, 255), outline=(170, 125, 85, 255), width=2)
+    draw.polygon([
+        (cx - 22, head_cy - 12), (cx - 22, head_cy - 26), (cx + 18, head_cy - 30),
+        (cx + 24, head_cy - 14), (cx + 16, head_cy - 20), (cx - 14, head_cy - 18)
+    ], fill=(90, 55, 30, 255))
+
+    # Anxious hyper-caffeinated eyes (wide open)
+    draw.ellipse([cx - 14, head_cy - 6, cx - 4, head_cy + 4], fill=(255, 255, 255, 255), outline=(100, 70, 50, 255), width=1)
+    draw.ellipse([cx + 4, head_cy - 6, cx + 14, head_cy + 4], fill=(255, 255, 255, 255), outline=(100, 70, 50, 255), width=1)
+    draw.ellipse([cx - 10, head_cy - 3, cx - 7, head_cy], fill=(30, 20, 10, 255))
+    draw.ellipse([cx + 7, head_cy - 3, cx + 10, head_cy], fill=(30, 20, 10, 255))
+    # Sweat drop
+    draw.ellipse([cx + 18, head_cy - 8, cx + 22, head_cy - 2], fill=(125, 211, 252, 255))
+
+    # Anxious tense smile
+    draw.line([cx - 8, head_cy + 10, cx + 8, head_cy + 10], fill=(150, 70, 50, 255), width=2)
+
+    # Arms holding disposable paper coffee cup (double-cupped)
+    cup_x, cup_y = cx - 10, torso_top + 32
+    draw.polygon([(cup_x, cup_y), (cup_x + 20, cup_y), (cup_x + 16, cup_y + 26), (cup_x + 4, cup_y + 26)], fill=(245, 245, 240, 255), outline=(180, 180, 180, 255), width=1)
+    draw.rectangle([cup_x + 2, cup_y + 8, cup_x + 18, cup_y + 18], fill=(180, 120, 60, 255)) # Cardboard sleeve
+    return img
+
+
+def create_hallway_background(width: int = 1280, height: int = 720) -> Image.Image:
+    """Render 1990s-style illustrated Forgotten Hallway."""
+    img = Image.new("RGBA", (width, height), (12, 15, 22, 255))
+    draw = ImageDraw.Draw(img)
+    wall_h = int(height * 0.48)
+
+    draw.rectangle([0, 0, width, wall_h], fill=(20, 26, 34, 255))
+    for x in range(0, width, 120):
+        draw.line([x, 0, x, wall_h], fill=(30, 40, 52, 120), width=1)
+    draw.rectangle([0, wall_h - 20, width, wall_h], fill=(35, 45, 58, 255))
+    draw.line([0, wall_h - 20, width, wall_h - 20], fill=(55, 70, 90, 255), width=2)
+
+    for fx in [200, 500, 800, 1100]:
+        draw.rectangle([fx - 60, 20, fx + 60, 34], fill=(50, 60, 72, 255))
+        draw.rectangle([fx - 50, 24, fx + 50, 30], fill=(220, 255, 245, 255))
+
+    draw.polygon([(0, wall_h), (width, wall_h), (width, height), (0, height)], fill=(16, 20, 28, 255))
+    grid_col = (28, 38, 50, 255)
+    for i in range(25):
+        x_top = int((i / 24) * width)
+        x_bot = int(((i - 12) * 1.5 + 12) / 24 * width)
+        draw.line([x_top, wall_h, x_bot, height], fill=grid_col, width=1)
+    for j in range(16):
+        t = (j / 15.0) ** 1.6
+        y_pos = int(wall_h + t * (height - wall_h))
+        draw.line([0, y_pos, width, y_pos], fill=grid_col, width=1)
+
+    # Doors / Archways
+    draw.rectangle([60, wall_h - 220, 180, wall_h], fill=(30, 38, 48, 255), outline=(50, 65, 80, 255), width=2)
+    draw.rectangle([80, wall_h - 200, 160, wall_h - 20], fill=(20, 25, 32, 255))
+    draw.text((85, wall_h - 235), "◄ BREAKROOM", fill=(56, 189, 248, 255))
+    draw.ellipse([145, wall_h - 110, 155, wall_h - 100], fill=(241, 196, 79, 255))
+
+    draw.rectangle([1100, wall_h - 230, 1220, wall_h], fill=(15, 20, 30, 255), outline=(60, 140, 180, 255), width=2)
+    draw.text((1100, wall_h - 245), "FRIDGE LABYRINTH ►", fill=(125, 211, 252, 255))
+    draw.ellipse([1080, wall_h - 80, 1240, wall_h + 40], fill=(40, 160, 220, 45))
+
+    # Filing Cabinets
+    cab_x, cab_y = 540, wall_h - 140
+    draw.rectangle([cab_x, cab_y, cab_x + 200, wall_h], fill=(45, 52, 62, 255), outline=(25, 30, 38, 255), width=2)
+    for row in range(4):
+        ry = cab_y + 10 + row * 30
+        draw.rectangle([cab_x + 10, ry, cab_x + 90, ry + 24], fill=(35, 40, 50, 255), outline=(60, 70, 85, 255), width=1)
+        draw.rectangle([cab_x + 110, ry, cab_x + 190, ry + 24], fill=(35, 40, 50, 255), outline=(60, 70, 85, 255), width=1)
+        draw.rectangle([cab_x + 40, ry + 8, cab_x + 60, ry + 14], fill=(200, 180, 140, 255))
+        draw.rectangle([cab_x + 140, ry + 8, cab_x + 160, ry + 14], fill=(200, 180, 140, 255))
+
+    # Water cooler
+    wc_x, wc_y = 340, wall_h - 90
+    draw.rectangle([wc_x, wc_y + 30, wc_x + 40, wall_h], fill=(220, 225, 235, 255), outline=(140, 150, 165, 255), width=2)
+    draw.ellipse([wc_x + 5, wc_y, wc_x + 35, wc_y + 40], fill=(56, 189, 248, 160), outline=(125, 211, 252, 200), width=2)
+
+    return img
+
+
+def create_fridge_labyrinth_background(width: int = 1280, height: int = 720) -> Image.Image:
+    """Render 1990s-style illustrated Fridge Labyrinth."""
+    img = Image.new("RGBA", (width, height), (8, 14, 24, 255))
+    draw = ImageDraw.Draw(img)
+    wall_h = int(height * 0.44)
+
+    draw.rectangle([0, 0, width, wall_h], fill=(16, 28, 44, 255))
+    for ix in range(0, width, 40):
+        ihl = 20 + (ix % 7) * 8
+        draw.polygon([(ix, 0), (ix + 20, 0), (ix + 10, ihl)], fill=(200, 240, 255, 180))
+
+    draw.polygon([(0, wall_h), (width, wall_h), (width, height), (0, height)], fill=(14, 24, 38, 255))
+    grid_col = (40, 75, 110, 200)
+    for i in range(25):
+        x_top = int((i / 24) * width)
+        x_bot = int(((i - 12) * 1.5 + 12) / 24 * width)
+        draw.line([x_top, wall_h, x_bot, height], fill=grid_col, width=1)
+    for j in range(16):
+        t = (j / 15.0) ** 1.6
+        y_pos = int(wall_h + t * (height - wall_h))
+        draw.line([0, y_pos, width, y_pos], fill=grid_col, width=1)
+
+    # Left Door / Tunnel (to Hallway)
+    draw.rectangle([60, wall_h - 200, 180, wall_h], fill=(12, 18, 28, 255), outline=(56, 189, 248, 255), width=2)
+    draw.text((65, wall_h - 220), "◄ THE HALLWAY", fill=(56, 189, 248, 255))
+
+    # Condiment Gate
+    gate_x, gate_y = 560, wall_h - 160
+    draw.rectangle([gate_x, gate_y, gate_x + 180, wall_h], fill=(25, 45, 68, 255), outline=(80, 160, 220, 255), width=3)
+    draw.rectangle([gate_x - 45, gate_y - 30, gate_x - 5, wall_h], fill=(160, 30, 30, 255), outline=(220, 80, 80, 255), width=2)
+    draw.rectangle([gate_x + 185, gate_y - 30, gate_x + 225, wall_h], fill=(200, 160, 30, 255), outline=(240, 210, 80, 255), width=2)
+    draw.text((gate_x + 20, gate_y + 40), "CONDIMENT GATE", fill=(255, 255, 255, 255))
+    draw.ellipse([400, wall_h - 40, 900, wall_h + 120], fill=(100, 200, 255, 40))
+
+    return img
+
+
 def draw_props(base_dir: Path) -> None:
     props_dir = base_dir / "props"
 
@@ -540,16 +686,23 @@ def main() -> int:
     # Import existing generated portraits and item icons
     copy_source_assets(Path("campaigns/strawberry_omen"), base_assets)
 
-    # Draw native illustrated breakroom
+    # Draw native illustrated rooms
     from tools.build_rpg_visual_assets import create_breakroom_background
     bg = create_breakroom_background(1280, 720)
     bg.save(base_assets / "rooms" / "breakroom.png")
+
+    h_bg = create_hallway_background(1280, 720)
+    h_bg.save(base_assets / "rooms" / "hallway.png")
+
+    f_bg = create_fridge_labyrinth_background(1280, 720)
+    f_bg.save(base_assets / "rooms" / "fridge_labyrinth.png")
 
     # Draw character sprites
     draw_player_sprite(128, 192).save(base_assets / "actors" / "player.png")
     draw_keith_sprite(140, 192).save(base_assets / "actors" / "keith.png")
     draw_darla_sprite(128, 192).save(base_assets / "actors" / "darla.png")
     draw_tammy_sprite(128, 192).save(base_assets / "actors" / "tammy.png")
+    draw_kevin_sprite(128, 192).save(base_assets / "actors" / "kevin.png")
 
     # Draw props and UI
     draw_props(base_assets)

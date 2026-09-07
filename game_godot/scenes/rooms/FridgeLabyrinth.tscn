@@ -1,0 +1,80 @@
+[gd_scene load_steps=10 format=3 uid="uid://f7l8r9i0d1g2e"]
+
+[ext_resource type="Script" path="res://scripts/rooms/FridgeLabyrinthScene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/fridge_labyrinth.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="4_hotspot"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_fridge"]
+vertices = PackedVector2Array(80, 350, 1200, 350, 1200, 680, 80, 680)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(80, 350, 1200, 350, 1200, 680, 80, 680)])
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(80, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate"]
+size = Vector2(180, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate_static"]
+size = Vector2(180, 40)
+
+[node name="FridgeLabyrinth" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_bg")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_fridge")
+
+[node name="StaticBodies" type="Node2D" parent="."]
+
+[node name="GateBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(650, 350)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/GateBody"]
+shape = SubResource("RectangleShape2D_gate_static")
+
+[node name="Entrance_Default" type="Marker2D" parent="."]
+position = Vector2(200, 480)
+
+[node name="Entrance_Hallway" type="Marker2D" parent="."]
+position = Vector2(180, 480)
+
+[node name="YSortContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="DoorToHallway" type="Area2D" parent="YSortContainer"]
+position = Vector2(100, 450)
+script = ExtResource("4_hotspot")
+hotspot_id = "door.fridge.hallway"
+display_name = "Return to Hallway"
+is_exit = true
+target_room = "hallway"
+target_entrance = "Fridge"
+approach_position = Vector2(160, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/DoorToHallway"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="CondimentGateHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(650, 370)
+script = ExtResource("4_hotspot")
+hotspot_id = "location.fridge_labyrinth.condiment_gate"
+display_name = "The Condiment Gate"
+scene_id = "scene.act4.condiment_gate"
+approach_position = Vector2(650, 440)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CondimentGateHotspot"]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
+position = Vector2(200, 480)
+
+[node name="DebugDraw" type="Node2D" parent="."]
+visible = false

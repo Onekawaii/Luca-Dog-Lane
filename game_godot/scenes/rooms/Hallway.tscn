@@ -1,0 +1,96 @@
+[gd_scene load_steps=10 format=3 uid="uid://h4l1w2a3y4s5c"]
+
+[ext_resource type="Script" path="res://scripts/rooms/HallwayScene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/hallway.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="4_hotspot"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_hallway"]
+vertices = PackedVector2Array(80, 360, 1200, 360, 1200, 680, 80, 680)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(80, 360, 1200, 360, 1200, 680, 80, 680)])
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(80, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cabinet"]
+size = Vector2(180, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cab_static"]
+size = Vector2(180, 40)
+
+[node name="Hallway" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_bg")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_hallway")
+
+[node name="StaticBodies" type="Node2D" parent="."]
+
+[node name="CabinetBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(640, 370)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/CabinetBody"]
+shape = SubResource("RectangleShape2D_cab_static")
+
+[node name="Entrance_Default" type="Marker2D" parent="."]
+position = Vector2(200, 480)
+
+[node name="Entrance_Breakroom" type="Marker2D" parent="."]
+position = Vector2(180, 480)
+
+[node name="Entrance_Fridge" type="Marker2D" parent="."]
+position = Vector2(1080, 480)
+
+[node name="YSortContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="DoorToBreakroom" type="Area2D" parent="YSortContainer"]
+position = Vector2(100, 450)
+script = ExtResource("4_hotspot")
+hotspot_id = "door.hallway.breakroom"
+display_name = "Return to Breakroom"
+is_exit = true
+target_room = "breakroom"
+target_entrance = "Hallway"
+approach_position = Vector2(160, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/DoorToBreakroom"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorToFridge" type="Area2D" parent="YSortContainer"]
+position = Vector2(1160, 450)
+script = ExtResource("4_hotspot")
+hotspot_id = "door.hallway.fridge"
+display_name = "Proceed to Fridge Labyrinth"
+is_exit = true
+target_room = "fridge_labyrinth"
+target_entrance = "Hallway"
+approach_position = Vector2(1100, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/DoorToFridge"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="FilingCabinetHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(640, 380)
+script = ExtResource("4_hotspot")
+hotspot_id = "location.breakroom.hallway.archives"
+display_name = "Mildred Archive Filing Cabinets"
+scene_id = "scene.act3.hallway_discovery"
+approach_position = Vector2(640, 440)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/FilingCabinetHotspot"]
+shape = SubResource("RectangleShape2D_cabinet")
+
+[node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
+position = Vector2(200, 480)
+
+[node name="DebugDraw" type="Node2D" parent="."]
+visible = false

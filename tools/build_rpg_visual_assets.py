@@ -17,6 +17,740 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 
+def create_room_system_files() -> None:
+    # 1. Base Room Script (scripts/rooms/RoomBase.gd)
+    room_base_code = """class_name RoomBase
+extends Node2D
+
+# Base Room Controller for Native Multi-Room Adventure World.
+
+@export var room_id: String = ""
+@export var location_id: String = ""
+@export var default_camera_pos: Vector2 = Vector2(640, 360)
+@export var default_camera_zoom: Vector2 = Vector2(1.0, 1.0)
+
+@onready var camera: Camera2D = get_node_or_null("Camera2D")
+@onready var ysort_container: Node2D = get_node_or_null("YSortContainer")
+@onready var player: PlayerActor = get_node_or_null("YSortContainer/Player")
+@onready var nav_region: NavigationRegion2D = get_node_or_null("NavigationRegion2D")
+@onready var debug_draw: Node2D = get_node_or_null("DebugDraw")
+
+var is_in_dialogue: bool = false
+var target_camera_pos: Vector2 = Vector2(640, 360)
+var target_camera_zoom: Vector2 = Vector2(1.0, 1.0)
+
+
+func _ready() -> void:
+	EventBus.action_requested.connect(_on_action_requested)
+	EventBus.world_state_changed.connect(_on_world_state_changed)
+	EventBus.dialogue_closed.connect(_on_dialogue_closed)
+	EventBus.debug_toggled.connect(_on_debug_toggled)
+	EventBus.camera_focus_requested.connect(_on_camera_focus_requested)
+	EventBus.camera_reset_requested.connect(_on_camera_reset_requested)
+
+	if camera:
+		target_camera_pos = camera.global_position
+		target_camera_zoom = camera.zoom
+
+	_update_room_visuals()
+
+
+func _process(delta: float) -> void:
+	if camera:
+		camera.global_position = camera.global_position.lerp(target_camera_pos, delta * 4.0)
+		camera.zoom = camera.zoom.lerp(target_camera_zoom, delta * 4.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if is_in_dialogue or not player or not player.can_move:
+		return
+
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		var click_world = get_global_mouse_position()
+		if _is_point_walkable(click_world):
+			player.walk_to(click_world)
+	elif event is InputEventScreenTouch and event.pressed:
+		var touch_world = get_global_mouse_position()
+		if _is_point_walkable(touch_world):
+			player.walk_to(touch_world)
+
+
+func _is_point_walkable(pos: Vector2) -> bool:
+	return pos.y >= 350.0 and pos.y <= 680.0 and pos.x >= 80.0 and pos.x <= 1200.0
+
+
+func set_player_spawn(entrance_name: String) -> void:
+	var marker = find_child("Entrance_" + entrance_name, true, false)
+	if not marker:
+		marker = find_child("Entrance_Default", true, false)
+	if marker and player:
+		player.global_position = marker.global_position
+		player.velocity = Vector2.ZERO
+		player.stop()
+
+
+func _on_action_requested(act_data: Dictionary) -> void:
+	var act_type = act_data.get("type", "")
+
+	if act_type == "approach_and_interact_actor":
+		var app_pos = act_data.get("approach_pos", Vector2.ZERO)
+		var actor = act_data.get("actor")
+		var scene_id = act_data.get("scene_id", "")
+		if actor:
+			actor.set_focus(true)
+
+		if player:
+			player.walk_to(app_pos, func():
+				_trigger_actor_dialogue(actor, scene_id)
+			)
+
+	elif act_type == "approach_and_interact_hotspot":
+		var app_pos = act_data.get("approach_pos", Vector2.ZERO)
+		var hotspot = act_data.get("hotspot")
+		var hotspot_id = act_data.get("hotspot_id", "")
+		var scene_id = act_data.get("scene_id", "")
+		var is_exit = act_data.get("is_exit", false)
+		var target_room = act_data.get("target_room", "")
+		var target_entrance = act_data.get("target_entrance", "Default")
+		if hotspot:
+			hotspot.set_selected(true)
+
+		if player:
+			player.walk_to(app_pos, func():
+				if is_exit and target_room != "":
+					EventBus.room_change_requested.emit(target_room, target_entrance)
+					if hotspot:
+						hotspot.set_selected(false)
+				else:
+					_trigger_hotspot_dialogue(hotspot, hotspot_id, scene_id)
+			)
+
+
+func _trigger_actor_dialogue(actor: ActorBase, scene_id: String) -> void:
+	is_in_dialogue = true
+	var state = GameRuntime.world_state
+	if scene_id != "":
+		GameRuntime.action_resolver.enter_scene(state, scene_id)
+
+	var scene_meta = GameRuntime.loader.get_encounter(state.current_scene)
+	var choices = GameRuntime.action_resolver.choice_views(state)
+
+	if player:
+		var mid_point = (player.global_position + actor.global_position) * 0.5 + Vector2(0, -60)
+		target_camera_pos = mid_point
+		target_camera_zoom = Vector2(1.15, 1.15)
+
+	var bubble = get_tree().root.find_child("DialogueBubble", true, false)
+	if bubble:
+		bubble.target_actor = actor
+
+	EventBus.dialogue_started.emit(
+		actor.actor_id,
+		actor.display_name,
+		scene_meta.get("read_aloud", "..."),
+		choices
+	)
+
+
+func _trigger_hotspot_dialogue(hotspot: Hotspot, hotspot_id: String, scene_id: String) -> void:
+	is_in_dialogue = true
+	var state = GameRuntime.world_state
+	if scene_id != "":
+		GameRuntime.action_resolver.enter_scene(state, scene_id)
+
+	var scene_meta = GameRuntime.loader.get_encounter(state.current_scene)
+	var choices = GameRuntime.action_resolver.choice_views(state)
+
+	var bubble = get_tree().root.find_child("DialogueBubble", true, false)
+	if bubble:
+		bubble.target_actor = hotspot
+
+	EventBus.dialogue_started.emit(
+		hotspot_id,
+		hotspot.display_name,
+		scene_meta.get("read_aloud", "..."),
+		choices
+	)
+
+
+func _on_dialogue_closed() -> void:
+	is_in_dialogue = false
+	target_camera_pos = default_camera_pos
+	target_camera_zoom = default_camera_zoom
+	if ysort_container:
+		for child in ysort_container.get_children():
+			if child is ActorBase:
+				child.set_focus(false)
+			elif child is Hotspot:
+				child.set_selected(false)
+
+
+func _on_world_state_changed(_delta: Dictionary) -> void:
+	_update_room_visuals()
+
+
+func _update_room_visuals() -> void:
+	pass
+
+
+func _on_debug_toggled(is_enabled: bool) -> void:
+	if debug_draw:
+		debug_draw.visible = is_enabled
+
+
+func _on_camera_focus_requested(target_pos: Vector2, zoom_level: float) -> void:
+	target_camera_pos = target_pos
+	target_camera_zoom = Vector2(zoom_level, zoom_level)
+
+
+func _on_camera_reset_requested() -> void:
+	target_camera_pos = default_camera_pos
+	target_camera_zoom = default_camera_zoom
+"""
+    Path("game_godot/scripts/rooms/RoomBase.gd").write_text(room_base_code, encoding="utf-8")
+
+    # 2. RoomManager Script (scripts/runtime/RoomManager.gd)
+    room_mgr_code = """class_name RoomManager
+extends Node
+
+# Authoritative Room Transition and World Management Controller.
+
+var current_room_node: RoomBase = null
+var current_room_id: String = "breakroom"
+
+var room_scenes: Dictionary = {
+	"breakroom": "res://scenes/rooms/Breakroom.tscn",
+	"hallway": "res://scenes/rooms/Hallway.tscn",
+	"fridge_labyrinth": "res://scenes/rooms/FridgeLabyrinth.tscn"
+}
+
+var room_locations: Dictionary = {
+	"breakroom": "location.breakroom",
+	"hallway": "location.breakroom.hallway",
+	"fridge_labyrinth": "location.fridge_labyrinth"
+}
+
+
+func _ready() -> void:
+	EventBus.room_change_requested.connect(change_room)
+	# Connect to existing initial room if present in tree
+	var initial_room = get_parent().find_child("Breakroom", true, false)
+	if initial_room:
+		current_room_node = initial_room
+		current_room_id = "breakroom"
+
+
+func change_room(room_id: String, entrance_name: String = "Default") -> void:
+	if not room_scenes.has(room_id):
+		push_error("Unknown room_id: " + room_id)
+		return
+
+	var scene_path = room_scenes[room_id]
+	if not ResourceLoader.exists(scene_path):
+		push_error("Room scene not found: " + scene_path)
+		return
+
+	# Update WorldState location
+	var state = GameRuntime.world_state
+	state.current_location = room_locations.get(room_id, "location.breakroom")
+
+	# Instantiate new room scene
+	var room_res = load(scene_path)
+	var new_room: RoomBase = room_res.instantiate()
+
+	var world_root = get_parent().find_child("WorldRoot", true, false)
+	if not world_root:
+		world_root = get_parent()
+
+	if is_instance_valid(current_room_node):
+		current_room_node.queue_free()
+
+	world_root.add_child(new_room)
+	current_room_node = new_room
+	current_room_id = room_id
+
+	new_room.set_player_spawn(entrance_name)
+	EventBus.room_entered.emit(room_id)
+	EventBus.world_state_changed.emit({})
+	AudioManager.play_ui_click()
+"""
+    Path("game_godot/scripts/runtime/RoomManager.gd").write_text(room_mgr_code, encoding="utf-8")
+
+    # 3. BreakroomScene.gd (scripts/rooms/BreakroomScene.gd)
+    breakroom_script_code = """class_name BreakroomScene
+extends RoomBase
+
+# Breakroom Scene Controller.
+
+@onready var keith: KeithActor = $YSortContainer/Keith
+@onready var darla: DarlaActor = $YSortContainer/Darla
+@onready var tammy: TammyActor = $YSortContainer/Tammy
+@onready var kevin: KevinActor = $YSortContainer/Kevin
+@onready var wetberry_prop: Sprite2D = $YSortContainer/CentralTableHotspot/WetberrySprite
+
+
+func _ready() -> void:
+	room_id = "breakroom"
+	location_id = "location.breakroom"
+	super._ready()
+
+
+func _update_room_visuals() -> void:
+	var state = GameRuntime.world_state
+	var is_contained = state.get_flag("wetberry_contained", false) == true or state.room_memory().get("wetberry_status") == "contained"
+	if wetberry_prop:
+		wetberry_prop.visible = not is_contained
+"""
+    Path("game_godot/scripts/rooms/BreakroomScene.gd").write_text(breakroom_script_code, encoding="utf-8")
+
+    # 4. Breakroom.tscn (scenes/rooms/Breakroom.tscn)
+    breakroom_tscn_code = """[gd_scene load_steps=18 format=3 uid="uid://j9k0l1m2n3o4p"]
+
+[ext_resource type="Script" path="res://scripts/rooms/BreakroomScene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/breakroom.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Keith.tscn" id="4_keith"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Darla.tscn" id="5_darla"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Tammy.tscn" id="6_tammy"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Kevin.tscn" id="7_kevin"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="8_hotspot"]
+[ext_resource type="Texture2D" path="res://assets/props/central_table.png" id="9_table"]
+[ext_resource type="Texture2D" path="res://assets/props/wetberry_idle.png" id="10_wetberry"]
+[ext_resource type="Texture2D" path="res://assets/props/counter_appliances.png" id="11_appliances"]
+[ext_resource type="Texture2D" path="res://assets/props/mop_bucket.png" id="12_mop"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_breakroom"]
+vertices = PackedVector2Array(80, 370, 1200, 370, 1200, 680, 80, 680, 560, 430, 720, 430, 720, 560, 560, 560, 260, 370, 520, 370, 520, 430, 260, 430, 960, 480, 1120, 480, 1120, 580, 960, 580)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(80, 370, 1200, 370, 1200, 680, 80, 680)])
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_table"]
+radius = 45.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_counter"]
+size = Vector2(160, 40)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_utility"]
+radius = 35.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_exit"]
+size = Vector2(60, 120)
+
+[node name="Breakroom" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_bg")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_breakroom")
+
+[node name="StaticBodies" type="Node2D" parent="."]
+
+[node name="TableBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(640, 500)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/TableBody"]
+shape = SubResource("CircleShape2D_table")
+
+[node name="CounterBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(400, 400)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/CounterBody"]
+shape = SubResource("RectangleShape2D_counter")
+
+[node name="UtilityBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(1040, 540)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/UtilityBody"]
+shape = SubResource("CircleShape2D_utility")
+
+[node name="Entrance_Default" type="Marker2D" parent="."]
+position = Vector2(640, 600)
+
+[node name="Entrance_Hallway" type="Marker2D" parent="."]
+position = Vector2(1100, 480)
+
+[node name="YSortContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="CentralTableHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(640, 500)
+script = ExtResource("8_hotspot")
+hotspot_id = "relic.wetberry"
+display_name = "Wetberry on Central Table"
+scene_id = "scene.act1.first_sighting"
+approach_position = Vector2(640, 570)
+
+[node name="TableSprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
+position = Vector2(0, -30)
+texture = ExtResource("9_table")
+
+[node name="WetberrySprite" type="Sprite2D" parent="YSortContainer/CentralTableHotspot"]
+position = Vector2(0, -52)
+texture = ExtResource("10_wetberry")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CentralTableHotspot"]
+position = Vector2(0, -20)
+shape = SubResource("CircleShape2D_table")
+
+[node name="CoffeeCounterHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(400, 390)
+script = ExtResource("8_hotspot")
+hotspot_id = "location.breakroom.coffee_counter"
+display_name = "Coffee Counter & Microwave"
+scene_id = "scene.act1.coffee_counter"
+approach_position = Vector2(400, 445)
+
+[node name="AppliancesSprite" type="Sprite2D" parent="YSortContainer/CoffeeCounterHotspot"]
+position = Vector2(0, -35)
+texture = ExtResource("11_appliances")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CoffeeCounterHotspot"]
+position = Vector2(0, -20)
+shape = SubResource("RectangleShape2D_counter")
+
+[node name="UtilityCornerHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(1040, 530)
+script = ExtResource("8_hotspot")
+hotspot_id = "location.breakroom.utility_corner"
+display_name = "Utility Corner & Mop Bucket"
+scene_id = "scene.act1.keith_corner"
+approach_position = Vector2(980, 540)
+
+[node name="MopSprite" type="Sprite2D" parent="YSortContainer/UtilityCornerHotspot"]
+position = Vector2(0, -30)
+texture = ExtResource("12_mop")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/UtilityCornerHotspot"]
+position = Vector2(0, -15)
+shape = SubResource("CircleShape2D_utility")
+
+[node name="ExitHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(1180, 460)
+script = ExtResource("8_hotspot")
+hotspot_id = "exit.breakroom.hallway"
+display_name = "Exit to Forgotten Hallway"
+is_exit = true
+target_room = "hallway"
+target_entrance = "Breakroom"
+approach_position = Vector2(1120, 460)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/ExitHotspot"]
+shape = SubResource("RectangleShape2D_exit")
+
+[node name="Darla" parent="YSortContainer" instance=ExtResource("5_darla")]
+position = Vector2(490, 410)
+
+[node name="Keith" parent="YSortContainer" instance=ExtResource("4_keith")]
+position = Vector2(960, 520)
+
+[node name="Tammy" parent="YSortContainer" instance=ExtResource("6_tammy")]
+position = Vector2(820, 470)
+
+[node name="Kevin" parent="YSortContainer" instance=ExtResource("7_kevin")]
+position = Vector2(330, 430)
+
+[node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
+position = Vector2(640, 590)
+
+[node name="DebugDraw" type="Node2D" parent="."]
+visible = false
+"""
+    Path("game_godot/scenes/rooms/Breakroom.tscn").write_text(breakroom_tscn_code, encoding="utf-8")
+
+    # 5. HallwayScene.gd (scripts/rooms/HallwayScene.gd)
+    hallway_script_code = """class_name HallwayScene
+extends RoomBase
+
+# Hallway Scene Controller.
+
+func _ready() -> void:
+	room_id = "hallway"
+	location_id = "location.breakroom.hallway"
+	super._ready()
+"""
+    Path("game_godot/scripts/rooms/HallwayScene.gd").write_text(hallway_script_code, encoding="utf-8")
+
+    # 6. Hallway.tscn (scenes/rooms/Hallway.tscn)
+    hallway_tscn_code = """[gd_scene load_steps=10 format=3 uid="uid://h4l1w2a3y4s5c"]
+
+[ext_resource type="Script" path="res://scripts/rooms/HallwayScene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/hallway.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="4_hotspot"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_hallway"]
+vertices = PackedVector2Array(80, 360, 1200, 360, 1200, 680, 80, 680)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(80, 360, 1200, 360, 1200, 680, 80, 680)])
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(80, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cabinet"]
+size = Vector2(180, 80)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_cab_static"]
+size = Vector2(180, 40)
+
+[node name="Hallway" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_bg")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_hallway")
+
+[node name="StaticBodies" type="Node2D" parent="."]
+
+[node name="CabinetBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(640, 370)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/CabinetBody"]
+shape = SubResource("RectangleShape2D_cab_static")
+
+[node name="Entrance_Default" type="Marker2D" parent="."]
+position = Vector2(200, 480)
+
+[node name="Entrance_Breakroom" type="Marker2D" parent="."]
+position = Vector2(180, 480)
+
+[node name="Entrance_Fridge" type="Marker2D" parent="."]
+position = Vector2(1080, 480)
+
+[node name="YSortContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="DoorToBreakroom" type="Area2D" parent="YSortContainer"]
+position = Vector2(100, 450)
+script = ExtResource("4_hotspot")
+hotspot_id = "door.hallway.breakroom"
+display_name = "Return to Breakroom"
+is_exit = true
+target_room = "breakroom"
+target_entrance = "Hallway"
+approach_position = Vector2(160, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/DoorToBreakroom"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="DoorToFridge" type="Area2D" parent="YSortContainer"]
+position = Vector2(1160, 450)
+script = ExtResource("4_hotspot")
+hotspot_id = "door.hallway.fridge"
+display_name = "Proceed to Fridge Labyrinth"
+is_exit = true
+target_room = "fridge_labyrinth"
+target_entrance = "Hallway"
+approach_position = Vector2(1100, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/DoorToFridge"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="FilingCabinetHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(640, 380)
+script = ExtResource("4_hotspot")
+hotspot_id = "location.breakroom.hallway.archives"
+display_name = "Mildred Archive Filing Cabinets"
+scene_id = "scene.act3.hallway_discovery"
+approach_position = Vector2(640, 440)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/FilingCabinetHotspot"]
+shape = SubResource("RectangleShape2D_cabinet")
+
+[node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
+position = Vector2(200, 480)
+
+[node name="DebugDraw" type="Node2D" parent="."]
+visible = false
+"""
+    Path("game_godot/scenes/rooms/Hallway.tscn").write_text(hallway_tscn_code, encoding="utf-8")
+
+    # 7. FridgeLabyrinthScene.gd (scripts/rooms/FridgeLabyrinthScene.gd)
+    fridge_script_code = """class_name FridgeLabyrinthScene
+extends RoomBase
+
+# Fridge Labyrinth Scene Controller.
+
+func _ready() -> void:
+	room_id = "fridge_labyrinth"
+	location_id = "location.fridge_labyrinth"
+	super._ready()
+"""
+    Path("game_godot/scripts/rooms/FridgeLabyrinthScene.gd").write_text(fridge_script_code, encoding="utf-8")
+
+    # 8. FridgeLabyrinth.tscn (scenes/rooms/FridgeLabyrinth.tscn)
+    fridge_tscn_code = """[gd_scene load_steps=10 format=3 uid="uid://f7l8r9i0d1g2e"]
+
+[ext_resource type="Script" path="res://scripts/rooms/FridgeLabyrinthScene.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/rooms/fridge_labyrinth.png" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/actors/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/interaction/Hotspot.gd" id="4_hotspot"]
+
+[sub_resource type="NavigationPolygon" id="NavigationPolygon_fridge"]
+vertices = PackedVector2Array(80, 350, 1200, 350, 1200, 680, 80, 680)
+polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3)])
+outlines = Array[PackedVector2Array]([PackedVector2Array(80, 350, 1200, 350, 1200, 680, 80, 680)])
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_door"]
+size = Vector2(80, 140)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate"]
+size = Vector2(180, 90)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_gate_static"]
+size = Vector2(180, 40)
+
+[node name="FridgeLabyrinth" type="Node2D"]
+script = ExtResource("1_script")
+
+[node name="Background" type="Sprite2D" parent="."]
+position = Vector2(640, 360)
+texture = ExtResource("2_bg")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(640, 360)
+
+[node name="NavigationRegion2D" type="NavigationRegion2D" parent="."]
+navigation_polygon = SubResource("NavigationPolygon_fridge")
+
+[node name="StaticBodies" type="Node2D" parent="."]
+
+[node name="GateBody" type="StaticBody2D" parent="StaticBodies"]
+position = Vector2(650, 350)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBodies/GateBody"]
+shape = SubResource("RectangleShape2D_gate_static")
+
+[node name="Entrance_Default" type="Marker2D" parent="."]
+position = Vector2(200, 480)
+
+[node name="Entrance_Hallway" type="Marker2D" parent="."]
+position = Vector2(180, 480)
+
+[node name="YSortContainer" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="DoorToHallway" type="Area2D" parent="YSortContainer"]
+position = Vector2(100, 450)
+script = ExtResource("4_hotspot")
+hotspot_id = "door.fridge.hallway"
+display_name = "Return to Hallway"
+is_exit = true
+target_room = "hallway"
+target_entrance = "Fridge"
+approach_position = Vector2(160, 470)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/DoorToHallway"]
+shape = SubResource("RectangleShape2D_door")
+
+[node name="CondimentGateHotspot" type="Area2D" parent="YSortContainer"]
+position = Vector2(650, 370)
+script = ExtResource("4_hotspot")
+hotspot_id = "location.fridge_labyrinth.condiment_gate"
+display_name = "The Condiment Gate"
+scene_id = "scene.act4.condiment_gate"
+approach_position = Vector2(650, 440)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSortContainer/CondimentGateHotspot"]
+shape = SubResource("RectangleShape2D_gate")
+
+[node name="Player" parent="YSortContainer" instance=ExtResource("3_player")]
+position = Vector2(200, 480)
+
+[node name="DebugDraw" type="Node2D" parent="."]
+visible = false
+"""
+    Path("game_godot/scenes/rooms/FridgeLabyrinth.tscn").write_text(fridge_tscn_code, encoding="utf-8")
+
+
+def create_kevin_files() -> None:
+    kevin_actor_path = Path("game_godot/scripts/actors/KevinActor.gd")
+    kevin_actor_path.parent.mkdir(parents=True, exist_ok=True)
+    kevin_actor_code = """class_name KevinActor
+extends ActorBase
+
+# Kevin from Marketing - Conditionally present at Coffee Counter/Breakroom.
+
+func _ready() -> void:
+	actor_id = "npc.kevin_marketing"
+	display_name = "Kevin from Marketing"
+	portrait_path = "res://assets/portraits/kevin_neutral.png"
+	approach_offset = Vector2(0, 50)
+	super._ready()
+
+	EventBus.world_state_changed.connect(_on_world_state_changed)
+	_check_presence()
+
+
+func _on_world_state_changed(_delta: Dictionary) -> void:
+	_check_presence()
+
+
+func _check_presence() -> void:
+	var state = GameRuntime.world_state
+	var is_present = (
+		state.get_flag("kevin_present", true) == true and
+		not state.get_flag("kevin_departed", false)
+	)
+	visible = is_present
+	process_mode = Node.PROCESS_MODE_INHERIT if is_present else Node.PROCESS_MODE_DISABLED
+
+
+func _handle_interaction() -> void:
+	if not visible:
+		return
+	if GameRuntime.inventory_system.is_item_armed():
+		GameRuntime.use_armed_item_on(actor_id)
+		return
+
+	EventBus.action_requested.emit({
+		"type": "approach_and_interact_actor",
+		"actor": self,
+		"actor_id": actor_id,
+		"scene_id": "scene.act1.coffee_counter",
+		"approach_pos": get_approach_position()
+	})
+"""
+    kevin_actor_path.write_text(kevin_actor_code, encoding="utf-8")
+
+    kevin_scene_path = Path("game_godot/scenes/actors/Kevin.tscn")
+    kevin_scene_path.parent.mkdir(parents=True, exist_ok=True)
+    kevin_scene_code = """[gd_scene load_steps=4 format=3 uid="uid://k3v1n4m5a6r7k"]
+
+[ext_resource type="Script" path="res://scripts/actors/KevinActor.gd" id="1_script"]
+[ext_resource type="Texture2D" path="res://assets/actors/kevin.png" id="2_tex"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_kevin"]
+radius = 16.0
+height = 38.0
+
+[node name="Kevin" type="CharacterBody2D"]
+y_sort_enabled = true
+input_pickable = true
+script = ExtResource("1_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(0, -88)
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+rotation = 1.5708
+shape = SubResource("CapsuleShape2D_kevin")
+"""
+    kevin_scene_path.write_text(kevin_scene_code, encoding="utf-8")
+
+
 def create_breakroom_background(width: int = 1024, height: int = 768) -> Image.Image:
     """Render a 1990s-style illustrated point-and-click breakroom background."""
     img = Image.new("RGBA", (width, height), (15, 18, 26, 255))
@@ -335,6 +1069,24 @@ def create_portrait(name: str, emotion: str, size: int = 256) -> Image.Image:
         draw.rectangle([cb_x, cb_y, cb_x + 35, cb_y + 50], fill=(210, 180, 140, 255), outline=(120, 90, 60, 255), width=2)
         draw.rectangle([cb_x + 10, cb_y - 6, cb_x + 25, cb_y + 4], fill=(180, 190, 200, 255))
 
+    elif name == "kevin":
+        draw.polygon([(cx - 75, size - 8), (cx + 75, size - 8), (cx + 50, cy + 50), (cx - 50, cy + 50)], fill=(231, 111, 81, 255))
+        draw.polygon([(cx - 15, cy + 50), (cx + 15, cy + 50), (cx, cy + 70)], fill=(255, 255, 255, 255))
+        draw.line([cx - 20, cy + 50, cx, cy + 90], fill=(56, 189, 248, 255), width=4)
+        draw.line([cx + 20, cy + 50, cx, cy + 90], fill=(56, 189, 248, 255), width=4)
+        draw.rectangle([cx - 18, cy + 20, cx + 18, cy + 52], fill=(210, 160, 120, 255))
+        draw.ellipse([cx - 38, cy - 40, cx + 38, cy + 35], fill=(235, 190, 150, 255), outline=(170, 125, 85, 255), width=2)
+        draw.polygon([(cx - 42, cy - 20), (cx - 44, cy - 50), (cx + 38, cy - 58), (cx + 46, cy - 22), (cx + 32, cy - 35), (cx - 28, cy - 32)], fill=(90, 55, 30, 255))
+        eye_y = cy - 6
+        draw.ellipse([cx - 28, eye_y - 8, cx - 8, eye_y + 8], fill=(255, 255, 255, 255), outline=(100, 70, 50, 255), width=2)
+        draw.ellipse([cx + 8, eye_y - 8, cx + 28, eye_y + 8], fill=(255, 255, 255, 255), outline=(100, 70, 50, 255), width=2)
+        draw.ellipse([cx - 20, eye_y - 4, cx - 14, eye_y + 2], fill=(30, 20, 10, 255))
+        draw.ellipse([cx + 14, eye_y - 4, cx + 20, eye_y + 2], fill=(30, 20, 10, 255))
+        draw.ellipse([cx + 32, cy - 22, cx + 40, cy - 10], fill=(125, 211, 252, 255))
+        draw.line([cx - 28, eye_y - 14, cx - 10, eye_y - 20], fill=(90, 55, 30, 255), width=3)
+        draw.line([cx + 10, eye_y - 20, cx + 28, eye_y - 14], fill=(90, 55, 30, 255), width=3)
+        draw.line([cx - 16, cy + 22, cx + 16, cy + 22], fill=(150, 70, 50, 255), width=3)
+
     return img
 
 
@@ -449,6 +1201,7 @@ def main() -> None:
         ("darla", "annoyed"),
         ("darla", "engaged"),
         ("tammy", "procedural"),
+        ("kevin", "neutral"),
     ]
     for char, emo in portraits:
         filename = f"{char}_{emo}.png"
@@ -522,6 +1275,9 @@ def main() -> None:
     }
     with gen_manifest_path.open("w", encoding="utf-8") as f:
         json.dump(manifest_data, f, indent=2)
+
+    create_room_system_files()
+    create_kevin_files()
 
     print("Visual assets successfully generated and synced.")
 

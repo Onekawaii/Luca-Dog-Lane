@@ -110,35 +110,6 @@ func close_dialogue() -> void:
 	EventBus.camera_reset_requested.emit()
 
 
-func _update_anchor_position() -> void:
-	var vp_size = get_viewport_rect().size
-	var target_screen: Vector2 = vp_size * 0.5
-
-	if is_instance_valid(target_actor):
-		if target_actor is ActorBase:
-			target_screen = target_actor.get_head_screen_position()
-		else:
-			var canvas_transform = get_viewport().get_canvas_transform()
-			target_screen = canvas_transform * target_actor.global_position
-
-	var panel_size = panel_container.size
-	if panel_size == Vector2.ZERO:
-		panel_size = Vector2(420, 240)
-
-	# Try positioning above actor
-	var ideal_pos = target_screen - Vector2(panel_size.x * 0.5, panel_size.y + 20)
-
-	# If too close to top edge, flip to below or side
-	if ideal_pos.y < 40:
-		ideal_pos.y = target_screen.y + 30
-
-	# Clamp to safe viewport margins
-	ideal_pos.x = clampf(ideal_pos.x, 20.0, max(20.0, vp_size.x - panel_size.x - 20.0))
-	ideal_pos.y = clampf(ideal_pos.y, 20.0, max(20.0, vp_size.y - panel_size.y - 100.0))
-
-	panel_container.global_position = ideal_pos
-
-
 func _get_portrait_for_actor(actor_id: String) -> String:
 	var clean = actor_id.replace("npc.", "")
 	if clean.begins_with("keith"):
@@ -147,4 +118,79 @@ func _get_portrait_for_actor(actor_id: String) -> String:
 		return "res://assets/portraits/darla_neutral.png"
 	elif clean.begins_with("tammy"):
 		return "res://assets/portraits/tammy_procedural.png"
+	elif clean.begins_with("kevin"):
+		return "res://assets/portraits/kevin_neutral.png"
 	return ""
+
+
+func _update_anchor_position() -> void:
+	var vp_size = get_viewport_rect().size
+	var target_screen: Vector2 = vp_size * 0.5
+	var actor_screen_center: Vector2 = target_screen
+
+	if is_instance_valid(target_actor):
+		var canvas_transform = get_viewport().get_canvas_transform()
+		if target_actor is ActorBase:
+			target_screen = target_actor.get_head_screen_position()
+			actor_screen_center = canvas_transform * (target_actor.global_position + Vector2(0, -90))
+		else:
+			target_screen = canvas_transform * target_actor.global_position
+			actor_screen_center = target_screen
+
+	var panel_size = panel_container.size
+	if panel_size == Vector2.ZERO:
+		panel_size = Vector2(400, 220)
+
+	# Candidate placement offsets (relative to actor_screen_center)
+	var candidates: Array[Vector2] = [
+		# 1. Right of actor
+		Vector2(actor_screen_center.x + 60, actor_screen_center.y - panel_size.y * 0.5),
+		# 2. Left of actor
+		Vector2(actor_screen_center.x - panel_size.x - 60, actor_screen_center.y - panel_size.y * 0.5),
+		# 3. Above-Right
+		Vector2(actor_screen_center.x + 30, actor_screen_center.y - panel_size.y - 40),
+		# 4. Above-Left
+		Vector2(actor_screen_center.x - panel_size.x - 30, actor_screen_center.y - panel_size.y - 40),
+		# 5. Above-Center
+		Vector2(actor_screen_center.x - panel_size.x * 0.5, actor_screen_center.y - panel_size.y - 40),
+		# 6. Below-Right
+		Vector2(actor_screen_center.x + 30, actor_screen_center.y + 40),
+		# 7. Below-Left
+		Vector2(actor_screen_center.x - panel_size.x - 30, actor_screen_center.y + 40)
+	]
+
+	var best_pos: Vector2 = candidates[0]
+	var best_score: float = -999999.0
+
+	var margin: float = 20.0
+	var safe_rect = Rect2(margin, margin + 48.0, vp_size.x - margin * 2.0, vp_size.y - margin * 2.0 - 100.0)
+
+	for cand in candidates:
+		var cand_rect = Rect2(cand, panel_size)
+		var score: float = 100.0
+
+		# Check if entirely inside viewport safe region
+		if safe_rect.encloses(cand_rect):
+			score += 500.0
+		else:
+			# Penalize for overflowing bounds
+			var left_pen = max(0.0, safe_rect.position.x - cand_rect.position.x)
+			var right_pen = max(0.0, (cand_rect.position.x + cand_rect.size.x) - (safe_rect.position.x + safe_rect.size.x))
+			var top_pen = max(0.0, safe_rect.position.y - cand_rect.position.y)
+			var bot_pen = max(0.0, (cand_rect.position.y + cand_rect.size.y) - (safe_rect.position.y + safe_rect.size.y))
+			score -= (left_pen + right_pen + top_pen + bot_pen) * 5.0
+
+		# Do not overlap the speaker face / center
+		var actor_box = Rect2(actor_screen_center - Vector2(40, 60), Vector2(80, 120))
+		if cand_rect.intersects(actor_box):
+			score -= 800.0
+
+		if score > best_score:
+			best_score = score
+			best_pos = cand
+
+	# Final safe clamp
+	best_pos.x = clampf(best_pos.x, margin, max(margin, vp_size.x - panel_size.x - margin))
+	best_pos.y = clampf(best_pos.y, margin + 48.0, max(margin + 48.0, vp_size.y - panel_size.y - 90.0))
+
+	panel_container.global_position = best_pos
