@@ -118,7 +118,7 @@ jobs:
   verify-android:
     name: Verify Android Boot on Emulator
     needs: build
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -140,6 +140,7 @@ jobs:
           api-level: 29
           target: default
           arch: x86_64
+          disk-size: 2048M
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
