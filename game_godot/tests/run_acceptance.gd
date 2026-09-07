@@ -8,6 +8,7 @@ const ActionResolver = preload("res://scripts/runtime/ActionResolver.gd")
 const WorldState = preload("res://scripts/runtime/WorldState.gd")
 const SaveSystem = preload("res://scripts/save/SaveSystem.gd")
 const RoomBaseClass = preload("res://scripts/rooms/RoomBase.gd")
+const ChalkCircleRouter = preload("res://scripts/runtime/ChalkCircleRouter.gd")
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -66,6 +67,7 @@ func _run_all_tests() -> void:
 	test_multi_room_system()
 	test_mobile_controls_and_readability()
 	test_first_person_runtime()
+	test_chalk_circle_bridge()
 
 
 func test_campaign_loading() -> void:
@@ -382,6 +384,56 @@ func test_first_person_runtime() -> void:
 	assert_true(fp_hud.find_child("InteractButton", true, false) != null, "First-person HUD has mobile interact button")
 
 	bootstrap.queue_free()
+
+
+func test_chalk_circle_bridge() -> void:
+	print("\n--- 13. Chalk Circle Pressure Spine ---")
+	var loader = CampaignLoader.new()
+	loader.load_all()
+	var state = WorldState.new()
+	state.init_from_campaign(loader.campaign)
+	var router = ChalkCircleRouter.new()
+
+	router.initialize(state)
+	assert_equal(router.snapshot(state).get("layer"), 1, "Chalk Circle starts at THE GATE")
+
+	router.observe_action(state, {"kind": "choice", "id": "inspect"}, {"result": "ok"})
+	assert_equal(router.snapshot(state).get("layer"), 2, "First resolved action passes into ANTECHAMBER")
+
+	router.observe_action(state, {"kind": "choice", "id": "inspect"}, {"result": "ok"})
+	assert_equal(router.snapshot(state).get("layer"), 3, "Repeated action pattern reaches MIRROR HALL")
+
+	state.stats["bureaucracy"] = 5
+	state.stats["ape_chaos"] = 5
+	router.observe_action(state, {"kind": "choice", "id": "file_form"}, {"result": "ok"})
+	assert_equal(router.snapshot(state).get("layer"), 4, "Mixed high route pressure reaches PRESSURE CHAMBER")
+	assert_true(
+		router.snapshot(state).get("pressure_refresh_required", false),
+		"Pressure chamber requests an explicit refresh before deeper authored use"
+	)
+
+	router.refresh_pressure(state)
+	assert_true(
+		ChalkCircleRouter.evaluate_requirement(state, {"layer_gte": 4, "pressure_refreshed": true}),
+		"Chalk requirement hook can gate content without changing WorldState schema"
+	)
+
+	router.request_archive_focus(state, "acceptance_archive")
+	assert_equal(router.snapshot(state).get("layer"), 5, "Explicit archive focus reaches ARCHIVE VAULT")
+	assert_true(router.snapshot(state).get("archive", []).size() >= 4, "Chalk archive records hash-chained gameplay receipts")
+
+	router.request_refusal(state, "acceptance_refusal")
+	assert_equal(router.snapshot(state).get("layer"), 6, "Explicit refusal reaches THE REFUSAL")
+
+	var save_payload = state.to_dict()
+	var restored = WorldState.new()
+	restored.from_dict(save_payload)
+	router.initialize(restored)
+	assert_equal(
+		router.snapshot(restored).get("layer"),
+		6,
+		"Chalk state survives save-v3 WorldState round trip"
+	)
 
 
 func assert_false(condition: bool, test_name: String) -> void:
