@@ -73,6 +73,7 @@ func _on_dialogue_requested(speaker: String, lines: Array) -> void:
 	dialogue_panel.visible = true
 	if pda_panel.visible:
 		pda_panel.visible = false
+	_set_mobile_gameplay_controls_enabled(false)
 	EventBus.first_person_input_lock_changed.emit(true)
 	_show_dialogue_line()
 
@@ -99,6 +100,7 @@ func _close_dialogue() -> void:
 	dialogue_panel.visible = false
 	dialogue_lines.clear()
 	dialogue_index = 0
+	_set_mobile_gameplay_controls_enabled(true)
 	EventBus.first_person_input_lock_changed.emit(false)
 	EventBus.first_person_dialogue_closed.emit()
 
@@ -107,8 +109,15 @@ func _toggle_pda() -> void:
 	if dialogue_panel.visible:
 		return
 	pda_panel.visible = not pda_panel.visible
+	_set_mobile_gameplay_controls_enabled(not pda_panel.visible)
 	EventBus.first_person_input_lock_changed.emit(pda_panel.visible)
 	_refresh_pda()
+
+
+func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:
+	if not is_instance_valid(mobile_controls):
+		return
+	mobile_controls.visible = DisplayServer.is_touchscreen_available() and enabled
 
 
 func _refresh_pda() -> void:
