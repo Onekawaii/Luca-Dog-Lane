@@ -1,13 +1,15 @@
 extends SceneTree
 
-# Dedicated Unit and Acceptance Test Suite for the Quantum Witness System.
+# Dedicated Unit and Acceptance Test Suite for the Quantum Witness System (2D & 3D).
 # Run with: godot --headless --path game_godot --script res://tests/test_quantum_system.gd
 
 const QuantumEntityScript = preload("res://scripts/quantum/QuantumEntity.gd")
 const QuantumWitnessSystemScript = preload("res://scripts/quantum/QuantumWitnessSystem.gd")
 const QuantumStateAnchorScript = preload("res://scripts/quantum/QuantumStateAnchor.gd")
 const QuantumEntanglementScript = preload("res://scripts/quantum/QuantumEntanglement.gd")
-const KevinActorScript = preload("res://scripts/actors/KevinActor.gd")
+const FirstPersonQuantumNPCScript = preload("res://scripts/fps/FirstPersonQuantumNPC.gd")
+const FirstPersonPlayerScript = preload("res://scripts/fps/FirstPersonPlayer.gd")
+const FirstPersonHUDScript = preload("res://scripts/fps/FirstPersonHUD.gd")
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -16,7 +18,7 @@ var failed_tests: int = 0
 
 func _init() -> void:
 	print("\n============================================================")
-	print("HIVE-LATTICE // QUANTUM WITNESS SYSTEM TEST SUITE")
+	print("HIVE-LATTICE // 3D QUANTUM WITNESS SYSTEM TEST SUITE")
 	print("============================================================\n")
 
 	_run_all_quantum_tests()
@@ -55,23 +57,23 @@ func assert_equal(actual: Variant, expected: Variant, test_name: String) -> void
 
 func _run_all_quantum_tests() -> void:
 	test_quantum_subsystem_load()
-	test_multiple_valid_states_definition()
+	test_vector3_and_2d_anchor_support()
 	test_observed_entity_does_not_transition()
 	test_grace_period_prevents_premature_transition()
 	test_sustained_unobserved_period_allows_transition()
 	test_deterministic_state_resolution()
 	test_resolution_never_selects_invalid_anchor()
 	test_multiple_witnesses_pin_coherence()
-	test_entanglement_coupling_proof()
-	test_kevin_presence_and_dialogue_retention()
-	test_pda_quantum_diagnostic_surface()
+	test_entanglement_coupling_proof_3d()
+	test_first_person_kevin_3d_actor()
+	test_first_person_hud_pda_quantum_surface()
 
 
 func test_quantum_subsystem_load() -> void:
 	print("--- 1. Subsystem Loading ---")
-	var q_entity: CharacterBody2D = QuantumEntityScript.new()
+	var q_entity: Node = QuantumEntityScript.new()
 	var q_sys: Node = QuantumWitnessSystemScript.new()
-	var q_anchor: RefCounted = QuantumStateAnchorScript.new("test_anchor", Vector2(100, 200))
+	var q_anchor: RefCounted = QuantumStateAnchorScript.new("test_anchor", Vector3(1.0, 0.0, 2.0))
 	var q_entangle: Node = QuantumEntanglementScript.new()
 
 	assert_true(q_entity != null, "QuantumEntityScript instantiates successfully")
@@ -84,41 +86,41 @@ func test_quantum_subsystem_load() -> void:
 	q_entangle.free()
 
 
-func test_multiple_valid_states_definition() -> void:
-	print("\n--- 2. Defining Multiple Valid States ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
-	var anchor_a: RefCounted = QuantumStateAnchorScript.new("anchor_a", Vector2(100, 100), 45.0, false, "coffee", "Coffee Area")
-	var anchor_b: RefCounted = QuantumStateAnchorScript.new("anchor_b", Vector2(200, 200), 40.0, false, "utility", "Utility Corner")
-	var anchor_c: RefCounted = QuantumStateAnchorScript.new("anchor_c", Vector2(300, 300), 40.0, false, "doorway", "Doorway")
-	var anchor_d: RefCounted = QuantumStateAnchorScript.new("anchor_d", Vector2.ZERO, 15.0, true, "absent", "Marketing")
+func test_vector3_and_2d_anchor_support() -> void:
+	print("\n--- 2. Vector3 Spatial Anchors & Relative Weights ---")
+	var entity: Node = QuantumEntityScript.new()
+	var a_coffee = QuantumStateAnchorScript.new("KevinCoffeeAnchor", Vector3(-2.5, 0.0, -1.8), 45.0, false, "coffee", "Coffee Area")
+	var a_utility = QuantumStateAnchorScript.new("KevinUtilityAnchor", Vector3(2.8, 0.0, 2.2), 40.0, false, "utility", "Utility Corner")
+	var a_door = QuantumStateAnchorScript.new("KevinDoorAnchor", Vector3(0.0, 0.0, 3.8), 40.0, false, "door", "Doorway")
+	var a_absent = QuantumStateAnchorScript.new("KevinAbsentAnchor", Vector3(0.0, -100.0, 0.0), 15.0, true, "absent", "Marketing")
 
-	entity.call("register_anchor", anchor_a)
-	entity.call("register_anchor", anchor_b)
-	entity.call("register_anchor", anchor_c)
-	entity.call("register_anchor", anchor_d)
+	entity.call("register_anchor", a_coffee)
+	entity.call("register_anchor", a_utility)
+	entity.call("register_anchor", a_door)
+	entity.call("register_anchor", a_absent)
 
-	var anchors_dict = entity.get("anchors")
-	assert_equal(anchors_dict.size(), 4, "Entity has exactly 4 registered anchors")
-	assert_equal(anchors_dict["anchor_a"].position_2d, Vector2(100, 100), "Anchor A position matches")
-	assert_true(anchors_dict["anchor_d"].is_absent, "Anchor D is marked absent")
+	var anchors = entity.get("anchors")
+	assert_equal(anchors.size(), 4, "Entity has exactly 4 registered 3D anchors")
+	assert_equal(anchors["KevinCoffeeAnchor"].position_3d, Vector3(-2.5, 0.0, -1.8), "Anchor Coffee Vector3 position matches")
+	assert_equal(anchors["KevinCoffeeAnchor"].relative_weight, 45.0, "Anchor Coffee relative weight is 45.0")
+	assert_true(anchors["KevinAbsentAnchor"].is_absent, "Anchor Absent is marked absent")
 
 	entity.free()
 
 
 func test_observed_entity_does_not_transition() -> void:
 	print("\n--- 3. Observed Entity Does Not Transition ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
-	var anchor_a: RefCounted = QuantumStateAnchorScript.new("anchor_a", Vector2(100, 100), 50.0)
-	var anchor_b: RefCounted = QuantumStateAnchorScript.new("anchor_b", Vector2(200, 200), 50.0)
-	entity.call("register_anchor", anchor_a)
-	entity.call("register_anchor", anchor_b)
-	entity.call("set_initial_state", "anchor_a")
+	var entity: Node = QuantumEntityScript.new()
+	var a1 = QuantumStateAnchorScript.new("a1", Vector3(0, 0, 0), 50.0)
+	var a2 = QuantumStateAnchorScript.new("a2", Vector3(1, 0, 1), 50.0)
+	entity.call("register_anchor", a1)
+	entity.call("register_anchor", a2)
+	entity.call("set_initial_state", "a1")
 
-	# Process 60 frames under active observation (1 witness)
 	for i in range(60):
 		entity.call("process_observation", 0.016, true, 1)
 
-	assert_equal(entity.get("current_anchor_id"), "anchor_a", "Entity current anchor remains pinned under observation")
+	assert_equal(entity.get("current_anchor_id"), "a1", "Entity current anchor remains pinned under observation")
 	assert_equal(entity.get("observation_state"), QuantumEntityScript.ObservationState.OBSERVED, "Entity is in OBSERVED state")
 	assert_equal(entity.call("get_coherence_percentage"), 100, "Coherence is 100% when observed")
 
@@ -127,15 +129,14 @@ func test_observed_entity_does_not_transition() -> void:
 
 func test_grace_period_prevents_premature_transition() -> void:
 	print("\n--- 4. Grace Period Prevents Premature Transition ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
+	var entity: Node = QuantumEntityScript.new()
 	entity.set("grace_period", 0.75)
-	var anchor_a: RefCounted = QuantumStateAnchorScript.new("anchor_a", Vector2(100, 100), 50.0)
-	var anchor_b: RefCounted = QuantumStateAnchorScript.new("anchor_b", Vector2(200, 200), 50.0)
-	entity.call("register_anchor", anchor_a)
-	entity.call("register_anchor", anchor_b)
-	entity.call("set_initial_state", "anchor_a")
+	var a1 = QuantumStateAnchorScript.new("a1", Vector3(0, 0, 0), 50.0)
+	var a2 = QuantumStateAnchorScript.new("a2", Vector3(1, 0, 1), 50.0)
+	entity.call("register_anchor", a1)
+	entity.call("register_anchor", a2)
+	entity.call("set_initial_state", "a1")
 
-	# Observed initially
 	entity.call("process_observation", 0.016, true, 1)
 
 	# Lose LOS for 0.3s (less than 0.75s grace period)
@@ -147,22 +148,21 @@ func test_grace_period_prevents_premature_transition() -> void:
 	# Regain LOS before grace period expires
 	entity.call("process_observation", 0.016, true, 1)
 	assert_equal(entity.get("observation_state"), QuantumEntityScript.ObservationState.OBSERVED, "Entity returns to OBSERVED state")
-	assert_equal(entity.get("current_anchor_id"), "anchor_a", "Entity stayed fixed at initial anchor")
+	assert_equal(entity.get("current_anchor_id"), "a1", "Entity stayed fixed at initial anchor")
 
 	entity.free()
 
 
 func test_sustained_unobserved_period_allows_transition() -> void:
 	print("\n--- 5. Sustained Loss of Observation Allows Transition ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
+	var entity: Node = QuantumEntityScript.new()
 	entity.set("grace_period", 0.5)
-	var anchor_a: RefCounted = QuantumStateAnchorScript.new("anchor_a", Vector2(100, 100), 50.0)
-	var anchor_b: RefCounted = QuantumStateAnchorScript.new("anchor_b", Vector2(200, 200), 50.0)
-	entity.call("register_anchor", anchor_a)
-	entity.call("register_anchor", anchor_b)
-	entity.call("set_initial_state", "anchor_a")
+	var a1 = QuantumStateAnchorScript.new("a1", Vector3(0, 0, 0), 50.0)
+	var a2 = QuantumStateAnchorScript.new("a2", Vector3(1, 0, 1), 50.0)
+	entity.call("register_anchor", a1)
+	entity.call("register_anchor", a2)
+	entity.call("set_initial_state", "a1")
 
-	# Observed initially
 	entity.call("process_observation", 0.016, true, 1)
 
 	# Sustain loss of LOS for 1.2s (> 0.5s grace period)
@@ -176,26 +176,24 @@ func test_sustained_unobserved_period_allows_transition() -> void:
 
 func test_deterministic_state_resolution() -> void:
 	print("\n--- 6. Re-observation Resolves a Valid Authored State ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
+	var entity: Node = QuantumEntityScript.new()
 	entity.set("grace_period", 0.5)
 	entity.set("resolution_seed", 42)
-	var anchor_a: RefCounted = QuantumStateAnchorScript.new("anchor_a", Vector2(100, 100), 45.0)
-	var anchor_b: RefCounted = QuantumStateAnchorScript.new("anchor_b", Vector2(200, 200), 40.0)
-	var anchor_c: RefCounted = QuantumStateAnchorScript.new("anchor_c", Vector2(300, 300), 15.0)
-	entity.call("register_anchor", anchor_a)
-	entity.call("register_anchor", anchor_b)
-	entity.call("register_anchor", anchor_c)
-	entity.call("set_initial_state", "anchor_a")
+	var a_coffee = QuantumStateAnchorScript.new("KevinCoffeeAnchor", Vector3(-2.5, 0.0, -1.8), 45.0)
+	var a_utility = QuantumStateAnchorScript.new("KevinUtilityAnchor", Vector3(2.8, 0.0, 2.2), 40.0)
+	var a_absent = QuantumStateAnchorScript.new("KevinAbsentAnchor", Vector3(0.0, -100.0, 0.0), 15.0, true)
+	entity.call("register_anchor", a_coffee)
+	entity.call("register_anchor", a_utility)
+	entity.call("register_anchor", a_absent)
+	entity.call("set_initial_state", "KevinCoffeeAnchor")
 
-	# Sustained unobserved period
 	entity.call("process_observation", 0.016, true, 1)
 	entity.call("process_observation", 1.0, false, 0)
 
-	# Re-observe
 	entity.call("process_observation", 0.016, true, 1)
 	assert_equal(entity.get("observation_state"), QuantumEntityScript.ObservationState.REOBSERVED, "State is now REOBSERVED")
-	var anchors_dict = entity.get("anchors")
-	assert_true(anchors_dict.has(entity.get("current_anchor_id")), "Resolved anchor is one of the valid authored anchors")
+	var anchors = entity.get("anchors")
+	assert_true(anchors.has(entity.get("current_anchor_id")), "Resolved anchor is one of the valid authored anchors")
 	assert_equal(entity.get("pending_transition"), false, "Pending transition cleared on resolution")
 
 	entity.free()
@@ -203,12 +201,12 @@ func test_deterministic_state_resolution() -> void:
 
 func test_resolution_never_selects_invalid_anchor() -> void:
 	print("\n--- 7. Resolution Never Selects Invalid Anchor ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
+	var entity: Node = QuantumEntityScript.new()
 	entity.set("grace_period", 0.1)
-	var valid_ids = ["safe_spot_1", "safe_spot_2", "safe_spot_3"]
+	var valid_ids = ["safe_anchor_1", "safe_anchor_2", "safe_anchor_3"]
 	for id in valid_ids:
-		entity.call("register_anchor", QuantumStateAnchorScript.new(id, Vector2(50, 50), 33.3))
-	entity.call("set_initial_state", "safe_spot_1")
+		entity.call("register_anchor", QuantumStateAnchorScript.new(id, Vector3(0, 0, 0), 33.3))
+	entity.call("set_initial_state", "safe_anchor_1")
 
 	for i in range(25):
 		entity.call("process_observation", 0.5, false, 0)
@@ -221,93 +219,104 @@ func test_resolution_never_selects_invalid_anchor() -> void:
 
 func test_multiple_witnesses_pin_coherence() -> void:
 	print("\n--- 8. Multiple Witnesses Pin Coherence Until All Are Gone ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
+	var entity: Node = QuantumEntityScript.new()
 	entity.set("grace_period", 0.2)
-	var a1: RefCounted = QuantumStateAnchorScript.new("a1", Vector2(100, 100))
-	var a2: RefCounted = QuantumStateAnchorScript.new("a2", Vector2(200, 200))
+	var a1 = QuantumStateAnchorScript.new("a1", Vector3(0, 0, 0))
+	var a2 = QuantumStateAnchorScript.new("a2", Vector3(1, 0, 1))
 	entity.call("register_anchor", a1)
 	entity.call("register_anchor", a2)
 	entity.call("set_initial_state", "a1")
 
-	# Observed by 2 witnesses (e.g. Player + Security Cam)
 	entity.call("process_observation", 0.016, true, 2)
 	assert_equal(entity.get("active_witness_count"), 2, "2 active witnesses")
 
-	# 1 witness looks away, 1 remains
 	entity.call("process_observation", 0.5, true, 1)
 	assert_equal(entity.get("observation_state"), QuantumEntityScript.ObservationState.OBSERVED, "Still observed with 1 witness")
 	assert_equal(entity.get("current_anchor_id"), "a1", "State stays pinned")
 
-	# Final witness looks away
 	entity.call("process_observation", 0.5, false, 0)
 	assert_equal(entity.get("observation_state"), QuantumEntityScript.ObservationState.UNOBSERVED, "Unobserved once all witnesses lose LOS")
 
 	entity.free()
 
 
-func test_entanglement_coupling_proof() -> void:
-	print("\n--- 9. Entanglement Coupling Proof (Kevin <-> Coffee Machine) ---")
-	var kevin: CharacterBody2D = QuantumEntityScript.new()
-	kevin.set("entity_id", "kevin")
-	var a_coffee: RefCounted = QuantumStateAnchorScript.new("kevin_anchor_a", Vector2(330, 430))
-	var a_utility: RefCounted = QuantumStateAnchorScript.new("kevin_anchor_b", Vector2(920, 520))
-	var a_absent: RefCounted = QuantumStateAnchorScript.new("kevin_anchor_d", Vector2.ZERO, 1.0, true)
+func test_entanglement_coupling_proof_3d() -> void:
+	print("\n--- 9. Entanglement Coupling Proof 3D (Kevin <-> Coffee Machine) ---")
+	var kevin = QuantumEntityScript.new()
+	kevin.set("entity_id", "kevin_marketing")
+	var a_coffee = QuantumStateAnchorScript.new("KevinCoffeeAnchor", Vector3(-2.5, 0.0, -1.8))
+	var a_utility = QuantumStateAnchorScript.new("KevinUtilityAnchor", Vector3(2.8, 0.0, 2.2))
+	var a_absent = QuantumStateAnchorScript.new("KevinAbsentAnchor", Vector3(0.0, -100.0, 0.0), 1.0, true)
 	kevin.call("register_anchor", a_coffee)
 	kevin.call("register_anchor", a_utility)
 	kevin.call("register_anchor", a_absent)
-	kevin.call("set_initial_state", "kevin_anchor_a")
+	kevin.call("set_initial_state", "KevinCoffeeAnchor")
 
-	var coffee_prop: Node = Node.new()
+	var breakroom = Node.new()
 	var correlations = {
-		"kevin_anchor_a": "normal",
-		"kevin_anchor_b": "leaking",
-		"kevin_anchor_d": "anomalous"
+		"KevinCoffeeAnchor": "normal",
+		"KevinUtilityAnchor": "leaking",
+		"KevinDoorAnchor": "anomalous",
+		"KevinAbsentAnchor": "anomalous"
 	}
 
-	var entanglement: Node = QuantumEntanglementScript.new()
-	entanglement.call("setup_link", kevin, coffee_prop, correlations)
+	var entanglement = QuantumEntanglementScript.new()
+	entanglement.call("setup_link", kevin, breakroom, correlations)
 
 	assert_equal(entanglement.get("current_target_state"), "normal", "Coffee machine is normal when Kevin is at coffee area")
 
-	entanglement.call("apply_correlation", "kevin_anchor_b")
+	entanglement.call("apply_correlation", "KevinUtilityAnchor")
 	assert_equal(entanglement.get("current_target_state"), "leaking", "Coffee machine is leaking when Kevin is at utility corner")
 
-	entanglement.call("apply_correlation", "kevin_anchor_d")
+	entanglement.call("apply_correlation", "KevinAbsentAnchor")
 	assert_equal(entanglement.get("current_target_state"), "anomalous", "Coffee machine is anomalous when Kevin is absent")
 
 	kevin.free()
-	coffee_prop.free()
+	breakroom.free()
 	entanglement.free()
 
 
-func test_kevin_presence_and_dialogue_retention() -> void:
-	print("\n--- 10. Kevin Actor Presence & Dialogue Retention ---")
-	var kevin: CharacterBody2D = KevinActorScript.new()
-	assert_true(kevin != null, "KevinActor instantiates")
-	assert_equal(kevin.get("actor_id"), "npc.kevin_marketing", "Kevin actor_id is correct")
+func test_first_person_kevin_3d_actor() -> void:
+	print("\n--- 10. FirstPersonQuantumNPC 3D Actor ---")
+	var kevin = FirstPersonQuantumNPCScript.new()
+	assert_true(kevin != null, "FirstPersonQuantumNPC instantiates")
+	assert_true(kevin is CharacterBody3D, "Kevin is a CharacterBody3D actor")
+	assert_equal(kevin.get("npc_id"), "npc.kevin_marketing", "Kevin npc_id is correct")
+	assert_equal(kevin.get("display_name"), "Kevin (Marketing)", "Kevin display_name is correct")
 	assert_true(kevin.get("quantum_component") != null, "Kevin has QuantumComponent attached")
 
-	var diag_a = kevin.call("get_quantum_dialogue_override")
-	assert_true(diag_a.has("read_aloud"), "Has read_aloud dialogue override")
-	assert_true(diag_a.has("remark"), "Has remark dialogue override")
+	# Test raycast interactable interface
+	assert_true(kevin.has_method("interact"), "Kevin implements interact method for RayCast3D")
+
+	var diag = kevin.call("get_quantum_dialogue")
+	assert_true(diag.has("speaker"), "Dialogue contains speaker")
+	assert_true(diag.has("lines"), "Dialogue contains lines array")
+
+	# Test collision toggling on absent anchor
+	var absent_anchor = QuantumStateAnchorScript.new("KevinAbsentAnchor", Vector3(0, -100, 0), 1.0, true)
+	kevin.call("apply_quantum_anchor", absent_anchor)
+	assert_equal(kevin.visible, false, "Kevin is invisible when absent")
+
+	var coffee_anchor = QuantumStateAnchorScript.new("KevinCoffeeAnchor", Vector3(-2.5, 0, -1.8), 1.0, false)
+	kevin.call("apply_quantum_anchor", coffee_anchor)
+	assert_equal(kevin.visible, true, "Kevin is visible when present")
+	assert_equal(kevin.position, Vector3(-2.5, 0, -1.8), "Kevin position matches 3D anchor")
 
 	kevin.free()
 
 
-func test_pda_quantum_diagnostic_surface() -> void:
-	print("\n--- 11. PDA Quantum Diagnostic Surface ---")
-	var entity: CharacterBody2D = QuantumEntityScript.new()
-	entity.set("entity_name", "Kevin (Marketing)")
-	entity.set("entity_id", "kevin_marketing")
-	var a1: RefCounted = QuantumStateAnchorScript.new("kevin_anchor_a", Vector2(330, 430), 1.0, false, "coffee", "Breakroom Coffee Area")
-	entity.call("register_anchor", a1)
-	entity.call("set_initial_state", "kevin_anchor_a")
-	entity.call("process_observation", 0.016, true, 1)
+func test_first_person_hud_pda_quantum_surface() -> void:
+	print("\n--- 11. FirstPersonHUD PDA Quantum Diagnostic Surface ---")
+	var hud_scene = load("res://scenes/fps/FirstPersonHUD.tscn")
+	assert_true(hud_scene != null, "FirstPersonHUD.tscn loads")
+	var hud = hud_scene.instantiate()
+	assert_true(hud != null, "FirstPersonHUD instantiates")
 
-	var summary: Dictionary = entity.call("get_status_summary")
-	assert_equal(summary["entity_name"], "Kevin (Marketing)", "Summary entity name matches")
-	assert_equal(summary["observed"], true, "Summary observed status is true")
-	assert_equal(summary["coherence_pct"], 100, "Summary coherence percentage is 100%")
-	assert_equal(summary["last_confirmed_location"], "Breakroom Coffee Area", "Summary last confirmed location matches")
+	assert_true(hud.has_method("open_dialogue"), "HUD has open_dialogue method")
+	assert_true(hud.has_method("advance_dialogue"), "HUD has advance_dialogue method")
+	assert_true(hud.has_method("open_pda"), "HUD has open_pda method")
 
-	entity.free()
+	hud.call("open_pda")
+	assert_true(hud.get("is_pda_open"), "PDA is open")
+
+	hud.free()

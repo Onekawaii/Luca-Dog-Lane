@@ -1,6 +1,18 @@
 class_name FirstPersonBreakroom
 extends Node3D
 
+const QuantumWitnessSystemClass = preload("res://scripts/quantum/QuantumWitnessSystem.gd")
+const QuantumEntanglementClass = preload("res://scripts/quantum/QuantumEntanglement.gd")
+
+@onready var quantum_player: Node3D = $Player
+@onready var quantum_kevin: Node3D = $World/FirstPersonKevin
+@onready var quantum_coffee_maker: Node3D = $World/CoffeeMaker
+@onready var quantum_coffee_light: OmniLight3D = get_node_or_null("World/CoffeeMaker/CoffeeLight")
+
+var witness_system = null
+var entanglement = null
+var coffee_machine_state: String = "normal"
+
 var pending_dialogue_action: String = ""
 
 
@@ -15,6 +27,7 @@ func _ready() -> void:
 		EventBus.world_state_changed.emit({})
 
 	_refresh_world()
+	_init_quantum_system()
 
 
 func _on_interaction_requested(data: Dictionary) -> void:
@@ -135,3 +148,36 @@ func _refresh_world() -> void:
 		EventBus.first_person_objective_changed.emit("Return to Wetberry at the central table and contain it.")
 	else:
 		EventBus.first_person_objective_changed.emit("Find Keith in the utility corner and ask for safe containment gear.")
+
+
+func _init_quantum_system() -> void:
+	witness_system = QuantumWitnessSystemClass.new()
+	witness_system.name = "QuantumWitnessSystem"
+	add_child(witness_system)
+	if quantum_player != null and quantum_player.get("camera") != null:
+		witness_system.register_witness("camera3d_player", quantum_player.get("camera"), 30.0, 360.0, "camera3d")
+	if quantum_kevin != null and quantum_kevin.get("quantum_component") != null:
+		var q = quantum_kevin.get("quantum_component")
+		if witness_system.has_method("register_entity"):
+			witness_system.register_entity(q)
+		entanglement = QuantumEntanglementClass.new()
+		entanglement.name = "BreakroomQuantumEntanglement"
+		add_child(entanglement)
+
+func set_entangled_state(state_name: String) -> void:
+	coffee_machine_state = state_name
+	_update_coffee_machine_visuals()
+
+func _update_coffee_machine_visuals() -> void:
+	if quantum_coffee_maker == null or quantum_coffee_light == null:
+		return
+	match coffee_machine_state:
+		"leaking":
+			quantum_coffee_light.light_color = Color(1.0, 0.7, 0.2)
+			quantum_coffee_light.light_energy = 1.5
+		"anomalous":
+			quantum_coffee_light.light_color = Color(0.3, 0.8, 1.0)
+			quantum_coffee_light.light_energy = 2.5
+		_:
+			quantum_coffee_light.light_color = Color(0.9, 0.9, 0.9)
+			quantum_coffee_light.light_energy = 0.8

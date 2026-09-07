@@ -8,14 +8,11 @@ const ActionResolver = preload("res://scripts/runtime/ActionResolver.gd")
 const WorldState = preload("res://scripts/runtime/WorldState.gd")
 const SaveSystem = preload("res://scripts/save/SaveSystem.gd")
 const RoomBaseClass = preload("res://scripts/rooms/RoomBase.gd")
-<<<<<<< HEAD
 const ChalkCircleRouter = preload("res://scripts/runtime/ChalkCircleRouter.gd")
-=======
 const QuantumEntityScript = preload("res://scripts/quantum/QuantumEntity.gd")
 const QuantumWitnessSystemScript = preload("res://scripts/quantum/QuantumWitnessSystem.gd")
 const QuantumStateAnchorScript = preload("res://scripts/quantum/QuantumStateAnchor.gd")
 const QuantumEntanglementScript = preload("res://scripts/quantum/QuantumEntanglement.gd")
->>>>>>> 9c00ae5 (test(quantum): harden observation and regression coverage)
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -262,7 +259,8 @@ func test_scene_and_assets() -> void:
 		"res://scripts/quantum/QuantumEntity.gd",
 		"res://scripts/quantum/QuantumWitnessSystem.gd",
 		"res://scripts/quantum/QuantumStateAnchor.gd",
-		"res://scripts/quantum/QuantumEntanglement.gd"
+		"res://scripts/quantum/QuantumEntanglement.gd",
+		"res://scripts/fps/FirstPersonQuantumNPC.gd"
 	]
 
 	for path in required_files:
@@ -275,14 +273,9 @@ func test_kevin_presence_and_dialogue() -> void:
 	assert_true(kevin_scene != null, "Kevin.tscn loads successfully")
 	var kevin = kevin_scene.instantiate()
 	assert_true(kevin is CharacterBody2D, "Kevin is a CharacterBody2D actor")
-<<<<<<< HEAD
-	assert_equal(kevin.actor_id, "npc.kevin_marketing", "Kevin actor_id is correct")
-	assert_equal(kevin.display_name, "Kevin from Marketing", "Kevin display_name is correct")
-=======
 	assert_equal(kevin.get("actor_id"), "npc.kevin_marketing", "Kevin actor_id is correct")
-	assert_equal(kevin.get("display_name"), "Kevin (Marketing)", "Kevin display_name is correct")
+	assert_equal(kevin.get("display_name"), "Kevin from Marketing", "Kevin display_name is correct")
 	assert_true(kevin.get("quantum_component") != null, "Kevin has QuantumComponent")
->>>>>>> 9c00ae5 (test(quantum): harden observation and regression coverage)
 	kevin.queue_free()
 
 
@@ -290,8 +283,8 @@ func test_quantum_witness_subsystem() -> void:
 	print("\n--- 10. Quantum Witness Subsystem & Entanglement Integration ---")
 	var q_entity = QuantumEntityScript.new()
 	q_entity.set("entity_id", "kevin_test")
-	var a1 = QuantumStateAnchorScript.new("a1", Vector2(100, 100))
-	var a2 = QuantumStateAnchorScript.new("a2", Vector2(200, 200))
+	var a1 = QuantumStateAnchorScript.new("a1", Vector3(0, 0, 0))
+	var a2 = QuantumStateAnchorScript.new("a2", Vector3(1, 0, 1))
 	q_entity.call("register_anchor", a1)
 	q_entity.call("register_anchor", a2)
 	q_entity.call("set_initial_state", "a1")
@@ -422,6 +415,17 @@ func test_first_person_runtime() -> void:
 	var keith = bootstrap.find_child("Keith", true, false)
 	assert_true(wetberry != null and wetberry.has_method("interact"), "Wetberry is a physical first-person interactable")
 	assert_true(keith != null and keith.has_method("interact"), "Keith is a physical first-person interactable")
+
+	var kevin_3d = bootstrap.find_child("FirstPersonKevin", true, false)
+	assert_true(kevin_3d is CharacterBody3D, "FirstPersonKevin is a CharacterBody3D")
+	assert_true(kevin_3d.has_method("interact"), "FirstPersonKevin implements interact")
+	assert_true(kevin_3d.get("quantum_component") != null, "FirstPersonKevin has QuantumComponent")
+
+	var breakroom_3d = bootstrap.find_child("FirstPersonBreakroom", true, false)
+	assert_true(breakroom_3d != null and breakroom_3d.has_method("set_entangled_state"), "FirstPersonBreakroom exposes entangled-state hook")
+	if breakroom_3d != null and breakroom_3d.has_method("set_entangled_state"):
+		breakroom_3d.call("set_entangled_state", "leaking")
+		assert_equal(breakroom_3d.get("coffee_machine_state"), "leaking", "Coffee maker receives leaking entangled state")
 
 	var fp_hud = bootstrap.find_child("FirstPersonHUD", true, false)
 	assert_true(fp_hud != null, "First-person HUD is present")

@@ -12,6 +12,7 @@ extends CanvasLayer
 @onready var pda_panel: PanelContainer = $Root/PDAPanel
 @onready var pda_objective_label: Label = $Root/PDAPanel/Margin/VBox/PDAObjective
 @onready var inventory_label: Label = $Root/PDAPanel/Margin/VBox/InventoryLabel
+@onready var quantum_diagnostic_label: Label = $Root/PDAPanel/Margin/VBox/QuantumDiagnostic
 @onready var pda_button: Button = $Root/PDAButton
 @onready var save_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/SaveButton
 @onready var load_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/LoadButton
@@ -133,6 +134,23 @@ func _refresh_pda() -> void:
 			for item in items:
 				lines.append("• " + str(item.get("name", item.get("id", "Unknown item"))))
 	inventory_label.text = "\n".join(lines)
+	_refresh_quantum_diagnostic()
+
+
+func _refresh_quantum_diagnostic() -> void:
+	if not is_instance_valid(quantum_diagnostic_label):
+		return
+	var kevin := get_tree().root.find_child("FirstPersonKevin", true, false)
+	if kevin == null or kevin.get("quantum_component") == null:
+		quantum_diagnostic_label.text = "QUANTUM COHERENCE\nSubject: Kevin — status unavailable"
+		return
+	var q = kevin.get("quantum_component")
+	if not q.has_method("get_status_summary"):
+		quantum_diagnostic_label.text = "QUANTUM COHERENCE\nSubject: Kevin — component online"
+		return
+	var summary: Dictionary = q.get_status_summary()
+	var observed := bool(summary.get("observed", false))
+	quantum_diagnostic_label.text = "QUANTUM COHERENCE\nState: %s\nConfirmed: %s\nCoherence: %s%%\nWitnesses: %s" % ["OBSERVED" if observed else "UNCONFIRMED", str(summary.get("last_confirmed_location", "unknown")), str(summary.get("coherence_pct", 0)), str(summary.get("witness_count", 0))]
 
 
 func _on_notification(message: String) -> void:

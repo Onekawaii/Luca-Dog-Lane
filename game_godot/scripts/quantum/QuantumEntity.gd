@@ -1,7 +1,7 @@
 class_name QuantumEntity
-extends CharacterBody2D
+extends Node
 
-# Reusable Quantum Entity subsystem for Godot 4 (2D & 3D portable).
+# Reusable Quantum Entity subsystem for Godot 4 (Node, Node3D, CharacterBody3D, or 2D).
 # Implements observation-dependent state pinning, line-of-sight tracking,
 # grace-period unobserved transitions, deterministic weighted resolution,
 # and coherence metrics.
@@ -22,9 +22,11 @@ enum ObservationState {
 @export var entity_id: String = "quantum_entity_generic"
 @export var entity_name: String = "Quantum Subject"
 @export var grace_period: float = 0.75 # Configurable grace period in seconds
-@export var same_state_weight: float = 45.0
-@export var other_state_weight: float = 40.0
-@export var absent_state_weight: float = 15.0
+
+# Authored relative weights for resolution pool (normalized dynamically)
+@export var same_state_relative_weight: float = 45.0
+@export var other_state_relative_weight: float = 40.0
+@export var absent_state_relative_weight: float = 15.0
 
 # Observation state tracking
 var observation_state: int = ObservationState.UNOBSERVED
@@ -47,7 +49,6 @@ var transition_count: int = 0
 
 
 func _ready() -> void:
-	# Ensure entity is registered in global witness system if available
 	if has_node("/root/QuantumWitnessSystem"):
 		var sys = get_node("/root/QuantumWitnessSystem")
 		if sys.has_method("register_entity"):
@@ -151,20 +152,20 @@ func _pick_next_anchor_deterministic() -> String:
 	if anchor_keys.size() == 1:
 		return anchor_keys[0]
 
-	# Build weighted pool
+	# Build weighted pool using authored relative weights
 	var candidates: Array[String] = []
 	var weights: Array[float] = []
 	var total_weight: float = 0.0
 
 	for id in anchor_keys:
 		var anchor: QuantumStateAnchor = anchors[id]
-		var w = anchor.weight
+		var w = anchor.relative_weight
 		if id == current_anchor_id:
-			w = same_state_weight
+			w = same_state_relative_weight
 		elif anchor.is_absent:
-			w = absent_state_weight
+			w = absent_state_relative_weight
 		else:
-			w = other_state_weight
+			w = other_state_relative_weight
 
 		candidates.append(id)
 		weights.append(w)
@@ -196,14 +197,37 @@ func _pick_next_anchor_deterministic() -> String:
 
 
 func _apply_anchor(anchor: QuantumStateAnchor) -> void:
-	if anchor.is_absent:
-		visible = false
-		process_mode = Node.PROCESS_MODE_DISABLED
-	else:
-		visible = true
-		process_mode = Node.PROCESS_MODE_INHERIT
-		global_position = anchor.position_2d
-		velocity = Vector2.ZERO
+	var parent_node = get_parent()
+	if parent_node == null:
+		return
+
+	if parent_node.has_method("apply_quantum_anchor"):
+		parent_node.apply_quantum_anchor(anchor)
+	elif parent_node is Node3D:
+		var p3d = parent_node as Node3D
+		if anchor.is_absent:
+			p3d.visible = false
+			p3d.process_mode = Node.PROCESS_MODE_DISABLED
+			if p3d is CollisionObject3D:
+				for child in p3d.find_children("", "CollisionShape3D", true, false):
+					child.disabled = true
+		else:
+			p3d.visible = true
+			p3d.process_mode = Node.PROCESS_MODE_INHERIT
+			p3d.global_position = anchor.position_3d
+			if p3d is CollisionObject3D:
+				for child in p3d.find_children("", "CollisionShape3D", true, false):
+					child.disabled = false
+	elif parent_node is CanvasItem:
+		var p2d = parent_node as CanvasItem
+		if anchor.is_absent:
+			p2d.visible = false
+			p2d.process_mode = Node.PROCESS_MODE_DISABLED
+		else:
+			p2d.visible = true
+			p2d.process_mode = Node.PROCESS_MODE_INHERIT
+			if parent_node is Node2D:
+				(parent_node as Node2D).global_position = anchor.position_2d
 
 
 func get_coherence_percentage() -> int:

@@ -231,6 +231,13 @@ theme_override_font_sizes/font_size = 16
 text = "OBJECTIVE"
 autowrap_mode = 2
 
+[node name="QuantumDiagnostic" type="Label" parent="Root/PDAPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "QUANTUM COHERENCE\nSubject: Kevin — status unavailable"
+autowrap_mode = 2
+
 [node name="InventoryLabel" type="Label" parent="Root/PDAPanel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3

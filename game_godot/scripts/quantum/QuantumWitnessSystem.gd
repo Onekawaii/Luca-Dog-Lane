@@ -1,11 +1,10 @@
 class_name QuantumWitnessSystem
 extends Node
 
-# Reusable Quantum Witness and Observation Subsystem.
-# Tracks multiple observer sources (Player Camera, Security Cameras, NPCs, Mirrors/Devices),
-# calculates frustum/viewport visibility + Physics Raycast line-of-sight occlusion tests,
-# pins quantum entity coherence whenever witness_count > 0,
-# and emits displacement and coherence pressure events.
+# Reusable Quantum Witness Subsystem (2D and 3D portable).
+# Tracks multiple observer sources (Camera3D, Player, Security Cameras, NPCs, Mirrors, Devices),
+# evaluates viewport frustum + PhysicsRayQueryParameters3D / 2D line-of-sight occlusion tests,
+# pins entity state whenever witness_count > 0, and dispatches displacement events.
 
 signal witness_registered(witness_id: String, witness_node: Node)
 signal witness_unregistered(witness_id: String)
@@ -16,12 +15,11 @@ signal quantum_state_forced(entity_id: String, target_state: String)
 var registered_entities: Array[QuantumEntity] = []
 var registered_witnesses: Dictionary = {} # witness_id -> Dictionary { "node": Node, "type": String, "range": float, "fov_deg": float }
 
-@export var max_observation_range: float = 1200.0
+@export var max_observation_range: float = 30.0 # 30 meters in 3D / configurable
 @export var debug_visualization: bool = false
 
 
 func _ready() -> void:
-	# Add default player witness if present
 	call_deferred("_discover_witnesses_in_scene")
 
 
@@ -36,7 +34,7 @@ func unregister_entity(entity: QuantumEntity) -> void:
 	registered_entities.erase(entity)
 
 
-func register_witness(witness_id: String, witness_node: Node, max_range: float = 1200.0, fov: float = 360.0, type: String = "generic") -> void:
+func register_witness(witness_id: String, witness_node: Node, max_range: float = 30.0, fov: float = 360.0, type: String = "generic") -> void:
 	registered_witnesses[witness_id] = {
 		"node": witness_node,
 		"max_range": max_range,
@@ -60,14 +58,16 @@ func _discover_witnesses_in_scene() -> void:
 	if not root:
 		return
 
-	# Look for Player or Camera
-	var player = root.find_child("Player", true, false)
-	if player:
-		register_witness("player_primary", player, max_observation_range, 360.0, "player")
+	# First-Person 3D Camera witness (the true authoritative observation source)
+	var cam3d = root.find_child("Camera3D", true, false)
+	if cam3d:
+		register_witness("camera3d_player", cam3d, max_observation_range, 360.0, "camera3d")
+		return
 
-	var cam = root.find_child("Camera2D", true, false)
-	if cam and not registered_witnesses.has("player_primary"):
-		register_witness("camera_primary", cam, max_observation_range, 360.0, "camera")
+	# 2D fallback camera
+	var cam2d = root.find_child("Camera2D", true, false)
+	if cam2d:
+		register_witness("camera2d_player", cam2d, 1200.0, 360.0, "camera2d")
 
 
 func _physics_process(delta: float) -> void:
@@ -99,44 +99,77 @@ func _evaluate_witness_los(witness_data: Dictionary, entity: QuantumEntity) -> b
 	var w_node: Node = witness_data["node"]
 	var max_range: float = witness_data.get("max_range", max_observation_range)
 
-	var witness_pos = Vector2.ZERO
-	if w_node is Node2D:
-		witness_pos = (w_node as Node2D).global_position
-	else:
+	var target_parent = entity.get_parent()
+	if target_parent == null:
 		return false
 
-	var entity_target_pos = entity.global_position
+	# 1. Evaluate 3D Line-of-Sight if nodes are 3D
+	if w_node is Node3D and target_parent is Node3D:
+		var w3d = w_node as Node3D
+		var t3d = target_parent as Node3D
 
-	# 1. Distance check
-	var dist = witness_pos.distance_to(entity_target_pos)
-	if dist > max_range:
-		return false
+		var w_pos = w3d.global_position
+		var t_pos = t3d.global_position + Vector3(0, 0.9, 0) # Target chest/head height
 
-	# 2. Viewport / Frustum check if witness is a Camera2D
-	if w_node is Camera2D:
-		var cam = w_node as Camera2D
-		var vp_rect = cam.get_viewport_rect()
-		var cam_pos = cam.global_position
-		var visible_bounds = Rect2(cam_pos - (vp_rect.size * 0.5) / cam.zoom, vp_rect.size / cam.zoom)
-		if not visible_bounds.has_point(entity_target_pos):
+		# Range check
+		var dist = w_pos.distance_to(t_pos)
+		if dist > max_range:
 			return false
 
-	# 3. Physics Raycast Occlusion Test (Checks for solid walls / opaque occluders)
-	var space_state = entity.get_world_2d().direct_space_state
-	if space_state:
-		var query = PhysicsRayQueryParameters2D.create(witness_pos, entity_target_pos)
-		query.exclude = [entity.get_rid()]
-		if w_node is CollisionObject2D:
-			query.exclude.append((w_node as CollisionObject2D).get_rid())
-
-		var result = space_state.intersect_ray(query)
-		if not result.is_empty():
-			# Hit an obstacle between witness and entity
-			var collider = result.get("collider")
-			if collider != null and collider != entity and collider != w_node:
+		# Camera3D Frustum check
+		if w_node is Camera3D:
+			var cam = w_node as Camera3D
+			if not cam.is_position_in_frustum(t_pos):
 				return false
 
-	return true
+		# Direct PhysicsRayQueryParameters3D occlusion test
+		var world3d = w3d.get_world_3d()
+		if world3d:
+			var space_state = world3d.direct_space_state
+			if space_state:
+				var query = PhysicsRayQueryParameters3D.create(w_pos, t_pos)
+				var excludes: Array[RID] = []
+				if w_node is CollisionObject3D:
+					excludes.append((w_node as CollisionObject3D).get_rid())
+				if target_parent is CollisionObject3D:
+					excludes.append((target_parent as CollisionObject3D).get_rid())
+				if w_node.get_parent() is CollisionObject3D:
+					excludes.append((w_node.get_parent() as CollisionObject3D).get_rid())
+				query.exclude = excludes
+
+				var result = space_state.intersect_ray(query)
+				if not result.is_empty():
+					var collider = result.get("collider")
+					if collider != null and collider != target_parent and collider != w_node:
+						return false # Raycast blocked by solid geometry / wall
+		return true
+
+	# 2. Evaluate 2D Line-of-Sight fallback
+	if w_node is Node2D:
+		var w2d = w_node as Node2D
+		var t_pos2d = Vector2.ZERO
+		if target_parent is Node2D:
+			t_pos2d = (target_parent as Node2D).global_position
+		else:
+			return false
+
+		var w_pos2d = w2d.global_position
+		if w_pos2d.distance_to(t_pos2d) > max_range:
+			return false
+
+		var world2d = w2d.get_world_2d()
+		if world2d:
+			var space_state2d = world2d.direct_space_state
+			if space_state2d:
+				var query2d = PhysicsRayQueryParameters2D.create(w_pos2d, t_pos2d)
+				var res2d = space_state2d.intersect_ray(query2d)
+				if not res2d.is_empty():
+					var col2d = res2d.get("collider")
+					if col2d != null and col2d != target_parent and col2d != w_node:
+						return false
+		return true
+
+	return false
 
 
 func _on_entity_uncertainty_displaced(entity_id: String, old_anchor: String, new_anchor: String) -> void:

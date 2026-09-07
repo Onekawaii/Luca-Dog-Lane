@@ -50,9 +50,9 @@ func _init_quantum_system() -> void:
 	quantum_component.entity_id = "kevin_marketing"
 	quantum_component.entity_name = "Kevin (Marketing)"
 	quantum_component.grace_period = 0.75
-	quantum_component.same_state_weight = 45.0
-	quantum_component.other_state_weight = 40.0
-	quantum_component.absent_state_weight = 15.0
+	quantum_component.same_state_relative_weight = 45.0
+	quantum_component.other_state_relative_weight = 40.0
+	quantum_component.absent_state_relative_weight = 15.0
 	add_child(quantum_component)
 
 	# Setup authored safe anchors:

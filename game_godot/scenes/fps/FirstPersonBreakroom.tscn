@@ -1,8 +1,9 @@
-[gd_scene load_steps=23 format=3]
+[gd_scene load_steps=27 format=3]
 
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonBreakroom.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonInteractable.gd" id="3_interactable"]
+[ext_resource type="Script" path="res://scripts/fps/FirstPersonQuantumNPC.gd" id="4_quantum_kevin"]
 
 [sub_resource type="Environment" id="Environment_breakroom"]
 background_mode = 1
@@ -81,6 +82,21 @@ size = Vector3(2.4, 2.5, 0.85)
 
 [sub_resource type="BoxShape3D" id="Shape_appliance"]
 size = Vector3(2.4, 2.5, 0.85)
+
+[sub_resource type="CapsuleShape3D" id="Shape_quantum_kevin"]
+radius = 0.42
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_quantum_kevin"]
+albedo_color = Color(0.2, 0.7, 0.9, 1)
+emission_enabled = true
+emission = Color(0.05, 0.22, 0.34, 1)
+emission_energy_multiplier = 0.25
+
+[sub_resource type="CapsuleMesh" id="Mesh_quantum_kevin"]
+material = SubResource("Mat_quantum_kevin")
+radius = 0.42
+height = 1.8
 
 [sub_resource type="CapsuleShape3D" id="Shape_player"]
 radius = 0.35
@@ -223,6 +239,22 @@ material_override = SubResource("Mat_appliance")
 
 [node name="Collision" type="CollisionShape3D" parent="World/CoffeeMaker"]
 shape = SubResource("Shape_appliance")
+
+[node name="CoffeeLight" type="OmniLight3D" parent="World/CoffeeMaker"]
+position = Vector3(0, 0.8, 0)
+light_color = Color(0.9, 0.9, 0.9, 1)
+light_energy = 0.8
+omni_range = 3.0
+
+[node name="FirstPersonKevin" type="CharacterBody3D" parent="World"]
+position = Vector3(-2.5, 0.95, -1.8)
+script = ExtResource("4_quantum_kevin")
+
+[node name="Mesh" type="MeshInstance3D" parent="World/FirstPersonKevin"]
+mesh = SubResource("Mesh_quantum_kevin")
+
+[node name="Collision" type="CollisionShape3D" parent="World/FirstPersonKevin"]
+shape = SubResource("Shape_quantum_kevin")
 
 [node name="Player" type="CharacterBody3D" parent="."]
 position = Vector3(0, 1.05, 4.1)

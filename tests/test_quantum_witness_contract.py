@@ -49,6 +49,37 @@ class TestQuantumWitnessContract(unittest.TestCase):
         self.assertIn("QuantumEntanglementClass", content)
         self.assertIn("set_entangled_state", content)
 
+    def test_first_person_3d_runtime_scripts(self):
+        """Verify 3D FPS runtime scripts and scenes exist and are wired."""
+        fps_scripts = [
+            Path("game_godot/scripts/fps/FirstPersonPlayer.gd"),
+            Path("game_godot/scripts/fps/FirstPersonBreakroom.gd"),
+            Path("game_godot/scripts/fps/FirstPersonHUD.gd"),
+            Path("game_godot/scripts/fps/FirstPersonQuantumNPC.gd"),
+        ]
+        for script in fps_scripts:
+            self.assertTrue(script.exists(), f"Missing FPS script: {script}")
+
+        fps_scenes = [
+            Path("game_godot/scenes/bootstrap/FirstPersonBootstrap.tscn"),
+            Path("game_godot/scenes/fps/FirstPersonBreakroom.tscn"),
+            Path("game_godot/scenes/fps/FirstPersonHUD.tscn"),
+        ]
+        for scene in fps_scenes:
+            self.assertTrue(scene.exists(), f"Missing FPS scene: {scene}")
+
+    def test_kevin_3d_quantum_anchors(self):
+        """Verify 3D Kevin uses Vector3 spatial anchors and relative weights."""
+        path = Path("game_godot/scripts/fps/FirstPersonQuantumNPC.gd")
+        content = path.read_text(encoding="utf-8")
+        self.assertIn("KevinCoffeeAnchor", content)
+        self.assertIn("KevinUtilityAnchor", content)
+        self.assertIn("KevinDoorAnchor", content)
+        self.assertIn("KevinAbsentAnchor", content)
+        self.assertIn("Vector3(-2.5, 0.0, -1.8)", content)
+        self.assertIn("same_state_relative_weight", content)
+        self.assertIn("interact", content)
+
     def test_godot_headless_quantum_suite(self):
         """Execute the headless Godot quantum system test suite."""
         if not self.godot_bin:
@@ -95,3 +126,5 @@ class TestQuantumWitnessContract(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
