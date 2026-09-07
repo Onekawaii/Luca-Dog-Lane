@@ -69,35 +69,6 @@ jobs:
         run: |
           python tools/build_android_apk.py
 
-      - name: Enable KVM group perms
-        run: |
-          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
-          sudo udevadm control --reload-rules
-          sudo udevadm trigger --name-match=kvm
-
-      - name: Verify Android Boot on Emulator
-        uses: reactivecircus/android-emulator-runner@v2
-        with:
-          api-level: 29
-          target: default
-          arch: x86_64
-          force-avd-creation: false
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          disable-animations: true
-          script: python tools/verify_android_boot.py
-
-      - name: Upload Android Boot Diagnostic Artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Hive-Lattice-Android-Boot-Diagnostics
-          path: |
-            dist/android_boot_logcat.txt
-            dist/android_boot_screenshot.png
-            dist/android_crash_logcat.txt
-          if-no-files-found: ignore
-          retention-days: 14
-
       - name: Package Native Deliverables & Compute Checksums
         run: |
           python tools/package_native_playtest.py
@@ -143,3 +114,45 @@ jobs:
             dist/Hive-Lattice-native-playtest-source.zip.sha256
           if-no-files-found: error
           retention-days: 30
+
+  verify-android:
+    name: Verify Android Boot on Emulator
+    needs: build
+    runs-on: macos-13
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download Android Deliverable
+        uses: actions/download-artifact@v4
+        with:
+          name: Hive-Lattice-Native-Android
+          path: dist
+
+      - name: Execute Android Emulator Boot Verification
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 29
+          target: default
+          arch: x86_64
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: python tools/verify_android_boot.py
+
+      - name: Upload Android Boot Diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hive-Lattice-Android-Boot-Diagnostics
+          path: |
+            dist/android_boot_logcat.txt
+            dist/android_boot_screenshot.png
+            dist/android_crash_logcat.txt
+          if-no-files-found: ignore
+          retention-days: 14
