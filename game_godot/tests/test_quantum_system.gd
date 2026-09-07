@@ -57,6 +57,7 @@ func assert_equal(actual: Variant, expected: Variant, test_name: String) -> void
 
 func _run_all_quantum_tests() -> void:
 	test_quantum_subsystem_load()
+	test_uncertainty_extension_hook()
 	test_vector3_and_2d_anchor_support()
 	test_observed_entity_does_not_transition()
 	test_grace_period_prevents_premature_transition()
@@ -67,6 +68,7 @@ func _run_all_quantum_tests() -> void:
 	test_entanglement_coupling_proof_3d()
 	test_first_person_kevin_3d_actor()
 	test_first_person_hud_pda_quantum_surface()
+	test_modal_input_ownership_regression()
 
 
 func test_quantum_subsystem_load() -> void:
@@ -320,3 +322,77 @@ func test_first_person_hud_pda_quantum_surface() -> void:
 	assert_true(hud.get("is_pda_open"), "PDA is open")
 
 	hud.free()
+
+
+func test_uncertainty_extension_hook() -> void:
+	print("\n--- Uncertainty Extension Hook ---")
+	var q_sys = QuantumWitnessSystemScript.new()
+	var q_entity = QuantumEntityScript.new()
+	q_entity.entity_id = "test_uncertain_subject"
+
+	assert_true(q_sys.has_signal("uncertainty_displaced"), "QuantumWitnessSystem declares uncertainty_displaced signal")
+	assert_true(q_entity.has_signal("uncertainty_displaced"), "QuantumEntity declares uncertainty_displaced signal")
+
+	var signal_received: Array = []
+	q_sys.uncertainty_displaced.connect(func(e_id, old_s, new_s): signal_received.append([e_id, old_s, new_s]))
+
+	q_sys.register_entity(q_entity)
+	q_entity.uncertainty_displaced.emit("test_uncertain_subject", "anchor_a", "anchor_b")
+
+	assert_equal(signal_received.size(), 1, "Uncertainty displacement signal was received through QuantumWitnessSystem")
+	if signal_received.size() > 0:
+		assert_equal(signal_received[0][0], "test_uncertain_subject", "Source entity ID matches")
+		assert_equal(signal_received[0][1], "anchor_a", "Old anchor matches")
+		assert_equal(signal_received[0][2], "anchor_b", "New anchor matches")
+
+	q_entity.free()
+	q_sys.free()
+
+
+func test_modal_input_ownership_regression() -> void:
+	print("\n--- 12. Modal Input Ownership & Mobile Overlay Regression ---")
+	var hud_scene = load("res://scenes/fps/FirstPersonHUD.tscn")
+	var hud = hud_scene.instantiate()
+
+	# Create a mock root scene with Player and MobileControls
+	var test_root = Node3D.new()
+	var player = FirstPersonPlayerScript.new()
+	player.name = "FirstPersonPlayer"
+	test_root.add_child(player)
+
+	var mobile_controls = Control.new()
+	mobile_controls.name = "MobileControls"
+	test_root.add_child(mobile_controls)
+	test_root.add_child(hud)
+	root.add_child(test_root)
+
+	# Initial state: player can move, mobile controls active
+	player.can_move = true
+	mobile_controls.visible = true
+	mobile_controls.process_mode = Node.PROCESS_MODE_INHERIT
+
+	# 1. Dialogue open -> movement locked, mobile overlay disabled
+	hud.open_dialogue("Test Speaker", ["Line 1", "Line 2"])
+	assert_equal(player.can_move, false, "Dialogue open -> player movement is locked")
+	assert_equal(mobile_controls.visible, false, "Dialogue open -> mobile overlay is hidden")
+	assert_equal(mobile_controls.process_mode, Node.PROCESS_MODE_DISABLED, "Dialogue open -> mobile overlay process is disabled")
+
+	# 2. Dialogue close -> movement restored, mobile overlay restored
+	hud.close_dialogue()
+	assert_equal(player.can_move, true, "Dialogue close -> player movement is restored")
+	assert_equal(mobile_controls.visible, true, "Dialogue close -> mobile overlay is visible")
+	assert_equal(mobile_controls.process_mode, Node.PROCESS_MODE_INHERIT, "Dialogue close -> mobile overlay process is restored")
+
+	# 3. PDA open -> movement locked, mobile overlay disabled
+	hud.open_pda()
+	assert_equal(player.can_move, false, "PDA open -> player movement is locked")
+	assert_equal(mobile_controls.visible, false, "PDA open -> mobile overlay is hidden")
+	assert_equal(mobile_controls.process_mode, Node.PROCESS_MODE_DISABLED, "PDA open -> mobile overlay process is disabled")
+
+	# 4. PDA close -> movement restored, mobile overlay restored
+	hud.close_pda()
+	assert_equal(player.can_move, true, "PDA close -> player movement is restored")
+	assert_equal(mobile_controls.visible, true, "PDA close -> mobile overlay is visible")
+	assert_equal(mobile_controls.process_mode, Node.PROCESS_MODE_INHERIT, "PDA close -> mobile overlay process is restored")
+
+	test_root.free()

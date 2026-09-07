@@ -1,16 +1,18 @@
 class_name QuantumWitnessSystem
 extends Node
 
-# Reusable Quantum Witness Subsystem (2D and 3D portable).
-# Tracks multiple observer sources (Camera3D, Player, Security Cameras, NPCs, Mirrors, Devices),
-# evaluates viewport frustum + PhysicsRayQueryParameters3D / 2D line-of-sight occlusion tests,
-# pins entity state whenever witness_count > 0, and dispatches displacement events.
+# Quantum Witness Subsystem (Godot 4 3D spatial observation implementation).
+# Evaluates Camera3D viewport frustum and PhysicsRayQueryParameters3D line-of-sight occlusion tests.
+# Directly reusable by 3D Godot 4 runtimes (e.g. Hive-Lattice 3D, Chernobyl 3D).
+# Note: 2D projects require a 2D witness adapter using Camera2D and PhysicsRayQueryParameters2D APIs.
+# (QuantumEntity and deterministic resolution logic remain broadly portable across 2D/3D).
 
 signal witness_registered(witness_id: String, witness_node: Node)
 signal witness_unregistered(witness_id: String)
-signal coherence_pressure_changed(entity_id: String, pressure: float)
+
+# Future extension hook for conservation of uncertainty ("SOMETHING MUST REMAIN UNCERTAIN").
+# Emitted when state collapse in one entity displaces uncertainty across the quantum network.
 signal uncertainty_displaced(entity_id: String, old_state: String, new_state: String)
-signal quantum_state_forced(entity_id: String, target_state: String)
 
 var registered_entities: Array[QuantumEntity] = []
 var registered_witnesses: Dictionary = {} # witness_id -> Dictionary { "node": Node, "type": String, "range": float, "fov_deg": float }
@@ -180,5 +182,4 @@ func force_state(entity_id: String, target_anchor_id: String) -> void:
 	for entity in registered_entities:
 		if is_instance_valid(entity) and entity.entity_id == entity_id:
 			entity.set_initial_state(target_anchor_id)
-			quantum_state_forced.emit(entity_id, target_anchor_id)
 			break
