@@ -11,7 +11,7 @@ extends CharacterBody2D
 var is_hovered: bool = false
 var is_focused: bool = false
 
-@onready var sprite: Sprite2D = $Sprite2D
+@onready var sprite: Sprite2D = get_node_or_null("Sprite2D")
 
 var base_modulate: Color = Color(1.0, 1.0, 1.0, 1.0)
 var highlight_modulate: Color = Color(1.2, 1.25, 1.35, 1.0)
@@ -23,6 +23,24 @@ func _ready() -> void:
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	_update_presentation()
+
+
+func _get_runtime() -> Node:
+	if has_node("/root/GameRuntime"):
+		return get_node("/root/GameRuntime")
+	return null
+
+
+func _get_bus() -> Node:
+	if has_node("/root/EventBus"):
+		return get_node("/root/EventBus")
+	return null
+
+
+func _get_audio() -> Node:
+	if has_node("/root/AudioManager"):
+		return get_node("/root/AudioManager")
+	return null
 
 
 func _on_mouse_entered() -> void:
@@ -38,7 +56,8 @@ func _on_mouse_exited() -> void:
 
 
 func _update_cursor() -> void:
-	if GameRuntime.inventory_system.is_item_armed():
+	var runtime = _get_runtime()
+	if runtime and runtime.inventory_system and runtime.inventory_system.is_item_armed():
 		Input.set_default_cursor_shape(Input.CURSOR_CROSS)
 	else:
 		Input.set_default_cursor_shape(Input.CURSOR_POINTING_HAND)
@@ -77,17 +96,23 @@ func _input_event(viewport: Viewport, event: InputEvent, _shape_idx: int) -> voi
 
 
 func _handle_interaction() -> void:
-	AudioManager.play_ui_click()
-	if GameRuntime.inventory_system.is_item_armed():
-		GameRuntime.use_armed_item_on(actor_id)
+	var audio = _get_audio()
+	if audio and audio.has_method("play_ui_click"):
+		audio.play_ui_click()
+
+	var runtime = _get_runtime()
+	if runtime and runtime.inventory_system and runtime.inventory_system.is_item_armed():
+		runtime.use_armed_item_on(actor_id)
 		return
 
-	EventBus.action_requested.emit({
-		"type": "approach_and_interact_actor",
-		"actor": self,
-		"actor_id": actor_id,
-		"approach_pos": get_approach_position()
-	})
+	var bus = _get_bus()
+	if bus and bus.has_signal("action_requested"):
+		bus.action_requested.emit({
+			"type": "approach_and_interact_actor",
+			"actor": self,
+			"actor_id": actor_id,
+			"approach_pos": get_approach_position()
+		})
 
 
 func _update_presentation() -> void:
@@ -99,7 +124,8 @@ func _update_presentation() -> void:
 
 
 func _draw() -> void:
-	if GameRuntime.debug_mode:
+	var runtime = _get_runtime()
+	if runtime and runtime.get("debug_mode"):
 		draw_circle(Vector2.ZERO, 6.0, Color(0.2, 0.9, 0.3, 0.8)) # Foot anchor at origin
 		draw_line(Vector2(-12, 0), Vector2(12, 0), Color(0.2, 0.9, 0.3, 1.0), 2.0)
 		draw_line(Vector2(0, -12), Vector2(0, 12), Color(0.2, 0.9, 0.3, 1.0), 2.0)

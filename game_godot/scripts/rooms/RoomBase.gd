@@ -38,6 +38,8 @@ func _process(delta: float) -> void:
 	if camera:
 		camera.global_position = camera.global_position.lerp(target_camera_pos, delta * 4.0)
 		camera.zoom = camera.zoom.lerp(target_camera_zoom, delta * 4.0)
+	if GameRuntime.debug_mode:
+		queue_redraw()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -84,12 +86,13 @@ func _on_action_requested(act_data: Dictionary) -> void:
 		var app_pos = act_data.get("approach_pos", Vector2.ZERO)
 		var actor = act_data.get("actor")
 		var scene_id = act_data.get("scene_id", "")
+		var dialogue_override = act_data.get("dialogue_override", {})
 		if actor:
 			actor.set_focus(true)
 
 		if player:
 			player.walk_to(app_pos, func():
-				_trigger_actor_dialogue(actor, scene_id)
+				_trigger_actor_dialogue(actor, scene_id, dialogue_override)
 			)
 
 	elif act_type == "approach_and_interact_hotspot":
@@ -114,7 +117,7 @@ func _on_action_requested(act_data: Dictionary) -> void:
 			)
 
 
-func _trigger_actor_dialogue(actor: ActorBase, scene_id: String) -> void:
+func _trigger_actor_dialogue(actor: ActorBase, scene_id: String, dialogue_override: Dictionary = {}) -> void:
 	is_in_dialogue = true
 	var state = GameRuntime.world_state
 	if scene_id != "":
@@ -122,6 +125,10 @@ func _trigger_actor_dialogue(actor: ActorBase, scene_id: String) -> void:
 
 	var scene_meta = GameRuntime.loader.get_encounter(state.current_scene)
 	var choices = GameRuntime.action_resolver.choice_views(state)
+
+	var read_aloud = scene_meta.get("read_aloud", "...")
+	if dialogue_override.has("read_aloud"):
+		read_aloud = dialogue_override["read_aloud"]
 
 	if player:
 		var mid_point = (player.global_position + actor.global_position) * 0.5 + Vector2(0, -60)
@@ -135,7 +142,7 @@ func _trigger_actor_dialogue(actor: ActorBase, scene_id: String) -> void:
 	EventBus.dialogue_started.emit(
 		actor.actor_id,
 		actor.display_name,
-		scene_meta.get("read_aloud", "..."),
+		read_aloud,
 		choices
 	)
 
@@ -184,6 +191,7 @@ func _update_room_visuals() -> void:
 func _on_debug_toggled(is_enabled: bool) -> void:
 	if debug_draw:
 		debug_draw.visible = is_enabled
+	queue_redraw()
 
 
 func _on_camera_focus_requested(target_pos: Vector2, zoom_level: float) -> void:
