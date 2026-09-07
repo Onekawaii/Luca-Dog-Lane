@@ -11,6 +11,10 @@ height = 38.0
 y_sort_enabled = true
 input_pickable = true
 script = ExtResource("1_script")
+actor_id = "npc.kevin_marketing"
+display_name = "Kevin from Marketing"
+portrait_path = "res://assets/portraits/kevin_neutral.png"
+approach_offset = Vector2(0, 50)
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(0, -88)

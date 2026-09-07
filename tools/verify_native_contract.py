@@ -100,7 +100,7 @@ def main() -> int:
     )
 
     if not run_command(
-        [str(godot_bin), "--headless", "--path", "game_godot", "--script", "res://tests/run_acceptance.gd"],
+        [str(godot_bin), "--headless", "--path", "game_godot", "res://tests/AcceptanceRunner.tscn"],
         "Native Godot Headless Acceptance Suite",
     ):
         return 1

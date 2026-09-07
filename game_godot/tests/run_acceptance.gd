@@ -1,4 +1,4 @@
-extends SceneTree
+extends Node
 
 # Headless Acceptance Test Suite for Native Hive-Lattice Game.
 # Run with: godot --headless --path game_godot --script res://tests/run_acceptance.gd
@@ -14,7 +14,7 @@ var passed_tests: int = 0
 var failed_tests: int = 0
 
 
-func _init() -> void:
+func _ready() -> void:
 	print("\n============================================================")
 	print("HIVE-LATTICE // NATIVE GODOT ACCEPTANCE SUITE")
 	print("============================================================\n")
@@ -27,10 +27,10 @@ func _init() -> void:
 
 	if failed_tests == 0:
 		print("[ALL NATIVE ACCEPTANCE TESTS PASSED]")
-		quit(0)
+		get_tree().quit(0)
 	else:
 		push_error("[SOME NATIVE ACCEPTANCE TESTS FAILED]")
-		quit(1)
+		get_tree().quit(1)
 
 
 func assert_true(condition: bool, test_name: String) -> void:
@@ -65,6 +65,7 @@ func _run_all_tests() -> void:
 	test_kevin_presence_and_dialogue()
 	test_multi_room_system()
 	test_mobile_controls_and_readability()
+	test_first_person_runtime()
 
 
 func test_campaign_loading() -> void:
@@ -261,7 +262,7 @@ func test_kevin_presence_and_dialogue() -> void:
 	var kevin = kevin_scene.instantiate()
 	assert_true(kevin is CharacterBody2D, "Kevin is a CharacterBody2D actor")
 	assert_equal(kevin.actor_id, "npc.kevin_marketing", "Kevin actor_id is correct")
-	assert_equal(kevin.display_name, "Kevin (Marketing)", "Kevin display_name is correct")
+	assert_equal(kevin.display_name, "Kevin from Marketing", "Kevin display_name is correct")
 	kevin.queue_free()
 
 
@@ -347,6 +348,40 @@ func test_mobile_controls_and_readability() -> void:
 	var status_close = status_modal.find_child("CloseButton", true, false)
 	assert_true(status_close.custom_minimum_size.y >= 44, "Status close button height is touch friendly (>= 44px)")
 	overlays.queue_free()
+
+
+func test_first_person_runtime() -> void:
+	print("\n--- 12. First-Person Runtime Baseline ---")
+	var bootstrap_scene = load("res://scenes/bootstrap/FirstPersonBootstrap.tscn")
+	var world_scene = load("res://scenes/fps/FirstPersonBreakroom.tscn")
+	var hud_scene = load("res://scenes/fps/FirstPersonHUD.tscn")
+
+	assert_true(bootstrap_scene != null, "FirstPersonBootstrap.tscn loads")
+	assert_true(world_scene != null, "FirstPersonBreakroom.tscn loads")
+	assert_true(hud_scene != null, "FirstPersonHUD.tscn loads")
+
+	var bootstrap = bootstrap_scene.instantiate()
+	assert_true(bootstrap != null, "First-person bootstrap instantiates")
+
+	var player = bootstrap.find_child("Player", true, false)
+	assert_true(player is CharacterBody3D, "First-person player is CharacterBody3D")
+	assert_true(player.find_child("Camera3D", true, false) is Camera3D, "First-person player owns active Camera3D")
+	assert_true(player.find_child("InteractionRay", true, false) is RayCast3D, "First-person player owns interaction ray")
+
+	var wetberry = bootstrap.find_child("Wetberry", true, false)
+	var keith = bootstrap.find_child("Keith", true, false)
+	assert_true(wetberry != null and wetberry.has_method("interact"), "Wetberry is a physical first-person interactable")
+	assert_true(keith != null and keith.has_method("interact"), "Keith is a physical first-person interactable")
+
+	var fp_hud = bootstrap.find_child("FirstPersonHUD", true, false)
+	assert_true(fp_hud != null, "First-person HUD is present")
+	assert_true(fp_hud.find_child("DialoguePanel", true, false) != null, "First-person HUD has manually advanced dialogue panel")
+	assert_true(fp_hud.find_child("PDAPanel", true, false) != null, "First-person HUD has PDA panel")
+	assert_true(fp_hud.find_child("MobileStick", true, false) != null, "First-person HUD preserves mobile movement stick")
+	assert_true(fp_hud.find_child("TouchLookZone", true, false) != null, "First-person HUD has mobile touch-look zone")
+	assert_true(fp_hud.find_child("InteractButton", true, false) != null, "First-person HUD has mobile interact button")
+
+	bootstrap.queue_free()
 
 
 func assert_false(condition: bool, test_name: String) -> void:

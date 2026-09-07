@@ -1,0 +1,348 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/fps/FirstPersonHUD.gd" id="1_hud"]
+[ext_resource type="Script" path="res://scripts/ui/VirtualStick.gd" id="2_stick"]
+[ext_resource type="Script" path="res://scripts/fps/TouchLookZone.gd" id="3_look"]
+
+[sub_resource type="StyleBoxFlat" id="Style_panel"]
+bg_color = Color(0.035, 0.045, 0.055, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.31, 0.78, 0.42, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="Style_stick"]
+bg_color = Color(0.05, 0.08, 0.09, 0.55)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.31, 0.78, 0.42, 0.65)
+corner_radius_top_left = 70
+corner_radius_top_right = 70
+corner_radius_bottom_right = 70
+corner_radius_bottom_left = 70
+
+[node name="FirstPersonHUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Crosshair" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -12.0
+offset_top = -16.0
+offset_right = 12.0
+offset_bottom = 16.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.82, 1, 0.83, 0.9)
+theme_override_font_sizes/font_size = 24
+text = "+"
+horizontal_alignment = 1
+
+[node name="PromptLabel" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -280.0
+offset_top = -128.0
+offset_right = 280.0
+offset_bottom = -88.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.9, 0.97, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ObjectivePanel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 430.0
+offset_bottom = 105.0
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="Margin" type="MarginContainer" parent="Root/ObjectivePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Root/ObjectivePanel/Margin"]
+layout_mode = 2
+
+[node name="Header" type="Label" parent="Root/ObjectivePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.78, 0.42, 1)
+theme_override_font_sizes/font_size = 14
+text = "CURRENT OBJECTIVE"
+
+[node name="ObjectiveLabel" type="Label" parent="Root/ObjectivePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "Find Keith and get safe containment gear."
+autowrap_mode = 2
+
+[node name="NotificationPanel" type="PanelContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -260.0
+offset_top = 24.0
+offset_right = 260.0
+offset_bottom = 78.0
+grow_horizontal = 2
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="Margin" type="MarginContainer" parent="Root/NotificationPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="NotificationLabel" type="Label" parent="Root/NotificationPanel/Margin"]
+layout_mode = 2
+text = "Notification"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="DialoguePanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(820, 220)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -410.0
+offset_top = -330.0
+offset_right = 410.0
+offset_bottom = -110.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="Margin" type="MarginContainer" parent="Root/DialoguePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="Root/DialoguePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SpeakerLabel" type="Label" parent="Root/DialoguePanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.78, 0.42, 1)
+theme_override_font_sizes/font_size = 20
+text = "Speaker"
+
+[node name="DialogueLabel" type="Label" parent="Root/DialoguePanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 17
+text = "Dialogue"
+autowrap_mode = 2
+
+[node name="ContinueButton" type="Button" parent="Root/DialoguePanel/Margin/VBox"]
+custom_minimum_size = Vector2(180, 48)
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 17
+text = "Go on."
+
+[node name="PDAButton" type="Button" parent="Root"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -145.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 68.0
+grow_horizontal = 0
+text = "PDA [P]"
+
+[node name="PDAPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(620, 430)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.0
+offset_top = -215.0
+offset_right = 310.0
+offset_bottom = 215.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("Style_panel")
+
+[node name="Margin" type="MarginContainer" parent="Root/PDAPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="Root/PDAPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Root/PDAPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.31, 0.78, 0.42, 1)
+theme_override_font_sizes/font_size = 24
+text = "HIVE-LATTICE PDA"
+
+[node name="PDAObjective" type="Label" parent="Root/PDAPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "OBJECTIVE"
+autowrap_mode = 2
+
+[node name="InventoryLabel" type="Label" parent="Root/PDAPanel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 16
+text = "INVENTORY\n• Empty"
+autowrap_mode = 2
+
+[node name="Hint" type="Label" parent="Root/PDAPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.67, 0.72, 0.67, 1)
+text = "Desktop: WASD move • Mouse look • E interact • Shift sprint • F5/F9 save/load"
+
+[node name="Buttons" type="HBoxContainer" parent="Root/PDAPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SaveButton" type="Button" parent="Root/PDAPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "Save"
+
+[node name="LoadButton" type="Button" parent="Root/PDAPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "Load"
+
+[node name="CloseButton" type="Button" parent="Root/PDAPanel/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 2
+text = "Close"
+
+[node name="MobileControls" type="Control" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TouchLookZone" type="Control" parent="Root/MobileControls"]
+layout_mode = 1
+anchors_preset = 6
+anchor_left = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("3_look")
+
+[node name="MobileStick" type="Control" parent="Root/MobileControls"]
+custom_minimum_size = Vector2(180, 180)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -220.0
+offset_right = 204.0
+offset_bottom = -40.0
+grow_vertical = 0
+mouse_filter = 1
+script = ExtResource("2_stick")
+
+[node name="StickBase" type="Panel" parent="Root/MobileControls/MobileStick"]
+custom_minimum_size = Vector2(140, 140)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -70.0
+offset_top = -70.0
+offset_right = 70.0
+offset_bottom = 70.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_stick")
+
+[node name="StickKnob" type="Panel" parent="Root/MobileControls/MobileStick/StickBase"]
+custom_minimum_size = Vector2(72, 72)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -36.0
+offset_top = -36.0
+offset_right = 36.0
+offset_bottom = 36.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("Style_stick")
+
+[node name="InteractButton" type="Button" parent="Root/MobileControls"]
+custom_minimum_size = Vector2(150, 70)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -190.0
+offset_top = -130.0
+offset_right = -40.0
+offset_bottom = -60.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 18
+text = "INTERACT"

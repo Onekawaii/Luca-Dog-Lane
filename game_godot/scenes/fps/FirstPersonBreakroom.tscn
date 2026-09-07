@@ -1,0 +1,244 @@
+[gd_scene load_steps=23 format=3]
+
+[ext_resource type="Script" path="res://scripts/fps/FirstPersonBreakroom.gd" id="1_world"]
+[ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/fps/FirstPersonInteractable.gd" id="3_interactable"]
+
+[sub_resource type="Environment" id="Environment_breakroom"]
+background_mode = 1
+background_color = Color(0.025, 0.03, 0.035, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.5, 0.58, 0.5, 1)
+ambient_light_energy = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Mat_floor"]
+albedo_color = Color(0.13, 0.15, 0.14, 1)
+roughness = 0.86
+
+[sub_resource type="StandardMaterial3D" id="Mat_wall"]
+albedo_color = Color(0.48, 0.5, 0.43, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="Mat_table"]
+albedo_color = Color(0.25, 0.17, 0.11, 1)
+roughness = 0.72
+
+[sub_resource type="StandardMaterial3D" id="Mat_wetberry"]
+albedo_color = Color(0.92, 0.92, 0.87, 1)
+emission_enabled = true
+emission = Color(0.52, 0.05, 0.08, 1)
+emission_energy_multiplier = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_keith"]
+albedo_color = Color(0.25, 0.34, 0.27, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Mat_appliance"]
+albedo_color = Color(0.18, 0.21, 0.2, 1)
+metallic = 0.35
+roughness = 0.52
+
+[sub_resource type="BoxMesh" id="Mesh_floor"]
+size = Vector3(16, 0.2, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_floor"]
+size = Vector3(16, 0.2, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_wall_long"]
+size = Vector3(16, 3.2, 0.25)
+
+[sub_resource type="BoxShape3D" id="Shape_wall_long"]
+size = Vector3(16, 3.2, 0.25)
+
+[sub_resource type="BoxMesh" id="Mesh_wall_side"]
+size = Vector3(0.25, 3.2, 12)
+
+[sub_resource type="BoxShape3D" id="Shape_wall_side"]
+size = Vector3(0.25, 3.2, 12)
+
+[sub_resource type="BoxMesh" id="Mesh_table"]
+size = Vector3(4.2, 0.85, 2.1)
+
+[sub_resource type="BoxShape3D" id="Shape_table"]
+size = Vector3(4.2, 0.85, 2.1)
+
+[sub_resource type="BoxMesh" id="Mesh_wetberry"]
+size = Vector3(0.42, 0.58, 0.32)
+
+[sub_resource type="BoxShape3D" id="Shape_wetberry"]
+size = Vector3(0.42, 0.58, 0.32)
+
+[sub_resource type="CapsuleMesh" id="Mesh_keith"]
+radius = 0.42
+height = 1.8
+
+[sub_resource type="CapsuleShape3D" id="Shape_keith"]
+radius = 0.42
+height = 1.8
+
+[sub_resource type="BoxMesh" id="Mesh_appliance"]
+size = Vector3(2.4, 2.5, 0.85)
+
+[sub_resource type="BoxShape3D" id="Shape_appliance"]
+size = Vector3(2.4, 2.5, 0.85)
+
+[sub_resource type="CapsuleShape3D" id="Shape_player"]
+radius = 0.35
+height = 1.75
+
+[node name="FirstPersonBreakroom" type="Node3D"]
+script = ExtResource("1_world")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_breakroom")
+
+[node name="CeilingLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-72, -20, 0)
+light_color = Color(0.78, 0.9, 0.78, 1)
+light_energy = 1.15
+shadow_enabled = true
+
+[node name="World" type="Node3D" parent="."]
+
+[node name="Floor" type="StaticBody3D" parent="World"]
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Floor"]
+mesh = SubResource("Mesh_floor")
+material_override = SubResource("Mat_floor")
+
+[node name="Collision" type="CollisionShape3D" parent="World/Floor"]
+shape = SubResource("Shape_floor")
+
+[node name="NorthWall" type="StaticBody3D" parent="World"]
+position = Vector3(0, 1.6, -6)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/NorthWall"]
+mesh = SubResource("Mesh_wall_long")
+material_override = SubResource("Mat_wall")
+
+[node name="Collision" type="CollisionShape3D" parent="World/NorthWall"]
+shape = SubResource("Shape_wall_long")
+
+[node name="SouthWall" type="StaticBody3D" parent="World"]
+position = Vector3(0, 1.6, 6)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/SouthWall"]
+mesh = SubResource("Mesh_wall_long")
+material_override = SubResource("Mat_wall")
+
+[node name="Collision" type="CollisionShape3D" parent="World/SouthWall"]
+shape = SubResource("Shape_wall_long")
+
+[node name="WestWall" type="StaticBody3D" parent="World"]
+position = Vector3(-8, 1.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/WestWall"]
+mesh = SubResource("Mesh_wall_side")
+material_override = SubResource("Mat_wall")
+
+[node name="Collision" type="CollisionShape3D" parent="World/WestWall"]
+shape = SubResource("Shape_wall_side")
+
+[node name="EastWall" type="StaticBody3D" parent="World"]
+position = Vector3(8, 1.6, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/EastWall"]
+mesh = SubResource("Mesh_wall_side")
+material_override = SubResource("Mat_wall")
+
+[node name="Collision" type="CollisionShape3D" parent="World/EastWall"]
+shape = SubResource("Shape_wall_side")
+
+[node name="CentralTable" type="StaticBody3D" parent="World"]
+position = Vector3(0, 0.52, -0.6)
+
+[node name="Mesh" type="MeshInstance3D" parent="World/CentralTable"]
+mesh = SubResource("Mesh_table")
+material_override = SubResource("Mat_table")
+
+[node name="Collision" type="CollisionShape3D" parent="World/CentralTable"]
+shape = SubResource("Shape_table")
+
+[node name="Wetberry" type="StaticBody3D" parent="World"]
+position = Vector3(0.25, 1.23, -0.55)
+script = ExtResource("3_interactable")
+interaction_id = "wetberry"
+target_id = "relic.wetberry"
+prompt = "[E / A] Inspect Wetberry"
+speaker_name = "Wetberry"
+description = "The carton stands upright with too much confidence."
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Wetberry"]
+mesh = SubResource("Mesh_wetberry")
+material_override = SubResource("Mat_wetberry")
+
+[node name="Collision" type="CollisionShape3D" parent="World/Wetberry"]
+shape = SubResource("Shape_wetberry")
+
+[node name="Keith" type="StaticBody3D" parent="World"]
+position = Vector3(-5.35, 0.95, -3.55)
+script = ExtResource("3_interactable")
+interaction_id = "keith"
+target_id = "npc.keith_janitor"
+prompt = "[E / A] Talk to Keith"
+speaker_name = "Keith the Janitor"
+description = "Keith has seen enough to skip surprise."
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Keith"]
+mesh = SubResource("Mesh_keith")
+material_override = SubResource("Mat_keith")
+
+[node name="Collision" type="CollisionShape3D" parent="World/Keith"]
+shape = SubResource("Shape_keith")
+
+[node name="Fridge" type="StaticBody3D" parent="World"]
+position = Vector3(5.8, 1.25, -4.9)
+script = ExtResource("3_interactable")
+interaction_id = "fridge"
+target_id = "location.breakroom.fridge"
+prompt = "[E / A] Inspect fridge"
+speaker_name = "Breakroom Fridge"
+description = "The fridge hums like it is keeping a secret."
+
+[node name="Mesh" type="MeshInstance3D" parent="World/Fridge"]
+mesh = SubResource("Mesh_appliance")
+material_override = SubResource("Mat_appliance")
+
+[node name="Collision" type="CollisionShape3D" parent="World/Fridge"]
+shape = SubResource("Shape_appliance")
+
+[node name="CoffeeMaker" type="StaticBody3D" parent="World"]
+position = Vector3(5.8, 1.25, 3.8)
+scale = Vector3(0.45, 0.55, 0.55)
+script = ExtResource("3_interactable")
+interaction_id = "coffee"
+target_id = "location.breakroom.coffee_counter"
+prompt = "[E / A] Inspect coffee maker"
+speaker_name = "Breakroom Coffee"
+description = "The coffee maker clicks on by itself."
+
+[node name="Mesh" type="MeshInstance3D" parent="World/CoffeeMaker"]
+mesh = SubResource("Mesh_appliance")
+material_override = SubResource("Mat_appliance")
+
+[node name="Collision" type="CollisionShape3D" parent="World/CoffeeMaker"]
+shape = SubResource("Shape_appliance")
+
+[node name="Player" type="CharacterBody3D" parent="."]
+position = Vector3(0, 1.05, 4.1)
+script = ExtResource("2_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Player"]
+shape = SubResource("Shape_player")
+
+[node name="Head" type="Node3D" parent="Player"]
+position = Vector3(0, 0.62, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Player/Head"]
+current = true
+fov = 78.0
+
+[node name="InteractionRay" type="RayCast3D" parent="Player/Head/Camera3D"]
+enabled = true
+target_position = Vector3(0, 0, -3.2)
+collision_mask = 1

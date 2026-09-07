@@ -24,3 +24,14 @@ signal debug_toggled(is_enabled: bool)
 signal camera_focus_requested(target_pos: Vector2, zoom_level: float)
 signal camera_reset_requested()
 signal virtual_move_input(input_vector: Vector2)
+
+# First-person runtime signals. These are presentation/runtime events only;
+# they do not add fields to the frozen campaign or save schemas.
+signal virtual_look_input(look_delta: Vector2)
+signal first_person_interact_pressed()
+signal first_person_prompt_changed(prompt_text: String)
+signal first_person_interaction_requested(interaction_data: Dictionary)
+signal first_person_dialogue_requested(speaker_name: String, lines: Array)
+signal first_person_dialogue_closed()
+signal first_person_objective_changed(objective_text: String)
+signal first_person_input_lock_changed(locked: bool)
