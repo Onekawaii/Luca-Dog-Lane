@@ -434,6 +434,8 @@ func test_first_person_runtime() -> void:
 	assert_true(fp_hud.find_child("MobileStick", true, false) != null, "First-person HUD preserves mobile movement stick")
 	assert_true(fp_hud.find_child("TouchLookZone", true, false) != null, "First-person HUD has mobile touch-look zone")
 	assert_true(fp_hud.find_child("InteractButton", true, false) != null, "First-person HUD has mobile interact button")
+	assert_true(fp_hud.has_method("_set_mobile_gameplay_controls_enabled"), "First-person HUD owns mobile modal process state")
+	assert_true(player.has_method("_on_input_lock_changed"), "First-person player owns modal input-lock handling")
 
 	bootstrap.queue_free()
 

@@ -119,6 +119,7 @@ func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:
 	if not is_instance_valid(mobile_controls):
 		return
 	mobile_controls.visible = DisplayServer.is_touchscreen_available() and enabled
+	mobile_controls.process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
 
 
 func _refresh_pda() -> void:

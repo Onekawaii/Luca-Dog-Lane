@@ -80,6 +80,21 @@ class TestQuantumWitnessContract(unittest.TestCase):
         self.assertIn("same_state_relative_weight", content)
         self.assertIn("interact", content)
 
+    def test_uncertainty_displaced_signal_contract(self):
+        """Verify generic uncertainty displacement hook is declared in QuantumWitnessSystem and QuantumEntity."""
+        qws_path = Path("game_godot/scripts/quantum/QuantumWitnessSystem.gd")
+        qe_path = Path("game_godot/scripts/quantum/QuantumEntity.gd")
+        self.assertIn("signal uncertainty_displaced", qws_path.read_text(encoding="utf-8"))
+        self.assertIn("signal uncertainty_displaced", qe_path.read_text(encoding="utf-8"))
+
+    def test_first_person_hud_modal_ownership(self):
+        """Verify FirstPersonHUD controls modal movement lock and mobile overlay visibility."""
+        hud_path = Path("game_godot/scripts/fps/FirstPersonHUD.gd")
+        content = hud_path.read_text(encoding="utf-8")
+        self.assertIn("_set_player_movement_enabled", content)
+        self.assertIn("can_move", content)
+        self.assertIn("MobileControls", content)
+
     def test_godot_headless_quantum_suite(self):
         """Execute the headless Godot quantum system test suite."""
         if not self.godot_bin:
