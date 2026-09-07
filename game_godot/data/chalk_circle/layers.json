@@ -1,0 +1,46 @@
+{
+  "schema": "hive_chalk_circle_layers_v1",
+  "source": "Chalk Circle v1.1 Layer Router / TRIUNE architecture",
+  "integration": "Hive-Lattice native Godot bridge",
+  "save_container": "WorldState.world_state.chalk_circle",
+  "layers": [
+    {
+      "id": 1,
+      "name": "THE GATE",
+      "function": "Validate runtime entry and action preconditions without altering campaign schemas.",
+      "voice": true
+    },
+    {
+      "id": 2,
+      "name": "ANTECHAMBER",
+      "function": "Track recurring player-action patterns and route signals.",
+      "voice": true
+    },
+    {
+      "id": 3,
+      "name": "MIRROR HALL",
+      "function": "Surface repeated or contradictory behavior as deterministic state.",
+      "voice": true
+    },
+    {
+      "id": 4,
+      "name": "PRESSURE CHAMBER",
+      "function": "Represent accumulated constraint, cost, scrutiny and tradeoff pressure.",
+      "voice": true,
+      "refresh_required": true
+    },
+    {
+      "id": 5,
+      "name": "ARCHIVE VAULT",
+      "function": "Expose explicit archive-focused gameplay and hash-chained receipts.",
+      "voice": false
+    },
+    {
+      "id": 6,
+      "name": "THE REFUSAL",
+      "function": "Terminal no-go state for explicit refusal or runaway recursion.",
+      "voice": false,
+      "final": true
+    }
+  ]
+}

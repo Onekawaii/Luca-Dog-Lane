@@ -78,6 +78,10 @@ func evaluate(state: WorldState, spec: Dictionary) -> bool:
 		if not _compare_number(val, npc_rule):
 			return false
 
+	if spec.has("chalk"):
+		if not ChalkCircleRouter.evaluate_requirement(state, spec["chalk"]):
+			return false
+
 	if spec.has("room"):
 		var room_rule = spec["room"]
 		var loc = room_rule.get("location", state.current_location)
