@@ -50,10 +50,14 @@ def find_godot_binary() -> Path | None:
     return None
 
 
-def run_command(cmd: list[str], desc: str, cwd: Path = Path(".")) -> bool:
+def run_command(cmd: list[str], desc: str, cwd: Path = Path("."), timeout: int = 180) -> bool:
     print(f"\n[GATE] {desc}...")
     print(f"       Running: {' '.join(str(c) for c in cmd)}")
-    res = subprocess.run(cmd, cwd=cwd)
+    try:
+        res = subprocess.run(cmd, cwd=cwd, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        print(f"[FAIL] {desc} timed out after {timeout} seconds", file=sys.stderr)
+        return False
     if res.returncode != 0:
         print(f"[FAIL] {desc} exited with code {res.returncode}", file=sys.stderr)
         return False

@@ -20,6 +20,10 @@ var failed_tests: int = 0
 
 
 func _ready() -> void:
+	_run_and_exit.call_deferred()
+
+
+func _run_and_exit() -> void:
 	print("\n============================================================")
 	print("HIVE-LATTICE // NATIVE GODOT ACCEPTANCE SUITE")
 	print("============================================================\n")

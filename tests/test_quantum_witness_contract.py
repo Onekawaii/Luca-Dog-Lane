@@ -107,7 +107,7 @@ class TestQuantumWitnessContract(unittest.TestCase):
             "game_godot",
             "res://tests/AcceptanceRunner.tscn",
         ]
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         self.assertEqual(
             res.returncode,
             0,
@@ -128,7 +128,7 @@ class TestQuantumWitnessContract(unittest.TestCase):
             "game_godot",
             "res://tests/AcceptanceRunner.tscn",
         ]
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
         self.assertEqual(
             res.returncode,
             0,
