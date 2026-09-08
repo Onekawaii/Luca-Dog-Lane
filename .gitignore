@@ -17,6 +17,7 @@ __pycache__/
 outputs/
 build/
 dist/
+build_artifacts/
 
 # Godot engine cache
 .godot/

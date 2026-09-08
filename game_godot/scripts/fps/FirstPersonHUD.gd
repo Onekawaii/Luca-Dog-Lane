@@ -24,10 +24,11 @@ extends CanvasLayer
 var dialogue_lines: Array = []
 var dialogue_index: int = 0
 var current_objective: String = "Find Keith and get safe containment gear."
+var force_mobile_controls: bool = false
 
 
 func is_mobile() -> bool:
-	return OS.has_feature("android") or OS.has_feature("mobile") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
+	return force_mobile_controls or OS.has_feature("android") or OS.has_feature("mobile") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
 
 
 func _ready() -> void:
@@ -170,6 +171,13 @@ func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:
 		return
 	mobile_controls.visible = is_mobile() and enabled
 	mobile_controls.process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
+	if not enabled:
+		var look_zone := mobile_controls.find_child("TouchLookZone", true, false)
+		if is_instance_valid(look_zone) and look_zone.has_method("reset_touch"):
+			look_zone.reset_touch()
+		var stick := mobile_controls.find_child("MobileStick", true, false)
+		if is_instance_valid(stick) and stick.has_method("_reset_stick"):
+			stick._reset_stick()
 
 
 func _refresh_pda() -> void:

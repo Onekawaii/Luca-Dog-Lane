@@ -77,6 +77,7 @@ func _run_all_tests() -> void:
 	test_mobile_controls_and_readability()
 	test_first_person_runtime()
 	test_phone_playtest_fixes()
+	test_touch_look_zone_robustness()
 	test_chalk_circle_bridge()
 
 
@@ -507,6 +508,155 @@ func test_phone_playtest_fixes() -> void:
 	hud._refresh_quantum_diagnostic()
 	assert_false("Confirmed:" in diag_label.text, "Quantum diagnostic does not use legacy Confirmed: field")
 
+	remove_child(hud)
+	hud.queue_free()
+
+
+func test_touch_look_zone_robustness() -> void:
+	print("\n--- 14. TouchLookZone Robust Finger Ownership & Multi-Touch ---")
+	var hud_scene = load("res://scenes/fps/FirstPersonHUD.tscn")
+	assert_true(hud_scene != null, "FirstPersonHUD.tscn loads for touch look test")
+	var hud = hud_scene.instantiate()
+	assert_true(hud != null, "FirstPersonHUD instantiates")
+	hud.force_mobile_controls = true
+	add_child(hud)
+	hud._set_mobile_gameplay_controls_enabled(true)
+
+	var touch_look = hud.find_child("TouchLookZone", true, false)
+	assert_true(touch_look != null, "TouchLookZone node exists in HUD")
+	assert_true(touch_look.has_method("reset_touch"), "TouchLookZone exposes reset_touch()")
+
+	var look_deltas: Array[Vector2] = []
+	var look_callable = func(delta: Vector2): look_deltas.append(delta)
+	EventBus.virtual_look_input.connect(look_callable)
+
+	# 1. Normal touch down -> drag -> release
+	var t_down = InputEventScreenTouch.new()
+	t_down.index = 1
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(100.0, 100.0)
+	touch_look._input(t_down)
+	assert_equal(touch_look.active_touch_index, 1, "TouchLookZone captures touch index 1")
+
+	var drag = InputEventScreenDrag.new()
+	drag.index = 1
+	drag.position = touch_look.global_position + Vector2(120.0, 105.0)
+	drag.relative = Vector2(20.0, 5.0)
+	touch_look._input(drag)
+	assert_equal(look_deltas.size(), 1, "Look drag event emitted")
+	assert_equal(look_deltas[0], Vector2(20.0, 5.0), "Look delta is Vector2(20, 5)")
+
+	var t_up = InputEventScreenTouch.new()
+	t_up.index = 1
+	t_up.pressed = false
+	t_up.position = touch_look.global_position + Vector2(120.0, 105.0)
+	touch_look._input(t_up)
+	assert_equal(touch_look.active_touch_index, -1, "TouchLookZone released touch index 1")
+
+	# 2. Drag outside look region then release
+	t_down.index = 2
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
+	touch_look._input(t_down)
+	assert_equal(touch_look.active_touch_index, 2, "TouchLookZone captures touch index 2")
+
+	drag.index = 2
+	drag.position = Vector2(10.0, 10.0) # Outside look region (left side of screen)
+	drag.relative = Vector2(-30.0, 10.0)
+	touch_look._input(drag)
+	assert_equal(look_deltas.back(), Vector2(-30.0, 10.0), "Drag outside look region tracked globally")
+
+	t_up.index = 2
+	t_up.pressed = false
+	t_up.position = Vector2(10.0, 10.0) # Released outside look region
+	touch_look._input(t_up)
+	assert_equal(touch_look.active_touch_index, -1, "Release outside look region cleanly frees active_touch_index")
+
+	# 3. Modal opens while look finger is active -> index cleared & drag suppressed
+	t_down.index = 3
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
+	touch_look._input(t_down)
+	assert_equal(touch_look.active_touch_index, 3, "TouchLookZone captures touch index 3")
+
+	hud._on_dialogue_requested("Keith", ["Testing look lock."])
+	assert_equal(touch_look.active_touch_index, -1, "Opening dialogue resets active_touch_index")
+
+	var deltas_before = look_deltas.size()
+	drag.index = 3
+	drag.relative = Vector2(40.0, 40.0)
+	touch_look._input(drag)
+	assert_equal(look_deltas.size(), deltas_before, "Look input suppressed while modal is open")
+
+	# 4. Look resumes immediately after modal closes
+	hud._close_dialogue()
+	t_down.index = 4
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
+	touch_look._input(t_down)
+	assert_equal(touch_look.active_touch_index, 4, "Look immediately claims new touch 4 after modal closes")
+
+	drag.index = 4
+	drag.relative = Vector2(15.0, -8.0)
+	touch_look._input(drag)
+	assert_equal(look_deltas.back(), Vector2(15.0, -8.0), "Look input emits properly after modal closure")
+
+	t_up.index = 4
+	t_up.pressed = false
+	touch_look._input(t_up)
+	assert_equal(touch_look.active_touch_index, -1, "Touch 4 released")
+
+	# 5. Left joystick and right look simultaneously (multi-touch)
+	var mobile_stick = hud.find_child("MobileStick", true, false)
+	assert_true(mobile_stick != null, "MobileStick node exists")
+
+	var stick_touch = InputEventScreenTouch.new()
+	stick_touch.index = 0
+	stick_touch.pressed = true
+	stick_touch.position = mobile_stick.global_position + mobile_stick.size * 0.5
+	mobile_stick._input(stick_touch)
+
+	t_down.index = 1
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
+	touch_look._input(t_down)
+
+	assert_equal(mobile_stick.active_touch_index, 0, "Joystick owns finger index 0")
+	assert_equal(touch_look.active_touch_index, 1, "Look zone owns finger index 1")
+
+	stick_touch.pressed = false
+	mobile_stick._input(stick_touch)
+	assert_equal(mobile_stick.active_touch_index, -1, "Joystick released finger index 0")
+	assert_equal(touch_look.active_touch_index, 1, "Look zone retains active finger index 1 during joystick release")
+
+	t_up.index = 1
+	t_up.pressed = false
+	touch_look._input(t_up)
+	assert_equal(touch_look.active_touch_index, -1, "Look zone released finger index 1")
+
+	# 6. Stale finger cannot block subsequent touch
+	touch_look.active_touch_index = 8 # Simulating a dropped OS release
+	t_down.index = 9
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
+	touch_look._input(t_down)
+	assert_equal(touch_look.active_touch_index, 9, "Stale finger 8 overridden by fresh touch 9")
+
+	t_up.index = 9
+	t_up.pressed = false
+	touch_look._input(t_up)
+	assert_equal(touch_look.active_touch_index, -1, "Touch 9 released")
+
+	# 7. Excluded buttons (InteractButton) do not trigger look
+	var interact_btn = hud.find_child("InteractButton", true, false)
+	if is_instance_valid(interact_btn):
+		t_down.index = 5
+		t_down.pressed = true
+		t_down.position = interact_btn.global_position + interact_btn.size * 0.5
+		touch_look._input(t_down)
+		assert_equal(touch_look.active_touch_index, -1, "Touch on INTERACT button is ignored by TouchLookZone")
+
+	EventBus.virtual_look_input.disconnect(look_callable)
 	remove_child(hud)
 	hud.queue_free()
 
