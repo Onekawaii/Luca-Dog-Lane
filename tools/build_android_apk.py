@@ -331,7 +331,7 @@ def main() -> int:
 
     # 5. Ensure textures are imported with etc2_astc
     print("[EXPORT] Re-importing Godot assets in headless mode...")
-    subprocess.run([str(godot_bin), "--headless", "--path", "game_godot", "--editor", "--quit"], check=True)
+    subprocess.run([str(godot_bin), "--headless", "--path", "game_godot", "--import"], check=True)
 
     # 6. Execute official Godot Android export
     export_cmd = [

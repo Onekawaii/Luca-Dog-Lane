@@ -95,7 +95,7 @@ def main() -> int:
 
     # Ensure Godot imports project and builds class cache
     run_command(
-        [str(godot_bin), "--headless", "--path", "game_godot", "--editor", "--quit"],
+        [str(godot_bin), "--headless", "--path", "game_godot", "--import"],
         "Godot Project Class & Asset Import",
     )
 
