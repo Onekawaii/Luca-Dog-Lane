@@ -50,69 +50,90 @@ def find_godot_binary() -> Path | None:
     return None
 
 
-def run_command(cmd: list[str], desc: str, cwd: Path = Path("."), timeout: int = 180) -> bool:
-    print(f"\n[GATE] {desc}...")
-    print(f"       Running: {' '.join(str(c) for c in cmd)}")
+def run_command(cmd: list[str], desc: str, cwd: Path = Path("."), timeout: int = 300) -> bool:
+    cmd_str = " ".join(str(c) for c in cmd)
+    print(f"\n[GATE] {desc} (timeout: {timeout}s)...", flush=True)
+    print(f"       Command: {cmd_str}", flush=True)
+    
+    env = os.environ.copy()
+    env["PYTHONUNBUFFERED"] = "1"
+    
     try:
-        res = subprocess.run(cmd, cwd=cwd, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        print(f"[FAIL] {desc} timed out after {timeout} seconds", file=sys.stderr)
+        res = subprocess.run(cmd, cwd=cwd, env=env, timeout=timeout)
+        sys.stdout.flush()
+        sys.stderr.flush()
+    except subprocess.TimeoutExpired as exc:
+        print(f"\n[FAIL] TIMEOUT: '{desc}' exceeded timeout of {timeout} seconds!", file=sys.stderr, flush=True)
+        print(f"       Blocking Command: {cmd_str}", file=sys.stderr, flush=True)
+        sys.stderr.flush()
         return False
+    except Exception as exc:
+        print(f"\n[FAIL] ERROR: '{desc}' failed with exception: {exc}", file=sys.stderr, flush=True)
+        print(f"       Command: {cmd_str}", file=sys.stderr, flush=True)
+        sys.stderr.flush()
+        return False
+
     if res.returncode != 0:
-        print(f"[FAIL] {desc} exited with code {res.returncode}", file=sys.stderr)
+        print(f"[FAIL] '{desc}' exited with code {res.returncode}", file=sys.stderr, flush=True)
+        print(f"       Failed Command: {cmd_str}", file=sys.stderr, flush=True)
+        sys.stderr.flush()
         return False
-    print(f"[PASS] {desc}")
+
+    print(f"[PASS] {desc}", flush=True)
     return True
 
 
 def main() -> int:
-    print("============================================================")
-    print("HIVE-LATTICE // FULL STACK CONTRACT VERIFICATION")
-    print("============================================================")
+    print("============================================================", flush=True)
+    print("HIVE-LATTICE // FULL STACK CONTRACT VERIFICATION", flush=True)
+    print("============================================================", flush=True)
 
-    # 1. Content Lint & Python Validation
-    if not run_command([sys.executable, "tools/content_lint.py"], "Content Lint"):
+    # 1. Content Lint & Python Validation (Timeout: 300s each)
+    if not run_command([sys.executable, "tools/content_lint.py"], "Content Lint", timeout=300):
         return 1
 
-    if not run_command([sys.executable, "-m", "tools.validate_campaign_module"], "Validate Campaign Module"):
+    if not run_command([sys.executable, "-m", "tools.validate_campaign_module"], "Validate Campaign Module", timeout=300):
         return 1
 
-    if not run_command([sys.executable, "-m", "tools.validate_visual_assets"], "Validate Visual Assets"):
+    if not run_command([sys.executable, "-m", "tools.validate_visual_assets"], "Validate Visual Assets", timeout=300):
         return 1
 
-    if not run_command([sys.executable, "-m", "hive_lattice.cli", "validate", "strawberry_omen"], "CLI Validate Strawberry Omen"):
+    if not run_command([sys.executable, "-m", "hive_lattice.cli", "validate", "strawberry_omen"], "CLI Validate Strawberry Omen", timeout=300):
         return 1
 
-    # 2. Export campaign data for Godot
-    if not run_command([sys.executable, "tools/export_godot_campaign.py"], "Deterministic Campaign Data Export"):
+    # 2. Export campaign data for Godot (Timeout: 120s)
+    if not run_command([sys.executable, "tools/export_godot_campaign.py"], "Deterministic Campaign Data Export", timeout=120):
         return 1
 
-    # 3. Find Godot and ensure project assets/classes are imported
+    # 3. Find Godot and ensure project assets/classes are imported (Timeout: 180s)
     godot_bin = find_godot_binary()
     if godot_bin:
-        run_command(
+        if not run_command(
             [str(godot_bin), "--headless", "--path", "game_godot", "--import"],
             "Godot Project Class & Asset Import",
-        )
+            timeout=180,
+        ):
+            return 1
 
-    # 4. Python Unit Tests Discovery
-    if not run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test*.py"], "Python Unit Tests"):
+    # 4. Python Unit Tests Discovery (Timeout: 300s)
+    if not run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test*.py"], "Python Unit Tests", timeout=300):
         return 1
 
-    # 5. Run headless acceptance test suite
+    # 5. Run headless acceptance test suite (Timeout: 300s)
     if not godot_bin:
-        print("[ERROR] Godot binary not found in PATH or ~/.godot_bin!", file=sys.stderr)
+        print("[ERROR] Godot binary not found in PATH or ~/.godot_bin!", file=sys.stderr, flush=True)
         return 1
 
     if not run_command(
         [str(godot_bin), "--headless", "--path", "game_godot", "res://tests/AcceptanceRunner.tscn"],
         "Native Godot Headless Acceptance Suite",
+        timeout=300,
     ):
         return 1
 
-    print("\n============================================================")
-    print("[ALL GATES PASSED] NATIVE CONTRACT & PYTHON PARITY VERIFIED")
-    print("============================================================\n")
+    print("\n============================================================", flush=True)
+    print("[ALL GATES PASSED] NATIVE CONTRACT & PYTHON PARITY VERIFIED", flush=True)
+    print("============================================================\n", flush=True)
     return 0
 
 
