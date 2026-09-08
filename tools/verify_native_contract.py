@@ -83,25 +83,26 @@ def main() -> int:
     if not run_command([sys.executable, "-m", "hive_lattice.cli", "validate", "strawberry_omen"], "CLI Validate Strawberry Omen"):
         return 1
 
-    # 2. Python Unit Tests Discovery
-    if not run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test*.py"], "Python Unit Tests"):
-        return 1
-
-    # 3. Export campaign data for Godot
+    # 2. Export campaign data for Godot
     if not run_command([sys.executable, "tools/export_godot_campaign.py"], "Deterministic Campaign Data Export"):
         return 1
 
-    # 4. Find Godot and run headless acceptance test suite
+    # 3. Find Godot and ensure project assets/classes are imported
     godot_bin = find_godot_binary()
+    if godot_bin:
+        run_command(
+            [str(godot_bin), "--headless", "--path", "game_godot", "--import"],
+            "Godot Project Class & Asset Import",
+        )
+
+    # 4. Python Unit Tests Discovery
+    if not run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test*.py"], "Python Unit Tests"):
+        return 1
+
+    # 5. Run headless acceptance test suite
     if not godot_bin:
         print("[ERROR] Godot binary not found in PATH or ~/.godot_bin!", file=sys.stderr)
         return 1
-
-    # Ensure Godot imports project and builds class cache
-    run_command(
-        [str(godot_bin), "--headless", "--path", "game_godot", "--import"],
-        "Godot Project Class & Asset Import",
-    )
 
     if not run_command(
         [str(godot_bin), "--headless", "--path", "game_godot", "res://tests/AcceptanceRunner.tscn"],

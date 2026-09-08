@@ -14,6 +14,12 @@ class TestQuantumWitnessContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.godot_bin = find_godot_binary()
+        if cls.godot_bin:
+            subprocess.run(
+                [str(cls.godot_bin), "--headless", "--path", "game_godot", "--import"],
+                capture_output=True,
+                timeout=90,
+            )
 
     def test_quantum_scripts_exist(self):
         """Verify all generic quantum subsystem files exist and are decoupled."""
