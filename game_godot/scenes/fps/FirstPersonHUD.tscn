@@ -108,13 +108,13 @@ autowrap_mode = 2
 
 [node name="NotificationPanel" type="PanelContainer" parent="Root"]
 layout_mode = 1
-anchors_preset = 10
+anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
 offset_left = -260.0
-offset_top = 24.0
+offset_top = 120.0
 offset_right = 260.0
-offset_bottom = 78.0
+offset_bottom = 174.0
 grow_horizontal = 2
 theme_override_styles/panel = SubResource("Style_panel")
 

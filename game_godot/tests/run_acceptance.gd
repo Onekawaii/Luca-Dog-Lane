@@ -76,6 +76,7 @@ func _run_all_tests() -> void:
 	test_multi_room_system()
 	test_mobile_controls_and_readability()
 	test_first_person_runtime()
+	test_phone_playtest_fixes()
 	test_chalk_circle_bridge()
 
 
@@ -442,6 +443,72 @@ func test_first_person_runtime() -> void:
 	assert_true(player.has_method("_on_input_lock_changed"), "First-person player owns modal input-lock handling")
 
 	bootstrap.queue_free()
+
+
+func test_phone_playtest_fixes() -> void:
+	print("\n--- 13. Phone Playtest Fix Batch (Prompt, Labels, Toasts, Quantum Anchor) ---")
+	var hud_scene = load("res://scenes/fps/FirstPersonHUD.tscn")
+	assert_true(hud_scene != null, "FirstPersonHUD.tscn loads for playtest fix verification")
+	var hud = hud_scene.instantiate()
+	assert_true(hud != null, "FirstPersonHUD instantiates")
+	add_child(hud)
+
+	var prompt_label = hud.find_child("PromptLabel", true, false)
+	var dialogue_panel = hud.find_child("DialoguePanel", true, false)
+	var pda_panel = hud.find_child("PDAPanel", true, false)
+	var notif_panel = hud.find_child("NotificationPanel", true, false)
+	var obj_panel = hud.find_child("ObjectivePanel", true, false)
+	var pda_button = hud.find_child("PDAButton", true, false)
+	var hint_label = hud.find_child("Hint", true, false)
+	var diag_label = hud.find_child("QuantumDiagnostic", true, false)
+
+	# 1. Hide interaction prompts whenever DialoguePanel or PDAPanel is open
+	hud._on_prompt_changed("Talk to Keith")
+	assert_true(prompt_label.visible, "PromptLabel is visible during regular exploration")
+	assert_equal(prompt_label.text, "Talk to Keith", "PromptLabel text updated")
+
+	hud._on_dialogue_requested("Keith", ["Sample line."])
+	assert_true(dialogue_panel.visible, "DialoguePanel is open")
+	assert_false(prompt_label.visible, "PromptLabel is hidden while DialoguePanel is open")
+
+	hud._close_dialogue()
+	assert_false(dialogue_panel.visible, "DialoguePanel is closed")
+	assert_true(prompt_label.visible, "PromptLabel is restored when DialoguePanel closes")
+
+	hud._toggle_pda()
+	assert_true(pda_panel.visible, "PDAPanel is open")
+	assert_false(prompt_label.visible, "PromptLabel is hidden while PDAPanel is open")
+
+	hud._toggle_pda()
+	assert_false(pda_panel.visible, "PDAPanel is closed")
+	assert_true(prompt_label.visible, "PromptLabel is restored when PDAPanel closes")
+
+	# 2. Platform-aware control labels
+	assert_true(hud.has_method("_format_prompt"), "HUD has _format_prompt platform-aware method")
+	assert_true(hud.has_method("_apply_platform_labels"), "HUD has _apply_platform_labels method")
+	
+	# Mobile format stripping
+	var raw_desktop_prompt = "[E / A] Inspect Wetberry"
+	var formatted_prompt = hud._format_prompt(raw_desktop_prompt)
+	if hud.is_mobile():
+		assert_equal(formatted_prompt, "Inspect Wetberry", "Mobile prompt strips [E / A] desktop prefix")
+		assert_false("[E / A]" in formatted_prompt, "Mobile prompt contains no [E / A]")
+		assert_false("[P]" in pda_button.text, "Mobile PDA button contains no [P]")
+		assert_false("WASD" in hint_label.text, "Mobile Hint contains no WASD")
+		assert_false("F5/F9" in hint_label.text, "Mobile Hint contains no F5/F9")
+	else:
+		assert_equal(formatted_prompt, raw_desktop_prompt, "Desktop prompt preserves key bindings")
+
+	# 3. Notification toasts never overlap Current Objective
+	assert_true(notif_panel != null and obj_panel != null, "HUD contains NotificationPanel and ObjectivePanel")
+	assert_true(notif_panel.offset_top >= obj_panel.offset_bottom, "NotificationPanel top offset (>= 120) sits below ObjectivePanel bottom (105)")
+
+	# 4. Rename PDA quantum "Confirmed" field to "Last confirmed anchor"
+	hud._refresh_quantum_diagnostic()
+	assert_false("Confirmed:" in diag_label.text, "Quantum diagnostic does not use legacy Confirmed: field")
+
+	remove_child(hud)
+	hud.queue_free()
 
 
 func test_chalk_circle_bridge() -> void:

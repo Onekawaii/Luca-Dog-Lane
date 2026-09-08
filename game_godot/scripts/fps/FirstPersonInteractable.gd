@@ -9,6 +9,13 @@ extends StaticBody3D
 
 
 func get_interaction_prompt() -> String:
+	var is_mobile := OS.has_feature("android") or OS.has_feature("mobile") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
+	if is_mobile:
+		var cleaned := prompt
+		cleaned = cleaned.replace("[E / A] ", "").replace("[E/A] ", "").replace("[E / A]", "")
+		cleaned = cleaned.replace("[E] ", "").replace("[E]", "")
+		cleaned = cleaned.replace("[P] ", "").replace("[P]", "")
+		return cleaned.strip_edges()
 	return prompt
 
 

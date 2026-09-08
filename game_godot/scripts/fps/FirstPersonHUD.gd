@@ -17,6 +17,7 @@ extends CanvasLayer
 @onready var save_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/SaveButton
 @onready var load_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/LoadButton
 @onready var close_pda_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/CloseButton
+@onready var hint_label: Label = $Root/PDAPanel/Margin/VBox/Hint
 @onready var mobile_controls: Control = $Root/MobileControls
 @onready var interact_button: Button = $Root/MobileControls/InteractButton
 
@@ -25,11 +26,18 @@ var dialogue_index: int = 0
 var current_objective: String = "Find Keith and get safe containment gear."
 
 
+func is_mobile() -> bool:
+	return OS.has_feature("android") or OS.has_feature("mobile") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
+
+
 func _ready() -> void:
+	prompt_label.visible = false
 	dialogue_panel.visible = false
 	pda_panel.visible = false
 	notification_panel.visible = false
-	mobile_controls.visible = DisplayServer.is_touchscreen_available()
+	mobile_controls.visible = is_mobile()
+
+	_apply_platform_labels()
 
 	EventBus.first_person_prompt_changed.connect(_on_prompt_changed)
 	EventBus.first_person_dialogue_requested.connect(_on_dialogue_requested)
@@ -48,6 +56,17 @@ func _ready() -> void:
 	_refresh_pda()
 
 
+func _apply_platform_labels() -> void:
+	if is_mobile():
+		pda_button.text = "PDA"
+		if is_instance_valid(hint_label):
+			hint_label.text = "Touch: Left stick move • Drag to look • INTERACT button • Save/Load buttons"
+	else:
+		pda_button.text = "PDA [P]"
+		if is_instance_valid(hint_label):
+			hint_label.text = "Desktop: WASD move • Mouse look • E interact • Shift sprint • F5/F9 save/load"
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
 		var key := event as InputEventKey
@@ -57,24 +76,49 @@ func _unhandled_input(event: InputEvent) -> void:
 			_advance_dialogue()
 
 
+func _format_prompt(text: String) -> String:
+	if text.is_empty():
+		return ""
+	if is_mobile():
+		var cleaned := text
+		cleaned = cleaned.replace("[E / A] ", "").replace("[E/A] ", "").replace("[E / A]", "")
+		cleaned = cleaned.replace("[E] ", "").replace("[E]", "")
+		cleaned = cleaned.replace("[P] ", "").replace("[P]", "")
+		return cleaned.strip_edges()
+	return text
+
+
+func _update_prompt_visibility() -> void:
+	if not is_instance_valid(prompt_label):
+		return
+	var modal_open := (is_instance_valid(dialogue_panel) and dialogue_panel.visible) or (is_instance_valid(pda_panel) and pda_panel.visible)
+	prompt_label.visible = not modal_open and not prompt_label.text.is_empty()
+
+
 func _on_prompt_changed(text: String) -> void:
-	prompt_label.text = text
+	if is_instance_valid(prompt_label):
+		prompt_label.text = _format_prompt(text)
+	_update_prompt_visibility()
 
 
 func _on_objective_changed(text: String) -> void:
 	current_objective = text
-	objective_label.text = text
+	if is_instance_valid(objective_label):
+		objective_label.text = text
 	_refresh_pda()
 
 
 func _on_dialogue_requested(speaker: String, lines: Array) -> void:
 	dialogue_lines = lines.duplicate()
 	dialogue_index = 0
-	speaker_label.text = speaker
-	dialogue_panel.visible = true
-	if pda_panel.visible:
+	if is_instance_valid(speaker_label):
+		speaker_label.text = speaker
+	if is_instance_valid(dialogue_panel):
+		dialogue_panel.visible = true
+	if is_instance_valid(pda_panel) and pda_panel.visible:
 		pda_panel.visible = false
 	_set_mobile_gameplay_controls_enabled(false)
+	_update_prompt_visibility()
 	EventBus.first_person_input_lock_changed.emit(true)
 	_show_dialogue_line()
 
@@ -83,12 +127,14 @@ func _show_dialogue_line() -> void:
 	if dialogue_lines.is_empty():
 		_close_dialogue()
 		return
-	dialogue_label.text = str(dialogue_lines[dialogue_index])
-	continue_button.text = "Go on." if dialogue_index < dialogue_lines.size() - 1 else "Done."
+	if is_instance_valid(dialogue_label):
+		dialogue_label.text = str(dialogue_lines[dialogue_index])
+	if is_instance_valid(continue_button):
+		continue_button.text = "Go on." if dialogue_index < dialogue_lines.size() - 1 else "Done."
 
 
 func _advance_dialogue() -> void:
-	if not dialogue_panel.visible:
+	if not is_instance_valid(dialogue_panel) or not dialogue_panel.visible:
 		return
 	dialogue_index += 1
 	if dialogue_index >= dialogue_lines.size():
@@ -98,27 +144,31 @@ func _advance_dialogue() -> void:
 
 
 func _close_dialogue() -> void:
-	dialogue_panel.visible = false
+	if is_instance_valid(dialogue_panel):
+		dialogue_panel.visible = false
 	dialogue_lines.clear()
 	dialogue_index = 0
 	_set_mobile_gameplay_controls_enabled(true)
+	_update_prompt_visibility()
 	EventBus.first_person_input_lock_changed.emit(false)
 	EventBus.first_person_dialogue_closed.emit()
 
 
 func _toggle_pda() -> void:
-	if dialogue_panel.visible:
+	if is_instance_valid(dialogue_panel) and dialogue_panel.visible:
 		return
-	pda_panel.visible = not pda_panel.visible
-	_set_mobile_gameplay_controls_enabled(not pda_panel.visible)
-	EventBus.first_person_input_lock_changed.emit(pda_panel.visible)
-	_refresh_pda()
+	if is_instance_valid(pda_panel):
+		pda_panel.visible = not pda_panel.visible
+		_set_mobile_gameplay_controls_enabled(not pda_panel.visible)
+		_update_prompt_visibility()
+		EventBus.first_person_input_lock_changed.emit(pda_panel.visible)
+		_refresh_pda()
 
 
 func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:
 	if not is_instance_valid(mobile_controls):
 		return
-	mobile_controls.visible = DisplayServer.is_touchscreen_available() and enabled
+	mobile_controls.visible = is_mobile() and enabled
 	mobile_controls.process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
 
 
@@ -151,7 +201,7 @@ func _refresh_quantum_diagnostic() -> void:
 		return
 	var summary: Dictionary = q.get_status_summary()
 	var observed := bool(summary.get("observed", false))
-	quantum_diagnostic_label.text = "QUANTUM COHERENCE\nState: %s\nConfirmed: %s\nCoherence: %s%%\nWitnesses: %s" % ["OBSERVED" if observed else "UNCONFIRMED", str(summary.get("last_confirmed_location", "unknown")), str(summary.get("coherence_pct", 0)), str(summary.get("witness_count", 0))]
+	quantum_diagnostic_label.text = "QUANTUM COHERENCE\nState: %s\nLast confirmed anchor: %s\nCoherence: %s%%\nWitnesses: %s" % ["OBSERVED" if observed else "UNCONFIRMED", str(summary.get("last_confirmed_location", "unknown")), str(summary.get("coherence_pct", 0)), str(summary.get("witness_count", 0))]
 
 
 func _on_notification(message: String) -> void:

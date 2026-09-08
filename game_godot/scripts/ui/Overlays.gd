@@ -35,6 +35,13 @@ func _get_bus() -> Node:
 func _ready() -> void:
 	hide_all()
 
+	var is_mobile := OS.has_feature("android") or OS.has_feature("mobile") or OS.has_feature("ios") or DisplayServer.is_touchscreen_available()
+	if is_mobile:
+		if is_instance_valid(save_btn):
+			save_btn.text = "Save State (Slot 1)"
+		if is_instance_valid(load_btn):
+			load_btn.text = "Load State (Slot 1)"
+
 	status_close_btn.pressed.connect(hide_all)
 	journal_close_btn.pressed.connect(hide_all)
 	resume_btn.pressed.connect(hide_all)
