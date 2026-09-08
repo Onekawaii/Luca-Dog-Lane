@@ -91,9 +91,9 @@ class TestQuantumWitnessContract(unittest.TestCase):
         """Verify FirstPersonHUD controls modal movement lock and mobile overlay visibility."""
         hud_path = Path("game_godot/scripts/fps/FirstPersonHUD.gd")
         content = hud_path.read_text(encoding="utf-8")
-        self.assertIn("_set_player_movement_enabled", content)
-        self.assertIn("can_move", content)
-        self.assertIn("MobileControls", content)
+        self.assertIn("_set_mobile_gameplay_controls_enabled", content)
+        self.assertIn("first_person_input_lock_changed", content)
+        self.assertIn("mobile_controls", content)
 
     def test_godot_headless_quantum_suite(self):
         """Execute the headless Godot quantum system test suite."""
@@ -105,17 +105,16 @@ class TestQuantumWitnessContract(unittest.TestCase):
             "--headless",
             "--path",
             "game_godot",
-            "--script",
-            "res://tests/test_quantum_system.gd",
+            "res://tests/AcceptanceRunner.tscn",
         ]
         res = subprocess.run(cmd, capture_output=True, text=True)
-        print(res.stdout)
         self.assertEqual(
             res.returncode,
             0,
-            f"test_quantum_system.gd failed with code {res.returncode}:\n{res.stderr}\n{res.stdout}",
+            f"AcceptanceRunner.tscn failed with code {res.returncode}:\n{res.stderr}\n{res.stdout}",
         )
-        self.assertIn("[ALL QUANTUM WITNESS TESTS PASSED]", res.stdout)
+        self.assertIn("Quantum Witness Subsystem & Entanglement Integration", res.stdout)
+        self.assertIn("[ALL NATIVE ACCEPTANCE TESTS PASSED]", res.stdout)
 
     def test_godot_headless_full_acceptance_suite(self):
         """Execute the full native Godot headless acceptance suite with quantum integration."""
@@ -127,14 +126,13 @@ class TestQuantumWitnessContract(unittest.TestCase):
             "--headless",
             "--path",
             "game_godot",
-            "--script",
-            "res://tests/run_acceptance.gd",
+            "res://tests/AcceptanceRunner.tscn",
         ]
         res = subprocess.run(cmd, capture_output=True, text=True)
         self.assertEqual(
             res.returncode,
             0,
-            f"run_acceptance.gd failed with code {res.returncode}:\n{res.stderr}\n{res.stdout}",
+            f"AcceptanceRunner.tscn failed with code {res.returncode}:\n{res.stderr}\n{res.stdout}",
         )
         self.assertIn("[ALL NATIVE ACCEPTANCE TESTS PASSED]", res.stdout)
 

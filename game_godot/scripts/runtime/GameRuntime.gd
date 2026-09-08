@@ -2,6 +2,8 @@ extends Node
 
 # Central GameRuntime Autoload for Native Hive-Lattice Game.
 
+const ChalkCircleRouter = preload("res://scripts/runtime/ChalkCircleRouter.gd")
+
 var loader: CampaignLoader
 var world_state: WorldState
 var action_resolver: ActionResolver

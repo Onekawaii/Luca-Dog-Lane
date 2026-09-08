@@ -111,5 +111,6 @@ game_godot/
 │   ├── audio/        # AudioManager
 │   └── save/         # SaveSystem
 └── tests/
-    └── run_acceptance.gd  # Headless test runner
+    ├── AcceptanceRunner.tscn  # Headless test runner scene
+    └── run_acceptance.gd      # Acceptance test suite script
 ```

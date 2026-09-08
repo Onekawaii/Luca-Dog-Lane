@@ -13,7 +13,7 @@
 | **Python Unit Tests** | 406 Tests | **PASS** | `python -m unittest discover -s tests -p "test*.py"` (406 OK, 1 skipped) |
 | **Campaign Lint & CLI** | Schema Validation | **PASS** | `tools/content_lint.py`, `validate_campaign_module`, `cli validate` |
 | **Data Export Pipeline** | Manifest & Checksum | **PASS** | `tools/export_godot_campaign.py` (Combined SHA: `36815a9ca367fb8889df5e5beebb732bc489a03dc390a5937c840445cd36e922`) |
-| **Godot Acceptance Suite** | 63 Headless Tests | **PASS** | `godot --headless --path game_godot --script res://tests/run_acceptance.gd` (63/63 PASS) |
+| **Godot Acceptance Suite** | 149 Headless Tests | **PASS** | `godot --headless --path game_godot res://tests/AcceptanceRunner.tscn` (149/149 PASS) |
 | **Keith Interaction Vector** | Dialogue + Evidence Bag | **PASS** | Foot-grounded Keith grants Evidence Bag, increments trust flag & NPC memory |
 | **Darla Interaction Vector** | Coffee Counter Dialogue | **PASS** | Unlocks fridge hints & relationship delta |
 | **Tammy HR Spawn Vector** | Conditional Appearance | **PASS** | Spawns with clipboard only when HR is alerted |

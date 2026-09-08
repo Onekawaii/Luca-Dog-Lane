@@ -4,6 +4,8 @@ extends RefCounted
 # ActionResolver for Hive-Lattice GDScript client.
 # Implements exact parity with Python CampaignModule logic.
 
+const ChalkCircleRouter = preload("res://scripts/runtime/ChalkCircleRouter.gd")
+
 var loader: CampaignLoader
 
 

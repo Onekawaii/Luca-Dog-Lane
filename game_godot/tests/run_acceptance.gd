@@ -1,7 +1,7 @@
 extends Node
 
 # Headless Acceptance Test Suite for Native Hive-Lattice Game.
-# Run with: godot --headless --path game_godot --script res://tests/run_acceptance.gd
+# Run with: godot --headless --path game_godot res://tests/AcceptanceRunner.tscn
 
 const CampaignLoader = preload("res://scripts/campaign/CampaignLoader.gd")
 const ActionResolver = preload("res://scripts/runtime/ActionResolver.gd")
