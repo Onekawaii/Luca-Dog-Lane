@@ -24,7 +24,7 @@ const KeithAmbientWorkerClass = preload("res://scripts/fps/KeithAmbientWorker.gd
 
 var witness_system = null
 var entanglement = null
-var keith_worker: KeithAmbientWorker = null
+var keith_worker = null
 var coffee_machine_state: String = "normal"
 var is_coffee_on: bool = false
 var is_fridge_open: bool = false
@@ -38,8 +38,8 @@ var inspect_camera_start_transform: Transform3D
 var is_inspecting: bool = false
 var inspect_tween: Tween = null
 
-var wetberry_holdable: Holdable = null
-var held_prop: Holdable = null
+var wetberry_holdable = null
+var held_prop = null
 var held_view_mesh: Node3D = null
 
 var fly_time: float = 0.0
@@ -113,16 +113,16 @@ func _process(delta: float) -> void:
 	if is_fridge_open and is_instance_valid(fridge_fly_swarm) and fridge_fly_swarm.visible:
 		fly_time += delta * 6.0
 		for i in range(fridge_fly_swarm.get_child_count()):
-			var fly := fridge_fly_swarm.get_child(i) as Node3D
+			var fly = fridge_fly_swarm.get_child(i) as Node3D
 			if fly:
-				var offset_x := sin(fly_time + float(i) * 1.7) * 0.12
-				var offset_y := cos(fly_time * 1.3 + float(i) * 2.1) * 0.08
-				var offset_z := sin(fly_time * 0.9 + float(i)) * 0.10
+				var offset_x = sin(fly_time + float(i) * 1.7) * 0.12
+				var offset_y = cos(fly_time * 1.3 + float(i) * 2.1) * 0.08
+				var offset_z = sin(fly_time * 0.9 + float(i)) * 0.10
 				fly.position = fly.get_meta("base_pos", Vector3.ZERO) + Vector3(offset_x, offset_y, offset_z)
 
 	# Coffee brewing subtle steam pulse
 	if is_coffee_on and is_instance_valid(coffee_steam) and coffee_steam.visible:
-		var pulse := 0.7 + sin(Time.get_ticks_msec() * 0.008) * 0.3
+		var pulse = 0.7 + sin(Time.get_ticks_msec() * 0.008) * 0.3
 		coffee_steam.scale = Vector3(pulse, pulse, pulse)
 
 
@@ -130,17 +130,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_inspecting:
 		if event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_E):
 			# delegate to canonical controller
-			var ctrl := get_tree().get_root().get("InspectController")
+			var ctrl = get_tree().get_root().get("InspectController")
 			if ctrl:
 				ctrl.exit_inspect()
 			get_viewport().set_input_as_handled()
 		elif event is InputEventScreenTouch and event.pressed:
-			var ctrl2 := get_tree().get_root().get("InspectController")
+			var ctrl2 = get_tree().get_root().get("InspectController")
 			if ctrl2:
 				ctrl2.exit_inspect()
 			get_viewport().set_input_as_handled()
 		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			var ctrl3 := get_tree().get_root().get("InspectController")
+			var ctrl3 = get_tree().get_root().get("InspectController")
 			if ctrl3:
 				ctrl3.exit_inspect()
 			get_viewport().set_input_as_handled()
@@ -151,15 +151,15 @@ func _update_appliance_prompts() -> void:
 		coffee_steam.visible = is_coffee_on
 
 	if quantum_coffee_maker and quantum_coffee_maker is FirstPersonInteractable:
-		var c_prompt := "[E / A] Turn Off Coffee Maker" if is_coffee_on else "[E / A] Turn On Coffee Maker"
+		var c_prompt = "[E / A] Turn Off Coffee Maker" if is_coffee_on else "[E / A] Turn On Coffee Maker"
 		quantum_coffee_maker.set("dynamic_prompt", c_prompt)
 
 	if fridge_body and fridge_body is FirstPersonInteractable:
-		var f_prompt := "[E / A] Close Fridge" if is_fridge_open else "[E / A] Open Fridge"
+		var f_prompt = "[E / A] Close Fridge" if is_fridge_open else "[E / A] Open Fridge"
 		fridge_body.set("dynamic_prompt", f_prompt)
 
 	if wetberry_prop and wetberry_prop is FirstPersonInteractable:
-		var w_prompt := "[E / A] Inspect Wetberry"
+		var w_prompt = "[E / A] Inspect Wetberry"
 		wetberry_prop.set("dynamic_prompt", w_prompt)
 
 
@@ -168,7 +168,7 @@ func _on_interaction_requested(data: Dictionary) -> void:
 		exit_inspect()
 		return
 
-	var inter_id := str(data.get("interaction_id", ""))
+	var inter_id = str(data.get("interaction_id", ""))
 	match inter_id:
 		"keith":
 			if keith_worker:
@@ -203,20 +203,13 @@ func _start_inspect(target: Node3D, target_name: String, distance: float = 1.4, 
 	# Delegate to InspectController singleton to perform canonical inspection
 	if not is_instance_valid(target) or not is_instance_valid(quantum_player):
 		return
-	var ctrl := get_tree().get_root().get("InspectController")
-	if ctrl and ctrl is InspectController:
+	var ctrl = get_tree().get_root().get("InspectController")
+	if ctrl and ctrl.has_method("request_inspect"):
 		ctrl.request_inspect(target, quantum_player)
 		return
 	# Fallback: do nothing if controller missing
 	return
 
-	EventBus.first_person_input_lock_changed.emit(true)
-	EventBus.first_person_inspect_started.emit(target_name)
-
-	if inspect_tween and inspect_tween.is_valid():
-		inspect_tween.kill()
-	inspect_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	inspect_tween.tween_property(cam, "global_transform", target_transform, 0.35)
 
 
 func exit_inspect() -> void:
@@ -247,8 +240,7 @@ func pick_up_wetberry() -> bool:
 		return false
 	if not wetberry_holdable.can_pick_up():
 		return false
-
-	var ok := wetberry_holdable.pick_up()
+	var ok: bool = wetberry_holdable.pick_up()
 	if ok:
 		held_prop = wetberry_holdable
 		_create_held_view_mesh()
@@ -266,12 +258,12 @@ func place_held_object() -> bool:
 		return false
 
 	# Raycast downward/forward from player to find legal flat surface
-	var space_state := get_world_3d().direct_space_state
-	var from_pos := cam.global_position
-	var to_pos := from_pos + -cam.global_transform.basis.z * 2.2 + Vector3(0, -1.2, 0)
+	var _space_state = get_world_3d().direct_space_state
+	var from_pos: Vector3 = cam.global_position
+	var to_pos: Vector3 = from_pos + -cam.global_transform.basis.z * 2.2 + Vector3(0, -1.2, 0)
 	var query := PhysicsRayQueryParameters3D.create(from_pos, to_pos)
 	query.collision_mask = 1
-	var hit := space_state.intersect_ray(query)
+	var hit: Dictionary = _space_state.intersect_ray(query)
 
 	var place_pos := Vector3.ZERO
 	if not hit.is_empty():
@@ -287,20 +279,20 @@ func place_held_object() -> bool:
 
 	var t := Transform3D(Basis.IDENTITY, place_pos)
 	# Validate placement for collision overlap
-	var ok := false
+	var ok: bool = false
 	if held_prop and held_prop is Holdable:
 		# perform an overlap check using the held prop's collision shapes bounds
-		var prop_node := held_prop as Node3D
-		var shape_ok := true
+		var prop_node: Node3D = held_prop as Node3D
+		var shape_ok: bool = true
 		# create a test shape from the held_prop's AABB
-		var aabb = prop_node.get_transformed_aabb()
-		var test_center = t.origin
-		var space_state := get_world_3d().direct_space_state
-		var params = PhysicsShapeQueryParameters3D.new()
+		var aabb: AABB = prop_node.get_transformed_aabb()
+		var test_center: Vector3 = t.origin
+		var space_state = get_world_3d().direct_space_state
+		var params: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
 		# approximate with box shape
-		var box = BoxShape3D.new()
+		var box: BoxShape3D = BoxShape3D.new()
 		box.extents = aabb.size * 0.5
-		var xform = Transform3D(Basis.IDENTITY, test_center)
+		var xform: Transform3D = Transform3D(Basis.IDENTITY, test_center)
 		params.shape_rid = box.get_rid()
 		params.transform = xform
 		params.collision_mask = 1
