@@ -326,7 +326,7 @@ size = Vector3(0.16, 0.14, 0.16)
 size = Vector3(2.4, 2.5, 0.85)
 
 [sub_resource type="BoxMesh" id="Mesh_fridge_body"]
-size = Vector3(2.36, 2.46, 0.80)
+size = Vector3(2.36, 2.46, 0.08)
 
 [sub_resource type="BoxMesh" id="Mesh_fridge_cavity"]
 size = Vector3(2.10, 1.40, 0.50)
@@ -335,11 +335,11 @@ size = Vector3(2.10, 1.40, 0.50)
 size = Vector3(2.05, 0.03, 0.48)
 
 [sub_resource type="QuadMesh" id="Mesh_fridge_ooze"]
-size = Vector2(0.9, 0.9)
+size = Vector2(0.7, 0.45)
 
 [sub_resource type="SphereMesh" id="Mesh_fly"]
-radius = 0.02
-height = 0.04
+radius = 0.008
+height = 0.016
 
 [sub_resource type="BoxMesh" id="Mesh_freezer_door"]
 size = Vector3(2.32, 0.80, 0.06)
@@ -734,13 +734,44 @@ description = "The fridge hums like it is keeping a secret."
 shape = SubResource("Shape_appliance")
 
 [node name="CabinetBody" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0, 0, -0.02)
+position = Vector3(0, 0, -0.36)
+mesh = SubResource("Mesh_fridge_body")
+material_override = SubResource("Mat_fridge_enamel")
+
+[node name="LeftShell" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(-1.12, 0, 0)
+scale = Vector3(0.05, 1, 9)
+mesh = SubResource("Mesh_fridge_body")
+material_override = SubResource("Mat_fridge_enamel")
+
+[node name="RightShell" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(1.12, 0, 0)
+scale = Vector3(0.05, 1, 9)
+mesh = SubResource("Mesh_fridge_body")
+material_override = SubResource("Mat_fridge_enamel")
+
+[node name="TopShell" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(0, 1.17, 0)
+scale = Vector3(0.90, 0.05, 9)
+mesh = SubResource("Mesh_fridge_body")
+material_override = SubResource("Mat_fridge_enamel")
+
+[node name="BottomShell" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(0, -1.17, 0)
+scale = Vector3(0.90, 0.05, 9)
 mesh = SubResource("Mesh_fridge_body")
 material_override = SubResource("Mat_fridge_enamel")
 
 [node name="InteriorCavity" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0, -0.42, 0.10)
-mesh = SubResource("Mesh_fridge_cavity")
+position = Vector3(0, -0.42, -0.30)
+scale = Vector3(0.89, 0.58, 1.15)
+mesh = SubResource("Mesh_fridge_body")
+material_override = SubResource("Mat_fridge_interior")
+
+[node name="FreezerInteriorBack" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(0, 0.78, -0.30)
+scale = Vector3(0.89, 0.30, 1.15)
+mesh = SubResource("Mesh_fridge_body")
 material_override = SubResource("Mat_fridge_interior")
 
 [node name="InteriorShelf" type="MeshInstance3D" parent="World/Fridge"]
@@ -749,14 +780,13 @@ mesh = SubResource("Mesh_fridge_shelf")
 material_override = SubResource("Mat_fridge_enamel")
 
 [node name="ContaminatedOoze" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0, -0.45, 0.25)
-rotation_degrees = Vector3(90, 0, 0)
+position = Vector3(0, -0.62, -0.24)
 mesh = SubResource("Mesh_fridge_ooze")
 material_override = SubResource("Mat_fridge_ooze")
 
 [node name="FlySwarm" type="Node3D" parent="World/Fridge"]
 visible = false
-position = Vector3(0, -0.40, 0.35)
+position = Vector3(0, -0.40, 0.08)
 
 [node name="Fly1" type="MeshInstance3D" parent="World/Fridge/FlySwarm"]
 position = Vector3(-0.2, 0.1, 0.0)
