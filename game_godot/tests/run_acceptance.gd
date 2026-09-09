@@ -267,15 +267,14 @@ func test_scene_and_assets() -> void:
 		"res://scripts/quantum/QuantumStateAnchor.gd",
 		"res://scripts/quantum/QuantumEntanglement.gd",
 		"res://scripts/fps/FirstPersonQuantumNPC.gd",
-		"res://assets/fps/materials/breakroom_floor_512.png",
-		"res://assets/fps/materials/breakroom_wall_512.png",
-		"res://assets/fps/materials/breakroom_table_512.png",
-		"res://assets/fps/props/wetberry_carton_512.png",
-		"res://assets/fps/actors/keith_uniform_512.png",
-		"res://assets/fps/props/breakroom_fridge_512.png",
-		"res://assets/fps/props/coffee_maker_512.png",
+		"res://assets/fps/materials/breakroom_floor_tile.png",
+		"res://assets/fps/props/wetberry_front_decal.png",
+		"res://assets/fps/actors/keith_name_badge.png",
+		"res://assets/fps/props/fridge_property_decal.png",
+		"res://assets/fps/props/fridge_maintenance_decal.png",
 		"res://assets/fps/props/hidden_anomaly_plate_256.png",
-		"res://assets/fps/materials/pda_arkheo_watermark.png"
+		"res://assets/fps/materials/pda_arkheo_watermark.png",
+		"res://assets/fps/materials/quantum_glyph_icon.png"
 	]
 
 	for path in required_files:
@@ -430,6 +429,32 @@ func test_first_person_runtime() -> void:
 	var keith = bootstrap.find_child("Keith", true, false)
 	assert_true(wetberry != null and wetberry.has_method("interact"), "Wetberry is a physical first-person interactable")
 	assert_true(keith != null and keith.has_method("interact"), "Keith is a physical first-person interactable")
+
+	# Modular geometry & decoupled decals verification
+	assert_true(wetberry.find_child("CartonBody", true, false) != null, "Wetberry has CartonBody mesh")
+	assert_true(wetberry.find_child("FrontLabelDecal", true, false) != null, "Wetberry has FrontLabelDecal mesh")
+
+	assert_true(keith.find_child("Torso", true, false) != null, "Keith has Torso mesh")
+	assert_true(keith.find_child("HeadHood", true, false) != null, "Keith has HeadHood mesh")
+	assert_true(keith.find_child("BadgeDecal", true, false) != null, "Keith has BadgeDecal mesh")
+
+	var fridge = bootstrap.find_child("Fridge", true, false)
+	assert_true(fridge != null, "Fridge exists")
+	assert_true(fridge.find_child("CabinetBody", true, false) != null, "Fridge has CabinetBody mesh")
+	assert_true(fridge.find_child("FreezerDoor", true, false) != null, "Fridge has FreezerDoor mesh")
+	assert_true(fridge.find_child("FridgeDoor", true, false) != null, "Fridge has FridgeDoor mesh")
+	assert_true(fridge.find_child("PropertyDecal", true, false) != null, "Fridge has PropertyDecal mesh")
+
+	var coffee_maker = bootstrap.find_child("CoffeeMaker", true, false)
+	assert_true(coffee_maker != null, "Coffee maker exists")
+	assert_true(coffee_maker.find_child("BasePlate", true, false) != null, "Coffee maker has BasePlate mesh")
+	assert_true(coffee_maker.find_child("CarafeGlass", true, false) != null, "Coffee maker has CarafeGlass mesh")
+	assert_true(coffee_maker.find_child("StatusLED", true, false) != null, "Coffee maker has StatusLED mesh")
+
+	var table = bootstrap.find_child("CentralTable", true, false)
+	assert_true(table != null, "Central table exists")
+	assert_true(table.find_child("TableTop", true, false) != null, "Central table has TableTop mesh")
+	assert_true(table.find_child("HiddenAnomalyPlate", true, false) != null, "Central table has HiddenAnomalyPlate mesh")
 
 	var kevin_3d = bootstrap.find_child("FirstPersonKevin", true, false)
 	assert_true(kevin_3d is CharacterBody3D, "FirstPersonKevin is a CharacterBody3D")

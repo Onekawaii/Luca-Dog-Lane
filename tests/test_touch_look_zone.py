@@ -41,7 +41,7 @@ class TestTouchLookZoneContract(unittest.TestCase):
         self.assertIn("if active_touch_index == -1:", self.look_gd)
 
 
-class TestVisualPassIntegrationContract(unittest.TestCase):
+class TestVisualPassModularArchitectureContract(unittest.TestCase):
     def test_staged_assets_and_provenance_exist(self):
         staging_dir = ROOT / "game_godot/assets/staging/borrowed_visuals"
         self.assertTrue(staging_dir.exists(), "Staging directory exists")
@@ -51,28 +51,74 @@ class TestVisualPassIntegrationContract(unittest.TestCase):
         self.assertTrue((staging_dir / "originals").exists(), "Originals folder exists")
         self.assertTrue((staging_dir / "derived").exists(), "Derived folder exists")
 
-    def test_derived_game_ready_textures_exist(self):
+    def test_decal_and_tiled_assets_exist(self):
         fps_mats = ROOT / "game_godot/assets/fps/materials"
         fps_props = ROOT / "game_godot/assets/fps/props"
         fps_actors = ROOT / "game_godot/assets/fps/actors"
 
-        self.assertTrue((fps_props / "wetberry_carton_512.png").exists(), "Wetberry carton texture exists")
-        self.assertTrue((fps_actors / "keith_uniform_512.png").exists(), "Keith uniform texture exists")
-        self.assertTrue((fps_props / "breakroom_fridge_512.png").exists(), "Breakroom fridge texture exists")
-        self.assertTrue((fps_props / "coffee_maker_512.png").exists(), "Coffee maker texture exists")
-        self.assertTrue((fps_mats / "breakroom_floor_512.png").exists(), "Breakroom floor texture exists")
-        self.assertTrue((fps_mats / "breakroom_wall_512.png").exists(), "Breakroom wall texture exists")
-        self.assertTrue((fps_mats / "breakroom_table_512.png").exists(), "Breakroom table texture exists")
+        self.assertTrue((fps_props / "wetberry_front_decal.png").exists(), "Wetberry front decal exists")
+        self.assertTrue((fps_actors / "keith_name_badge.png").exists(), "Keith name badge decal exists")
+        self.assertTrue((fps_props / "fridge_property_decal.png").exists(), "Fridge property decal exists")
+        self.assertTrue((fps_props / "fridge_maintenance_decal.png").exists(), "Fridge maintenance decal exists")
+        self.assertTrue((fps_props / "hidden_anomaly_plate_256.png").exists(), "Hidden anomaly plate exists")
+        self.assertTrue((fps_mats / "breakroom_floor_tile.png").exists(), "Breakroom floor tile exists")
         self.assertTrue((fps_mats / "pda_arkheo_watermark.png").exists(), "PDA watermark texture exists")
-        self.assertTrue((fps_props / "hidden_anomaly_plate_256.png").exists(), "Hidden anomaly plate texture exists")
+        self.assertTrue((fps_mats / "quantum_glyph_icon.png").exists(), "Quantum glyph icon exists")
 
-    def test_breakroom_scene_uses_textured_materials(self):
+    def test_breakroom_modular_geometry_hierarchy(self):
         breakroom_tscn = (ROOT / "game_godot/scenes/fps/FirstPersonBreakroom.tscn").read_text(encoding="utf-8")
-        self.assertIn("wetberry_carton_512.png", breakroom_tscn)
-        self.assertIn("keith_uniform_512.png", breakroom_tscn)
-        self.assertIn("breakroom_fridge_512.png", breakroom_tscn)
-        self.assertIn("coffee_maker_512.png", breakroom_tscn)
+        
+        # Wetberry assembly
+        self.assertIn("CartonBody", breakroom_tscn)
+        self.assertIn("CartonGable", breakroom_tscn)
+        self.assertIn("TopSeam", breakroom_tscn)
+        self.assertIn("FrontLabelDecal", breakroom_tscn)
+
+        # Keith assembly
+        self.assertIn("Torso", breakroom_tscn)
+        self.assertIn("HeadHood", breakroom_tscn)
+        self.assertIn("FaceVisor", breakroom_tscn)
+        self.assertIn("BadgeDecal", breakroom_tscn)
+        self.assertIn("LeftUpperArm", breakroom_tscn)
+        self.assertIn("RightUpperArm", breakroom_tscn)
+        self.assertIn("LeftLeg", breakroom_tscn)
+        self.assertIn("RightLeg", breakroom_tscn)
+        self.assertIn("LeftBoot", breakroom_tscn)
+        self.assertIn("RightBoot", breakroom_tscn)
+        self.assertIn("MopHandle", breakroom_tscn)
+
+        # Fridge assembly
+        self.assertIn("CabinetBody", breakroom_tscn)
+        self.assertIn("FreezerDoor", breakroom_tscn)
+        self.assertIn("FridgeDoor", breakroom_tscn)
+        self.assertIn("FreezerHandle", breakroom_tscn)
+        self.assertIn("FridgeHandle", breakroom_tscn)
+        self.assertIn("PropertyDecal", breakroom_tscn)
+        self.assertIn("MaintenanceDecal", breakroom_tscn)
+
+        # Coffee maker assembly
+        self.assertIn("BasePlate", breakroom_tscn)
+        self.assertIn("WarmPlate", breakroom_tscn)
+        self.assertIn("BackTower", breakroom_tscn)
+        self.assertIn("BrewBasket", breakroom_tscn)
+        self.assertIn("CarafeGlass", breakroom_tscn)
+        self.assertIn("CarafeHandle", breakroom_tscn)
+        self.assertIn("ControlPanel", breakroom_tscn)
+        self.assertIn("StatusLED", breakroom_tscn)
+
+        # Central table assembly
+        self.assertIn("TableTop", breakroom_tscn)
+        self.assertIn("TableEdge", breakroom_tscn)
+        self.assertIn("Leg_FL", breakroom_tscn)
+        self.assertIn("Leg_FR", breakroom_tscn)
+        self.assertIn("Leg_BL", breakroom_tscn)
+        self.assertIn("Leg_BR", breakroom_tscn)
         self.assertIn("HiddenAnomalyPlate", breakroom_tscn)
+
+        # Ceiling fixtures and environmental details
+        self.assertIn("CeilingFixtures", breakroom_tscn)
+        self.assertIn("TrashCan", breakroom_tscn)
+        self.assertIn("Counter", breakroom_tscn)
 
     def test_pda_hud_has_watermark(self):
         hud_tscn = (ROOT / "game_godot/scenes/fps/FirstPersonHUD.tscn").read_text(encoding="utf-8")
