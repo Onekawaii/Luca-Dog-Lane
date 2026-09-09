@@ -852,6 +852,12 @@ func test_breakroom_interaction_pass() -> void:
 	assert_true(place_ok, "Held object placed back on surface")
 	assert_true(wetberry.visible, "Wetberry world prop visible after placement")
 	assert_true(breakroom.held_prop == null, "Held prop reference cleared")
+	var placed_props = GameRuntime.world_state.room_memory(GameRuntime.world_state.current_location).get("placed_props", {})
+	assert_true(placed_props.has("Wetberry"), "Placed Wetberry transform persisted to room memory")
+	var saved_wetberry_position: Vector3 = wetberry.global_position
+	wetberry.global_position += Vector3(1.0, 0.0, 0.0)
+	breakroom._restore_persistence()
+	assert_true(wetberry.global_position.is_equal_approx(saved_wetberry_position), "Placed Wetberry transform restores from room memory")
 
 	# 5. Keith Ambient Worker (Cleaning loop & Pause/Resume)
 	var keith = bootstrap.find_child("Keith", true, false)

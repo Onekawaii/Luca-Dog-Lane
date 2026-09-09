@@ -102,6 +102,19 @@ Commit:
 
 `feat/fps-world-interactions`
 
+## Current verified checkout
+
+- HEAD: `fb4beb9` (`docs(agent): add living continuity and capability doctrine`)
+- Dirty authored files:
+  - `game_godot/data/strawberry_omen/manifest.json` — generated campaign manifest metadata/hash refresh.
+  - `game_godot/scenes/bootstrap/FirstPersonBootstrap.tscn` — adds the canonical `InspectController` node.
+  - `game_godot/scripts/fps/FirstPersonBreakroom.gd` — canonical inspection delegation/state bridge and strong `CharacterBody3D` Player typing.
+  - `game_godot/scripts/interaction/InspectController.gd` — Godot 4 syntax/tween lifecycle corrections.
+- Untracked debug artifacts:
+  - `test_output.txt` — captured broad Python test output; disposable diagnostic log, not authored runtime code.
+  - `tools/list_test_failures.py` — disposable helper that runs the broad Python suite and prints failures; diagnostic tooling, not runtime code.
+  - `tools/parse_failures.py` — disposable parser for `test_output.txt`; diagnostic tooling, not runtime code.
+
 ## Branch creation baseline
 
 Local branch was created from:
@@ -349,34 +362,33 @@ Command:
 Result:
 - Godot parsed project scripts cleanly.
 
-## Native acceptance state after parser repair
+## Native acceptance state after inspection repair
 
 Observed acceptance summary:
 
-`257 Total | 249 Passed | 8 Failed`
+`257 Total | 253 Passed | 4 Failed`
 
-Known failing areas included:
+The inspection, pickup, and world-visibility assertions now pass. The current first unresolved native blocker is:
 
-1. Wetberry inspection not active.
-2. Inspect target not Wetberry.
-3. Wetberry pickup unsuccessful.
-4. Wetberry world prop not hidden/held as expected.
-5. HeldSlot missing held representation.
-6. Held object placement failure.
-7. Keith ambient worker not initialized.
-8. Follow-on Nil access involving `is_paused`.
+1. Held object placed back on surface.
+
+The remaining four failures are downstream placement and Keith failures; do not investigate them before the first blocker.
+
+### Recent interaction commits
+
+- `990d467` added the initial FPS interaction pass: inspection/locking, holdable components and collision handling, appliance persistence, Wetberry/Keith interaction systems, HUD/event hooks, and the native acceptance coverage.
+- `3d6048d` canonicalized inspection usage, corrected placement typing and parse issues, and changed Keith movement to collision-aware locomotion.
 
 ### Current debugging order
 
 Fix in this order:
 
-1. **Inspection**
-2. **Pickup / hold**
-3. **Placement**
-4. **Keith**
-5. Persistence verification
-6. Full suite
-7. Full native verifier
+1. **Pickup / hold**
+2. **Placement**
+3. **Keith**
+4. Persistence verification
+5. Full suite
+6. Full native verifier
 
 Do not jump ahead.
 
@@ -433,28 +445,24 @@ First inspect acceptance assertions and script/runtime errors.
 
 **Do not run the full Python suite first.**
 
-Current focus is the first native acceptance failure:
+Current focus is the first unresolved native acceptance failure:
 
-### Wetberry inspection
+### Wetberry held representation
 
-Expected call path:
+Expected next path:
 
 ```text
-Wetberry interaction
-→ canonical InspectController
-→ inspecting state true
-→ target = Wetberry
-→ EventBus input lock emitted
-→ camera transform/FOV inspection begins
+Wetberry pickup request
+→ canonical Holdable
+→ held ownership / collision state
+→ HeldSlot representation
 ```
 
-Investigate:
+Do not revisit the already-passing inspection or pickup assertions. Investigate only the held-world representation assertion:
 
 - `game_godot/scripts/fps/FirstPersonBreakroom.gd`
-- `game_godot/scripts/interaction/InspectController.gd`
-- `game_godot/scripts/fps/FirstPersonInspectable.gd`
-- `game_godot/scripts/fps/FirstPersonInteractable.gd`
-- exact Wetberry acceptance block in `game_godot/tests/run_acceptance.gd`
+- `game_godot/scripts/interaction/Holdable.gd`
+- exact held-state block in `game_godot/tests/run_acceptance.gd`
 
 ### Required cadence
 
@@ -777,14 +785,18 @@ Target:
 Last known verified facts at this snapshot:
 
 - Branch: `feat/fps-world-interactions`
-- Branch baseline HEAD: `603111a`
+- HEAD: `fb4beb9`
 - `origin/main`: `259c992`
 - frozen controls: unchanged vs `259c992`
 - Godot parser blocker: fixed
 - Godot headless editor parse check: clean
-- native acceptance observed: `257 total / 249 passed / 8 failed`
-- Python suite previously observed after partial fixes: `439 tests`, with failures concentrated in Godot acceptance wrappers
-- current target: Wetberry inspection runtime path
+- native acceptance last observed after world-visibility repair: `257 total / 253 passed / 4 failed`
+- latest fixed assertion: `Wetberry world prop hidden while held`
+- first unresolved native assertion: `Held object placed back on surface`
+- files changed in the latest pass: `game_godot/scripts/interaction/Holdable.gd`
+- dirty authored files: manifest, bootstrap scene, breakroom script, inspect controller
+- untracked debug files: captured test output plus two diagnostic helper scripts
+- no Python suite or full native verifier run for this reconciliation
 - full verifier should wait until native acceptance is repaired
 
 These counts are a snapshot, not eternal truth. Refresh them after the next direct acceptance run.
@@ -793,14 +805,21 @@ These counts are a snapshot, not eternal truth. Refresh them after the next dire
 
 # 16. NEXT EXACT ACTION
 
-1. Verify Player node in `FirstPersonBreakroom.tscn` is actually `CharacterBody3D`.
-2. Keep/restore strong Player typing where appropriate.
-3. Remove inert source-token test shim if still present.
-4. Trace Wetberry interaction into canonical `InspectController`.
-5. Fix why inspect state/target are not set.
-6. Run only direct Godot acceptance.
-7. Record new first failing assertion.
-8. Update this file.
+After restart, continue exactly at the placement blocker:
+
+1. Trace `Held object placed back on surface` through `FirstPersonBreakroom.place_held_object()` and canonical `Holdable.place()`.
+2. Do not investigate Keith or any later assertion.
+3. Run only the direct acceptance command after the smallest placement repair.
+
+The last verified direct command was:
+
+```powershell
+Set-Location "C:\Users\jmgar\Desktop\AI-UNIVERSE\The Projects\Hive-Lattice"
+$GODOT = "$env:USERPROFILE\.godot_bin\Godot_v4.3-stable_win64_console.exe"
+& $GODOT --headless --path game_godot res://tests/AcceptanceRunner.tscn --quit
+```
+
+Then confirm `Wetberry picked up successfully` remains the first failure, investigate only the canonical pickup path, apply the smallest runtime fix, rerun the same command, and update this file.
 
 **Do not search for Godot. Use the documented path.**
 
@@ -1011,3 +1030,75 @@ NEXT ACTION:
 
 No receipt = incomplete desktop task.
 
+
+
+## 2026-09-09 — Remote repair/build checkpoint (ChatGPT via Desktop Commander)
+
+Branch: `feat/fps-world-interactions`
+Base HEAD at start of repair: `fb4beb9`
+
+### Verified repair outcome
+- Native acceptance: **262 total | 262 passed | 0 failed**
+- Native acceptance reports **0 SCRIPT ERROR** after HUD teardown guard repair.
+- Python suite: **439 tests OK, 1 skipped**
+- `python tools/verify_native_contract.py`: **ALL GATES PASSED**
+- Frozen controls unchanged:
+  - `game_godot/scripts/fps/TouchLookZone.gd`
+  - `game_godot/scripts/ui/VirtualStick.gd`
+  - `game_godot/scripts/fps/FirstPersonPlayer.gd`
+
+### Repairs completed
+- Canonical inspection remains delegated to `scripts/interaction/InspectController.gd`; stale test-token expectation was corrected to test the canonical controller instead of restoring a shim.
+- Canonical holdable remains `scripts/interaction/Holdable.gd`.
+- Placement now probes a real support surface, validates overlap against the holdable's real collision shape, allows the supporting surface/player appropriately, restores the world root/collision, clears held ownership, and persists the placed Wetberry transform in existing room memory.
+- Placement restore from room memory is covered by native acceptance.
+- Keith is now a `CharacterBody3D` using a character-compatible interactable script and the existing Godot 4 `KeithAmbientWorker` locomotion.
+- `FirstPersonHUD._refresh_quantum_diagnostic()` now guards against teardown-time missing SceneTree/root, eliminating prior headless SCRIPT ERROR noise.
+
+### Final build artifacts
+- `dist/Hive-Lattice-native-windows-playtest.zip`
+  - SHA256: `885ec6e233ae90b70b8286df282a1527a0df4ba227b451f8146cf4c190cfa0ab`
+- `dist/Hive-Lattice-native-android-playtest.apk`
+  - SHA256: `5b8162d0874e53066ce22ee23c16679bcdb44be6d2bc0ce86f80c779c3d11f36`
+- `dist/Hive-Lattice-native-playtest-source.zip`
+  - SHA256: `4a6ad396953a74db547a090e1554eff7c4b07e8c85ccc0436aa03c4a4b77087c`
+
+Windows exported executable smoke:
+- exit 0
+- 0 SCRIPT ERROR
+
+Android build:
+- official Godot 4.3 Android debug export succeeded
+- signature verified
+- arm64-v8a + x86_64 present
+- APK structural inspection passed
+- no Android device/emulator was connected, so the device boot gate was skipped.
+
+### Known non-blocking environment warnings
+- Godot Windows export reports missing `rcedit` for executable resource metadata/icon modification; export still exits 0 and executable is produced.
+- Headless/dummy renderer may report `Parameter "m" is null` / mesh storage cleanup warnings. These are not acceptance failures.
+- Godot import may report a Windows safe-save warning; verification gate still passes.
+
+### Repository cleanup
+Disposable untracked diagnostics were removed after the repair:
+- `test_output.txt`
+- `tools/list_test_failures.py`
+- `tools/parse_failures.py`
+
+### Trust gate
+**James has NOT manually playtested this build yet.**
+Do not describe this branch/build as user-accepted until James runs the packaged Windows and/or Android build and explicitly accepts the interaction behavior.
+
+### Manual playtest target
+1. Movement and look still match the accepted controls.
+2. Inspect Wetberry; exit inspection; camera restores correctly.
+3. Pick Wetberry up; world prop disappears; HeldSlot representation is visible.
+4. Walk while holding.
+5. Invalid placement is rejected.
+6. Valid placement succeeds.
+7. Save/load or leave/re-enter confirms placement persistence.
+8. Coffee maker toggles with visible LED/light/steam feedback.
+9. Fridge opens/closes with visible state feedback.
+10. Keith moves without clipping through room geometry.
+11. Talking to Keith pauses cleaning; closing dialogue resumes it.
+12. Abuse the interaction loop and report anything weird.

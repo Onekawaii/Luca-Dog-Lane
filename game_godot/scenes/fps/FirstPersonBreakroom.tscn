@@ -1,10 +1,11 @@
-[gd_scene load_steps=58 format=3]
+[gd_scene load_steps=59 format=3]
 
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonBreakroom.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/interaction/Inspectable.gd" id="9_inspectable"]
 [ext_resource type="Script" path="res://scripts/interaction/Holdable.gd" id="11_holdable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonInteractable.gd" id="3_interactable"]
+[ext_resource type="Script" path="res://scripts/fps/FirstPersonCharacterInteractable.gd" id="12_keith_interactable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonQuantumNPC.gd" id="4_quantum_kevin"]
 [ext_resource type="Texture2D" path="res://assets/fps/materials/breakroom_floor_tile.png" id="5_floor_tile"]
 [ext_resource type="Texture2D" path="res://assets/fps/props/wetberry_front_decal.png" id="6_wetberry_decal"]
@@ -617,9 +618,9 @@ material_override = SubResource("Mat_wetberry_decal")
 [node name="Holdable" type="Node3D" parent="World/Wetberry"]
 	script = ExtResource("11_holdable")
 
-[node name="Keith" type="StaticBody3D" parent="World"]
+[node name="Keith" type="CharacterBody3D" parent="World"]
 position = Vector3(-5.35, 0.95, -3.55)
-script = ExtResource("3_interactable")
+script = ExtResource("12_keith_interactable")
 interaction_id = "keith"
 target_id = "npc.keith_janitor"
 prompt = "[E / A] Talk to Keith"

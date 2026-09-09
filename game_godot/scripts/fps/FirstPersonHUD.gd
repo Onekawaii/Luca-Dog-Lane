@@ -211,7 +211,10 @@ func _refresh_pda() -> void:
 func _refresh_quantum_diagnostic() -> void:
 	if not is_instance_valid(quantum_diagnostic_label):
 		return
-	var kevin := get_tree().root.find_child("FirstPersonKevin", true, false)
+	var tree := get_tree()
+	if tree == null or tree.root == null:
+		return
+	var kevin := tree.root.find_child("FirstPersonKevin", true, false)
 	if kevin == null or kevin.get("quantum_component") == null:
 		quantum_diagnostic_label.text = "QUANTUM COHERENCE\nSubject: Kevin — status unavailable"
 		return

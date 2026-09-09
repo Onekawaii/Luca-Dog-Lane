@@ -131,16 +131,18 @@ class TestBreakroomInteractionPassContract(unittest.TestCase):
         self.breakroom_gd = (ROOT / "game_godot/scripts/fps/FirstPersonBreakroom.gd").read_text(encoding="utf-8")
         self.breakroom_tscn = (ROOT / "game_godot/scenes/fps/FirstPersonBreakroom.tscn").read_text(encoding="utf-8")
         self.inspect_gd = (ROOT / "game_godot/scripts/fps/FirstPersonInspectable.gd").read_text(encoding="utf-8")
-        self.hold_gd = (ROOT / "game_godot/scripts/fps/FirstPersonHoldable.gd").read_text(encoding="utf-8")
+        self.inspect_controller_gd = (ROOT / "game_godot/scripts/interaction/InspectController.gd").read_text(encoding="utf-8")
+        self.hold_gd = (ROOT / "game_godot/scripts/interaction/Holdable.gd").read_text(encoding="utf-8")
         self.keith_gd = (ROOT / "game_godot/scripts/fps/KeithAmbientWorker.gd").read_text(encoding="utf-8")
 
     def test_inspect_system_contract(self):
-        """Verify inspect zoom and framing logic is present."""
+        """Verify room delegation and canonical inspection signalling."""
         self.assertIn("_start_inspect", self.breakroom_gd)
         self.assertIn("exit_inspect", self.breakroom_gd)
-        self.assertIn("compute_inspect_transform", self.inspect_gd)
-        self.assertIn("first_person_inspect_started", self.breakroom_gd)
-        self.assertIn("first_person_inspect_ended", self.breakroom_gd)
+        self.assertIn("request_inspect", self.inspect_controller_gd)
+        self.assertIn("first_person_inspect_started", self.inspect_controller_gd)
+        self.assertIn("first_person_inspect_ended", self.inspect_controller_gd)
+        self.assertIn("first_person_input_lock_changed", self.inspect_controller_gd)
 
     def test_hold_and_place_system_contract(self):
         """Verify Wetberry holdable and surface placement contracts."""

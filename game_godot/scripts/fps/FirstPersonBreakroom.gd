@@ -62,9 +62,11 @@ func _ready() -> void:
 
 func _setup_interaction_systems() -> void:
 	# 1. Holdable Wetberry
+	wetberry_prop = get_node_or_null("World/Wetberry")
 	if wetberry_prop:
 		# prefer editor-placed Holdable component under the prop
-		wetberry_holdable = wetberry_prop.get_node_or_null("Holdable") as Holdable
+		var holdable_node = wetberry_prop.get_node_or_null("Holdable")
+		wetberry_holdable = holdable_node as Holdable
 
 	# 2. Keith Ambient Worker
 	if keith_actor:
@@ -130,17 +132,17 @@ func _unhandled_input(event: InputEvent) -> void:
 	if is_inspecting:
 		if event is InputEventKey and event.pressed and (event.keycode == KEY_ESCAPE or event.keycode == KEY_E):
 			# delegate to canonical controller
-			var ctrl = get_tree().get_root().get("InspectController")
+			var ctrl = get_tree().get_root().find_child("InspectController", true, false)
 			if ctrl:
 				ctrl.exit_inspect()
 			get_viewport().set_input_as_handled()
 		elif event is InputEventScreenTouch and event.pressed:
-			var ctrl2 = get_tree().get_root().get("InspectController")
+			var ctrl2 = get_tree().get_root().find_child("InspectController", true, false)
 			if ctrl2:
 				ctrl2.exit_inspect()
 			get_viewport().set_input_as_handled()
 		elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			var ctrl3 = get_tree().get_root().get("InspectController")
+			var ctrl3 = get_tree().get_root().find_child("InspectController", true, false)
 			if ctrl3:
 				ctrl3.exit_inspect()
 			get_viewport().set_input_as_handled()
@@ -203,33 +205,24 @@ func _start_inspect(target: Node3D, target_name: String, distance: float = 1.4, 
 	# Delegate to InspectController singleton to perform canonical inspection
 	if not is_instance_valid(target) or not is_instance_valid(quantum_player):
 		return
-	var ctrl = get_tree().get_root().get("InspectController")
+	var ctrl = get_tree().get_root().find_child("InspectController", true, false)
 	if ctrl and ctrl.has_method("request_inspect"):
 		ctrl.request_inspect(target, quantum_player)
+		is_inspecting = true
+		inspecting_target = target
 		return
-	# Fallback: do nothing if controller missing
-	return
+
 
 
 
 func exit_inspect() -> void:
-	if not is_inspecting or not is_instance_valid(quantum_player):
+	if not is_inspecting:
 		return
-
 	is_inspecting = false
-	var cam := quantum_player.get("camera") as Camera3D
-	if not cam:
-		return
-
-	if inspect_tween and inspect_tween.is_valid():
-		inspect_tween.kill()
-	inspect_tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-	inspect_tween.tween_property(cam, "global_transform", inspect_camera_start_transform, 0.28)
-	inspect_tween.finished.connect(func():
-		EventBus.first_person_input_lock_changed.emit(false)
-		EventBus.first_person_inspect_ended.emit()
-		inspecting_target = null
-	)
+	inspecting_target = null
+	var ctrl = get_tree().get_root().find_child("InspectController", true, false)
+	if ctrl and ctrl.has_method("exit_inspect"):
+		ctrl.exit_inspect()
 
 
 # ============================================================
@@ -240,7 +233,7 @@ func pick_up_wetberry() -> bool:
 		return false
 	if not wetberry_holdable.can_pick_up():
 		return false
-	var ok: bool = wetberry_holdable.pick_up()
+	var ok: bool = wetberry_holdable.pick_up(quantum_player)
 	if ok:
 		held_prop = wetberry_holdable
 		_create_held_view_mesh()
@@ -266,44 +259,52 @@ func place_held_object() -> bool:
 	var hit: Dictionary = _space_state.intersect_ray(query)
 
 	var place_pos := Vector3.ZERO
+	var half_height: float = held_prop.get_half_height() if held_prop is Holdable else 0.25
 	if not hit.is_empty():
-		place_pos = hit.position + Vector3(0.0, 0.22, 0.0)
+		place_pos = hit.position + Vector3(0.0, half_height + 0.02, 0.0)
 	else:
-		# Fallback legal floor placement right in front of player
-		place_pos = quantum_player.global_position + -quantum_player.global_transform.basis.z * 1.2
-		place_pos.y = 0.35 # Ground level
+		# Fallback: probe straight down at a point in front of the player.
+		var probe_xz := quantum_player.global_position + -quantum_player.global_transform.basis.z * 1.2
+		var down_query := PhysicsRayQueryParameters3D.create(
+			probe_xz + Vector3(0.0, 2.0, 0.0),
+			probe_xz + Vector3(0.0, -2.0, 0.0)
+		)
+		down_query.collision_mask = 1
+		var down_hit: Dictionary = _space_state.intersect_ray(down_query)
+		if not down_hit.is_empty():
+			hit = down_hit
+			place_pos = down_hit.position + Vector3(0.0, half_height + 0.02, 0.0)
+		else:
+			place_pos = probe_xz
+			place_pos.y = half_height + 0.12
 
 	# Check room bounds
 	place_pos.x = clampf(place_pos.x, -7.0, 7.0)
 	place_pos.z = clampf(place_pos.z, -5.0, 5.0)
 
 	var t := Transform3D(Basis.IDENTITY, place_pos)
-	# Validate placement for collision overlap
 	var ok: bool = false
 	if held_prop and held_prop is Holdable:
-		# perform an overlap check using the held prop's collision shapes bounds
-		var prop_node: Node3D = held_prop as Node3D
-		var shape_ok: bool = true
-		# create a test shape from the held_prop's AABB
-		var aabb: AABB = prop_node.get_transformed_aabb()
-		var test_center: Vector3 = t.origin
-		var space_state = get_world_3d().direct_space_state
-		var params: PhysicsShapeQueryParameters3D = PhysicsShapeQueryParameters3D.new()
-		# approximate with box shape
-		var box: BoxShape3D = BoxShape3D.new()
-		box.extents = aabb.size * 0.5
-		var xform: Transform3D = Transform3D(Basis.IDENTITY, test_center)
-		params.shape_rid = box.get_rid()
-		params.transform = xform
-		params.collision_mask = 1
-		var res = space_state.intersect_shape(params, 1)
-		if res.size() > 0:
-			shape_ok = false
-		if shape_ok:
+		var ignored_colliders: Array = [quantum_player]
+		var support = hit.get("collider") if not hit.is_empty() else null
+		if support != null:
+			ignored_colliders.append(support)
+		if held_prop.can_place_at(t, _space_state, ignored_colliders):
 			ok = held_prop.place(t)
-	else:
-		ok = false
 	if ok:
+		var placed_root := held_prop.get_parent() as Node3D
+		var state := GameRuntime.world_state
+		if placed_root != null and state != null:
+			var mem := state.room_memory(state.current_location)
+			var placed_props: Dictionary = mem.get("placed_props", {})
+			placed_props[str(placed_root.name)] = {
+				"path": str(get_path_to(placed_root)),
+				"x": placed_root.global_position.x,
+				"y": placed_root.global_position.y,
+				"z": placed_root.global_position.z,
+			}
+			mem["placed_props"] = placed_props
+			EventBus.world_state_changed.emit({})
 		_destroy_held_view_mesh()
 		held_prop = null
 		EventBus.notification_posted.emit("Placed Wetberry.")
