@@ -1,0 +1,186 @@
+{
+  "schema": "hive_visual_stage_v1",
+  "purpose": "Staged candidate visual assets for post-control-baseline Hive-Lattice art pass. No runtime wiring.",
+  "source_bundles": {
+    "arkheo_sample_art_bundle.zip": {
+      "sha256": "e4e2e98c86c46f2bed81d01c1de1a7852136e4e4c46bbb51cf37bca593273ae5"
+    },
+    "blood_scene_pixel_artifacts.zip": {
+      "sha256": "1ccc6c0b2c5304341c05d57dbb617be10348975954832337b9fae33f1f13a916"
+    },
+    "Frog_of_Endless_Eons_FullBundle.zip": {
+      "sha256": "5e43f4c686b9f5234db2403c4d213fbb780e12cbe0639d468daa782a5299183a"
+    }
+  },
+  "files": [
+    {
+      "path": "originals/Frog_of_Endless_Eons_Sigil.png",
+      "sha256": "87f87923653fc516964a3c5b5709742e8f5c0ebbd002ab4f03f4f6806a53cd42",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGB"
+    },
+    {
+      "path": "originals/berktoung__json__ARKHEOPANTHEOCHIVE_MASTER_json_berk_txt.berktoung.png",
+      "sha256": "68a5647da54b8b0566248195cd6b5a40ee733613ee88e875263b66ba1abfdc9b",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "originals/berktoung__json__ARKHEOPANTHEOCHIVE_MASTER_json_berk_txt.dockerglyph.png",
+      "sha256": "34d6b982cc2bd701888ebca391d60c179362a95d80b375c0a93ce08698401e38",
+      "size": [
+        1024,
+        1024
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "originals/blood_top_left.png",
+      "sha256": "e79fd82aad598e0c6a48496734f067de002884f4d2942936820e0c49fc528321",
+      "size": [
+        512,
+        768
+      ],
+      "mode": "RGB"
+    },
+    {
+      "path": "originals/blood_top_right.png",
+      "sha256": "fd464d5be3961159127793e72e8207a1127cca79cbfbe0b87932fb4c05e1c572",
+      "size": [
+        512,
+        768
+      ],
+      "mode": "RGB"
+    },
+    {
+      "path": "originals/grains_arkheo_final.png",
+      "sha256": "0d0c48985d89fc0880d24be5d380e6d3e2d06bb63323e36e8d41b8c32d183709",
+      "size": [
+        320,
+        64
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "originals/mash_core.png",
+      "sha256": "caafb3419309938b2f4f6458fac80185cd7e09085f7093b43639b1269abf8274",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "originals/single_ape.png",
+      "sha256": "1a287998e69119287eacfd4e9650cc0f373a392edcec5207efd0e74ded580e58",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "originals/test_flock.png",
+      "sha256": "dbe77198d3d92d475c4a464517431dec5aaf143934e15ccc26071682fbe37f15",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/Frog_of_Endless_Eons_Sigil_512.png",
+      "sha256": "5b35d46d360da5b8d4529010e48a72c13a8d7b7ea9f7607bb3e9162980724a5b",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/berktoung__json__ARKHEOPANTHEOCHIVE_MASTER_json_berk_txt.berktoung_512.png",
+      "sha256": "db0f9eb8c32ba9b999ea47d9653be2e34364946addcf9864cfbd599d46f49515",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/berktoung__json__ARKHEOPANTHEOCHIVE_MASTER_json_berk_txt.dockerglyph_512.png",
+      "sha256": "a22bc448f856b7016ab7322f2730eb74b6968b188a5cc3b8b1a1ecbcd4e16dbf",
+      "size": [
+        512,
+        512
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/blood_top_left_512.png",
+      "sha256": "334a57a5b0487712bd35b5c2e147472a2fa8ae81e52686816500c80be3f50359",
+      "size": [
+        341,
+        512
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/blood_top_right_512.png",
+      "sha256": "391cf9054a2ee7f255ee3bb8dc131386ee3780a5880095c4907656db8c4cdd6e",
+      "size": [
+        341,
+        512
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/grains_arkheo_final_512.png",
+      "sha256": "ba948bcda6c5a2c34b90efe6c8a737590c0a59ee717aedadf5e8911230b37250",
+      "size": [
+        320,
+        64
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/mash_core_512.png",
+      "sha256": "6ceaf77dec039c45172123314114aa712aa4af9477901963a3572f884e9438f1",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/single_ape_512.png",
+      "sha256": "f6dbcb25de01be2643a794dbd912b753596aa93da0f7759601418dacc4e35296",
+      "size": [
+        64,
+        64
+      ],
+      "mode": "RGBA"
+    },
+    {
+      "path": "derived/test_flock_512.png",
+      "sha256": "c64461e800a6066e260240b6666b4d8e47dc5ca7bfd6db84ea0b5b46817af716",
+      "size": [
+        256,
+        256
+      ],
+      "mode": "RGBA"
+    }
+  ],
+  "rules": [
+    "Do not modify movement/input while evaluating these assets.",
+    "Derived files are optimization candidates; originals remain preserved.",
+    "Blood-scene assets are decal/event material only, not global wall/floor materials.",
+    "Frog sigil is a rare anomaly mark, not repeated UI chrome.",
+    "Arkheo glyphs are preferred for PDA/quantum surfaces."
+  ]
+}

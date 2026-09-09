@@ -4,6 +4,14 @@
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonInteractable.gd" id="3_interactable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonQuantumNPC.gd" id="4_quantum_kevin"]
+[ext_resource type="Texture2D" path="res://assets/fps/materials/breakroom_floor_512.png" id="5_floor_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/materials/breakroom_wall_512.png" id="6_wall_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/materials/breakroom_table_512.png" id="7_table_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/props/wetberry_carton_512.png" id="8_wetberry_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/actors/keith_uniform_512.png" id="9_keith_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/props/breakroom_fridge_512.png" id="10_fridge_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/props/coffee_maker_512.png" id="11_coffee_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/props/hidden_anomaly_plate_256.png" id="12_hidden_anomaly_tex"]
 
 [sub_resource type="Environment" id="Environment_breakroom"]
 background_mode = 1
@@ -13,31 +21,45 @@ ambient_light_color = Color(0.5, 0.58, 0.5, 1)
 ambient_light_energy = 0.7
 
 [sub_resource type="StandardMaterial3D" id="Mat_floor"]
-albedo_color = Color(0.13, 0.15, 0.14, 1)
-roughness = 0.86
+albedo_texture = ExtResource("5_floor_tex")
+roughness = 0.82
+uv1_scale = Vector3(4, 3, 1)
 
 [sub_resource type="StandardMaterial3D" id="Mat_wall"]
-albedo_color = Color(0.48, 0.5, 0.43, 1)
-roughness = 0.92
+albedo_texture = ExtResource("6_wall_tex")
+roughness = 0.9
+uv1_scale = Vector3(4, 1, 1)
 
 [sub_resource type="StandardMaterial3D" id="Mat_table"]
-albedo_color = Color(0.25, 0.17, 0.11, 1)
-roughness = 0.72
+albedo_texture = ExtResource("7_table_tex")
+roughness = 0.65
 
 [sub_resource type="StandardMaterial3D" id="Mat_wetberry"]
-albedo_color = Color(0.92, 0.92, 0.87, 1)
+albedo_texture = ExtResource("8_wetberry_tex")
 emission_enabled = true
-emission = Color(0.52, 0.05, 0.08, 1)
-emission_energy_multiplier = 0.45
+emission = Color(0.75, 0.12, 0.16, 1)
+emission_energy_multiplier = 0.35
 
 [sub_resource type="StandardMaterial3D" id="Mat_keith"]
-albedo_color = Color(0.25, 0.34, 0.27, 1)
-roughness = 0.8
+albedo_texture = ExtResource("9_keith_tex")
+roughness = 0.78
 
-[sub_resource type="StandardMaterial3D" id="Mat_appliance"]
-albedo_color = Color(0.18, 0.21, 0.2, 1)
-metallic = 0.35
-roughness = 0.52
+[sub_resource type="StandardMaterial3D" id="Mat_fridge"]
+albedo_texture = ExtResource("10_fridge_tex")
+metallic = 0.2
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_coffee"]
+albedo_texture = ExtResource("11_coffee_tex")
+metallic = 0.4
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_hidden_anomaly"]
+albedo_texture = ExtResource("12_hidden_anomaly_tex")
+roughness = 0.5
+
+[sub_resource type="QuadMesh" id="Mesh_hidden_anomaly"]
+size = Vector2(0.6, 0.6)
 
 [sub_resource type="BoxMesh" id="Mesh_floor"]
 size = Vector3(16, 0.2, 12)
@@ -172,6 +194,12 @@ position = Vector3(0, 0.52, -0.6)
 mesh = SubResource("Mesh_table")
 material_override = SubResource("Mat_table")
 
+[node name="HiddenAnomalyPlate" type="MeshInstance3D" parent="World/CentralTable"]
+position = Vector3(0, -0.4, 0)
+rotation_degrees = Vector3(90, 0, 0)
+mesh = SubResource("Mesh_hidden_anomaly")
+material_override = SubResource("Mat_hidden_anomaly")
+
 [node name="Collision" type="CollisionShape3D" parent="World/CentralTable"]
 shape = SubResource("Shape_table")
 
@@ -218,7 +246,7 @@ description = "The fridge hums like it is keeping a secret."
 
 [node name="Mesh" type="MeshInstance3D" parent="World/Fridge"]
 mesh = SubResource("Mesh_appliance")
-material_override = SubResource("Mat_appliance")
+material_override = SubResource("Mat_fridge")
 
 [node name="Collision" type="CollisionShape3D" parent="World/Fridge"]
 shape = SubResource("Shape_appliance")
@@ -235,7 +263,7 @@ description = "The coffee maker clicks on by itself."
 
 [node name="Mesh" type="MeshInstance3D" parent="World/CoffeeMaker"]
 mesh = SubResource("Mesh_appliance")
-material_override = SubResource("Mat_appliance")
+material_override = SubResource("Mat_coffee")
 
 [node name="Collision" type="CollisionShape3D" parent="World/CoffeeMaker"]
 shape = SubResource("Shape_appliance")

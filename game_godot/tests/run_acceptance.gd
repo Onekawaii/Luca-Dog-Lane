@@ -266,7 +266,16 @@ func test_scene_and_assets() -> void:
 		"res://scripts/quantum/QuantumWitnessSystem.gd",
 		"res://scripts/quantum/QuantumStateAnchor.gd",
 		"res://scripts/quantum/QuantumEntanglement.gd",
-		"res://scripts/fps/FirstPersonQuantumNPC.gd"
+		"res://scripts/fps/FirstPersonQuantumNPC.gd",
+		"res://assets/fps/materials/breakroom_floor_512.png",
+		"res://assets/fps/materials/breakroom_wall_512.png",
+		"res://assets/fps/materials/breakroom_table_512.png",
+		"res://assets/fps/props/wetberry_carton_512.png",
+		"res://assets/fps/actors/keith_uniform_512.png",
+		"res://assets/fps/props/breakroom_fridge_512.png",
+		"res://assets/fps/props/coffee_maker_512.png",
+		"res://assets/fps/props/hidden_anomaly_plate_256.png",
+		"res://assets/fps/materials/pda_arkheo_watermark.png"
 	]
 
 	for path in required_files:
