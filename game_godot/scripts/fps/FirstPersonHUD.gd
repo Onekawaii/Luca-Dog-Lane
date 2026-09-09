@@ -49,6 +49,7 @@ func _ready() -> void:
 
 	EventBus.first_person_inspect_started.connect(_on_inspect_started)
 	EventBus.first_person_inspect_ended.connect(_on_inspect_ended)
+	EventBus.first_person_input_lock_changed.connect(_on_first_person_input_lock_changed)
 
 	continue_button.pressed.connect(_advance_dialogue)
 	pda_button.pressed.connect(_toggle_pda)
@@ -176,6 +177,17 @@ func _toggle_pda() -> void:
 		_update_prompt_visibility()
 		EventBus.first_person_input_lock_changed.emit(pda_panel.visible)
 		_refresh_pda()
+
+
+func _on_first_person_input_lock_changed(locked: bool) -> void:
+	if not locked or not is_instance_valid(mobile_controls):
+		return
+	var look_zone := mobile_controls.find_child("TouchLookZone", true, false)
+	if is_instance_valid(look_zone) and look_zone.has_method("reset_touch"):
+		look_zone.reset_touch()
+	var stick := mobile_controls.find_child("MobileStick", true, false)
+	if is_instance_valid(stick) and stick.has_method("_reset_stick"):
+		stick._reset_stick()
 
 
 func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:

@@ -607,7 +607,17 @@ func test_touch_look_zone_robustness() -> void:
 	touch_look._input(t_up)
 	assert_equal(touch_look.active_touch_index, -1, "Release outside look region cleanly frees active_touch_index")
 
-	# 3. Modal opens while look finger is active -> index cleared & drag suppressed
+	# 3. Any gameplay input lock clears stale touch ownership (inspection included)
+	t_down.index = 7
+	t_down.pressed = true
+	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
+	touch_look._input(t_down)
+	assert_equal(touch_look.active_touch_index, 7, "TouchLookZone captures touch before generic input lock")
+	EventBus.first_person_input_lock_changed.emit(true)
+	assert_equal(touch_look.active_touch_index, -1, "Generic input lock resets active touch ownership")
+	EventBus.first_person_input_lock_changed.emit(false)
+
+	# 4. Modal opens while look finger is active -> index cleared & drag suppressed
 	t_down.index = 3
 	t_down.pressed = true
 	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
