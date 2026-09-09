@@ -634,18 +634,49 @@ func test_touch_look_zone_robustness() -> void:
 	touch_look._input(t_up)
 	assert_equal(touch_look.active_touch_index, -1, "Look zone released finger index 1")
 
-	# 6. Stale finger cannot block subsequent touch
-	touch_look.active_touch_index = 8 # Simulating a dropped OS release
-	t_down.index = 9
+	# 6. Second finger cannot steal ownership from active look finger
+	t_down.index = 8
 	t_down.pressed = true
 	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
 	touch_look._input(t_down)
-	assert_equal(touch_look.active_touch_index, 9, "Stale finger 8 overridden by fresh touch 9")
+	assert_equal(touch_look.active_touch_index, 8, "Look finger 8 claims initial ownership")
 
-	t_up.index = 9
+	# Second finger touches down inside look zone
+	var t_down_2 = InputEventScreenTouch.new()
+	t_down_2.index = 9
+	t_down_2.pressed = true
+	t_down_2.position = touch_look.global_position + Vector2(60.0, 60.0)
+	touch_look._input(t_down_2)
+	assert_equal(touch_look.active_touch_index, 8, "Second finger 9 cannot steal ownership from active finger 8")
+
+	# Active finger 8 continues producing look deltas
+	var deltas_count_before = look_deltas.size()
+	drag.index = 8
+	drag.relative = Vector2(10.0, 5.0)
+	touch_look._input(drag)
+	assert_equal(look_deltas.size(), deltas_count_before + 1, "Active finger 8 continues producing look deltas after second touch")
+	assert_equal(look_deltas.back(), Vector2(10.0, 5.0), "Look delta from active finger 8 is accurate")
+
+	# Second finger drag is ignored
+	drag.index = 9
+	drag.relative = Vector2(50.0, 50.0)
+	touch_look._input(drag)
+	assert_equal(look_deltas.size(), deltas_count_before + 1, "Second finger 9 drag is ignored")
+
+	# Second finger release is ignored and does not clear active finger 8
+	var t_up_2 = InputEventScreenTouch.new()
+	t_up_2.index = 9
+	t_up_2.pressed = false
+	t_up_2.position = touch_look.global_position + Vector2(60.0, 60.0)
+	touch_look._input(t_up_2)
+	assert_equal(touch_look.active_touch_index, 8, "Second finger release does not clear active finger 8")
+
+	# Active finger release clears ownership
+	t_up.index = 8
 	t_up.pressed = false
+	t_up.position = touch_look.global_position + Vector2(50.0, 50.0)
 	touch_look._input(t_up)
-	assert_equal(touch_look.active_touch_index, -1, "Touch 9 released")
+	assert_equal(touch_look.active_touch_index, -1, "Active finger 8 release cleanly clears ownership")
 
 	# 7. Excluded buttons (InteractButton) do not trigger look
 	var interact_btn = hud.find_child("InteractButton", true, false)

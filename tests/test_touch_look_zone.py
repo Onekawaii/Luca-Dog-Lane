@@ -36,6 +36,10 @@ class TestTouchLookZoneContract(unittest.TestCase):
         """Verify FirstPersonHUD._set_mobile_gameplay_controls_enabled resets TouchLookZone."""
         self.assertIn("look_zone.reset_touch()", self.hud_gd)
 
+    def test_exclusive_touch_ownership_check(self):
+        """Verify TouchLookZone checks active_touch_index == -1 on press before claiming a finger."""
+        self.assertIn("if active_touch_index == -1:", self.look_gd)
+
 
 if __name__ == "__main__":
     unittest.main()

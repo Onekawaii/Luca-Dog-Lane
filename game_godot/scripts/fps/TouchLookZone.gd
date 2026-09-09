@@ -51,11 +51,12 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed:
-			var local_pos := get_global_transform_with_canvas().affine_inverse() * touch.position
-			var rect := Rect2(Vector2.ZERO, size)
-			if rect.has_point(local_pos) and not _is_excluded_position(touch.position):
-				active_touch_index = touch.index
-				get_viewport().set_input_as_handled()
+			if active_touch_index == -1:
+				var local_pos := get_global_transform_with_canvas().affine_inverse() * touch.position
+				var rect := Rect2(Vector2.ZERO, size)
+				if rect.has_point(local_pos) and not _is_excluded_position(touch.position):
+					active_touch_index = touch.index
+					get_viewport().set_input_as_handled()
 		else:
 			if touch.index == active_touch_index:
 				reset_touch()
