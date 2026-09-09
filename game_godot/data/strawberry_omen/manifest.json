@@ -2,7 +2,7 @@
   "schema": "godot_campaign_manifest_v1",
   "campaign_id": "strawberry_omen",
   "campaign_title": "The Strawberry Omen",
-  "exported_at": "2026-09-08T15:06:16.950717+00:00",
+  "exported_at": "2026-09-09T03:24:24.228769+00:00",
   "combined_sha256": "36815a9ca367fb8889df5e5beebb732bc489a03dc390a5937c840445cd36e922",
   "entry_location": "location.breakroom",
   "entry_scene": "scene.act1.first_sighting",

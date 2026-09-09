@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonBreakroom.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
+[ext_resource type="Script" path="res://scripts/interaction/Inspectable.gd" id="9_inspectable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonInteractable.gd" id="3_interactable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonQuantumNPC.gd" id="4_quantum_kevin"]
 [ext_resource type="Texture2D" path="res://assets/fps/materials/breakroom_floor_tile.png" id="5_floor_tile"]

@@ -1,0 +1,923 @@
+--------- beginning of system
+09-08 11:15:29.640 W/PackageManager( 1932): Skipping provider name org.godotengine.hivelattice.fileprovider (in package org.godotengine.hivelattice): name already used by org.godotengine.hivelattice
+09-08 11:15:29.641 I/PackageManager( 1932): Un-granting permission android.permission.GLOBAL_SEARCH from package com.android.quicksearchbox (protectionLevel=18 flags=0x3088be45)
+09-08 11:15:29.642 I/PackageManager( 1932): Un-granting permission android.permission.BIND_WALLPAPER from package com.android.camera2 (protectionLevel=18 flags=0x20d8bc45)
+09-08 11:15:29.647 I/PackageManager( 1932): Un-granting permission android.permission.CONNECTIVITY_USE_RESTRICTED_NETWORKS from package com.android.captiveportallogin (protectionLevel=18 flags=0x38c8be45)
+09-08 11:15:29.647 I/PackageManager( 1932): Un-granting permission android.permission.NETWORK_BYPASS_PRIVATE_DNS from package com.android.captiveportallogin (protectionLevel=2 flags=0x38c8be45)
+--------- beginning of main
+09-08 11:15:29.721 W/SurfaceFlinger( 1754): Faking VSYNC due to driver stall
+09-08 11:15:29.722 I/Choreographer( 2098): Skipped 2417 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:29.737 W/View    ( 2098): requestLayout() improperly called by com.android.keyguard.AlphaOptimizedLinearLayout{41f4281 V.E...... ......ID 3,0-18,22 #7f0a03ef app:id/wifi_group} during layout: running second layout pass
+09-08 11:15:29.738 W/View    ( 2098): requestLayout() improperly called by com.android.keyguard.AlphaOptimizedLinearLayout{858cf26 V.E...... ......ID 3,0-18,22 #7f0a03ef app:id/wifi_group} during layout: running second layout pass
+09-08 11:15:29.738 W/View    ( 2098): requestLayout() improperly called by com.android.keyguard.AlphaOptimizedLinearLayout{a51f767 V.E...... ......ID 3,0-18,22 #7f0a03ef app:id/wifi_group} during layout: running second layout pass
+09-08 11:15:29.833 I/ActivityManager( 1932): dumpStackTraces pids=null nativepids=[1712, 1728, 1714, 1826, 1732, 1820, 1709, 1726, 1727, 1564, 1749, 1754, 1794, 1795, 1804, 1806, 1811, 1813, 1815, 1820, 1826]
+09-08 11:15:29.836 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.836 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.837 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.837 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.839 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.839 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.840 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.840 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.840 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.840 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.841 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.841 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.841 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.842 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.845 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.845 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.847 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:29.847 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:29.857 I/ActivityManager( 1932): Dumping to /data/anr/anr_2026-09-08-15-15-29-854
+09-08 11:15:29.857 I/ActivityManager( 1932): Collecting stacks for pid 1932
+09-08 11:15:29.858 I/system_server( 1932): libdebuggerd_client: started dumping process 1932
+09-08 11:15:29.861 I//system/bin/tombstoned( 1831): registered intercept for pid 1932 and type kDebuggerdJavaBacktrace
+09-08 11:15:29.862 I/system_server( 1932): Thread[2,tid=1942,WaitingInMainSignalCatcherLoop,Thread*=0x7693ed000000,peer=0x12dc0000,"Signal Catcher"]: reacting to signal 3
+09-08 11:15:29.862 I/system_server( 1932): 
+09-08 11:15:29.866 I/system_server( 1932): Waiting for a blocking GC ObjectsAllocated
+09-08 11:15:29.929 W/InputReader( 1932): Device has associated, but no associated display id.
+09-08 11:15:29.931 I/chatty  ( 1932): uid=1000(system) android.display identical 8 lines
+09-08 11:15:29.931 W/InputReader( 1932): Device has associated, but no associated display id.
+09-08 11:15:30.151 I/OpenGLRenderer( 2098): Davey! duration=40703ms; Flags=0, IntendedVsync=224629993755, Vsync=264913325477, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=264923555000, AnimationStart=264923822000, PerformTraversalsStart=264924660000, DrawStart=264943298000, SyncQueued=264944128000, SyncStart=264962619000, IssueDrawCommandsStart=264965733000, SwapBuffers=265347426000, FrameCompleted=265351681000, DequeueBufferDuration=413000, QueueBufferDuration=2082000, 
+09-08 11:15:30.368 E/livelock( 1870): sample 24.450s
+09-08 11:15:30.394 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.403 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.405 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.409 D/PackageManager( 1932): Instant App installer not found with android.intent.action.INSTALL_INSTANT_APP_PACKAGE
+09-08 11:15:30.409 D/PackageManager( 1932): Clear ephemeral installer activity
+09-08 11:15:30.412 W/system_server( 1932): Long monitor contention with owner PackageManager (1974) at void com.android.server.pm.PackageManagerService.installPackagesLI(java.util.List)(PackageManagerService.java:17017) waiters=1 in android.content.pm.ApplicationInfo com.android.server.pm.PackageManagerService.getApplicationInfoInternal(java.lang.String, int, int, int) for 252ms
+09-08 11:15:30.437 I/Choreographer( 1932): Skipped 1123 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:30.439 W/system_server( 1932): Long monitor contention with owner android.anim (1954) at int com.android.server.wm.WindowManagerService.addWindow(com.android.server.wm.Session, android.view.IWindow, int, android.view.WindowManager$LayoutParams, int, int, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.graphics.Rect, android.view.DisplayCutout$ParcelableWrapper, android.view.InputChannel, android.view.InsetsState)(WindowManagerService.java:1236) waiters=0 in void com.android.server.wm.ActivityStackSupervisor$ActivityStackSupervisorHandler.handleMessage(android.os.Message) for 487ms
+09-08 11:15:30.450 I/Choreographer( 1932): Skipped 36 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:30.496 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.497 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.497 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.498 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.498 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.499 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.499 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.499 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.500 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.504 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.504 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.506 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:30.506 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:30.569 W/ActivityTaskManager( 1932): Launch timeout has expired, giving up wake lock!
+09-08 11:15:30.634 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 823296
+09-08 11:15:30.640 I/hwservicemanager( 1556): getTransport: Cannot find entry android.hardware.graphics.mapper@3.0::IMapper/default in either framework or device manifest.
+09-08 11:15:30.641 W/Gralloc3( 1932): mapper 3.x is not supported
+09-08 11:15:30.655 D/HostConnection( 1932): createUnique: call
+09-08 11:15:30.656 D/HostConnection( 1932): HostConnection::get() New Host Connection established 0x7693977ee2a0, tid 1954
+09-08 11:15:30.808 W/Looper  ( 1932): Slow delivery took 323ms android.ui h=com.android.server.wm.DisplayPolicy$PolicyHandler c=com.android.server.wm.-$$Lambda$DisplayPolicy$qQY9m_Itua9TDy-Nk3zzDxvjEwE@3251ea5 m=0
+09-08 11:15:30.816 D/HostConnection( 1932): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_1 
+09-08 11:15:30.823 D/eglCodecCommon( 1932): allocate: Ask for block of size 0x1000
+09-08 11:15:30.825 D/eglCodecCommon( 1932): allocate: ioctl allocate returned offset 0x3ffff4000 size 0x2000
+09-08 11:15:30.894 D/eglCodecCommon( 1932): allocate: Ask for block of size 0xc9000
+09-08 11:15:30.895 D/eglCodecCommon( 1932): allocate: ioctl allocate returned offset 0x3fff2c000 size 0xca000
+09-08 11:15:30.968 W/Looper  ( 1932): Drained
+09-08 11:15:30.982 I/Choreographer( 1932): Skipped 32 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:31.083 D/EGL_emulation( 2394): eglMakeCurrent: 0x7693ed0498c0: ver 3 1 (tinfo 0x7693ed0185c0)
+09-08 11:15:31.250 I/netd    ( 1698): trafficSetNetPermForUids(0, [10116]) <0.14ms>
+09-08 11:15:31.253 E/        ( 1800): Couldn't opendir /data/app/vmdl1237501376.tmp: No such file or directory
+09-08 11:15:31.253 E/installd( 1800): Failed to delete /data/app/vmdl1237501376.tmp: No such file or directory
+09-08 11:15:31.230 W/Binder:1932_2( 1932): type=1400 audit(0.0:15): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+09-08 11:15:31.230 I/chatty  ( 1932): uid=1000 system_server identical 1 line
+09-08 11:15:31.230 W/Binder:1932_2( 1932): type=1400 audit(0.0:17): avc: denied { getopt } for scontext=u:r:system_server:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+09-08 11:15:31.344 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.344 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.345 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.345 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.347 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.347 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.348 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.348 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.350 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.350 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.351 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.351 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.368 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.368 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.370 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.370 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.371 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.371 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.371 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.371 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.372 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.372 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.373 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.373 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.373 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.373 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.374 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.374 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.459 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.459 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.459 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.459 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.459 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:31.459 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:31.250 W/adbd    ( 1771): type=1400 audit(0.0:18): avc: denied { shutdown } for scontext=u:r:adbd:s0 tcontext=u:r:shell:s0 tclass=unix_stream_socket permissive=0
+09-08 11:15:32.507 I/system_server( 1932): Background young concurrent copying GC freed 59356(3650KB) AllocSpace objects, 58(2056KB) LOS objects, 44% free, 6492KB/11MB, paused 3.888ms total 2.856s
+09-08 11:15:32.508 I/system_server( 1932): WaitForGcToComplete blocked ObjectsAllocated on HeapTrim for 2.641s
+09-08 11:15:33.653 I/ActivityTaskManager( 1932): START u0 {flg=0x10000000 cmp=org.godotengine.hivelattice/com.godot.game.GodotApp} from uid 2000
+09-08 11:15:34.147 E/system_server( 1932): Invalid ID 0x00000000.
+09-08 11:15:34.217 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 823296
+09-08 11:15:34.642 I//system/bin/tombstoned( 1831): received crash request for pid 1932
+09-08 11:15:34.648 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1932 and type kDebuggerdJavaBacktrace
+09-08 11:15:34.653 I/system_server( 1932): Wrote stack traces to tombstoned
+09-08 11:15:34.743 I/system_server( 1932): libdebuggerd_client: done dumping process 1932
+09-08 11:15:34.757 I/ActivityManager( 1932): Collecting stacks for native pid 1712
+09-08 11:15:34.757 I/system_server( 1932): libdebuggerd_client: started dumping process 1712
+09-08 11:15:34.759 I//system/bin/tombstoned( 1831): registered intercept for pid 1712 and type kDebuggerdNativeBacktrace
+09-08 11:15:34.759 I/libc    ( 1712): Requested dump for tid 1712 (audio@2.0-servi)
+09-08 11:15:34.942 I/crash_dump32( 2712): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:34.942 I//system/bin/tombstoned( 1831): received crash request for pid 1712
+09-08 11:15:34.943 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1712 and type kDebuggerdNativeBacktrace
+09-08 11:15:34.943 I/crash_dump32( 2712): performing dump of process 1712 (target tid = 1712)
+09-08 11:15:35.006 I/system_server( 1932): libdebuggerd_client: done dumping process 1712
+09-08 11:15:35.017 I/ActivityManager( 1932): Collecting stacks for native pid 1728
+09-08 11:15:35.017 I/system_server( 1932): libdebuggerd_client: started dumping process 1728
+09-08 11:15:35.018 I//system/bin/tombstoned( 1831): registered intercept for pid 1728 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.019 I/libc    ( 1728): Requested dump for tid 1728 (health@2.0-serv)
+09-08 11:15:35.168 I/crash_dump64( 2717): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.168 I//system/bin/tombstoned( 1831): received crash request for pid 1728
+09-08 11:15:35.169 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1728 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.169 I/crash_dump64( 2717): performing dump of process 1728 (target tid = 1728)
+09-08 11:15:35.177 I/system_server( 1932): libdebuggerd_client: done dumping process 1728
+09-08 11:15:35.185 I/ActivityManager( 1932): Collecting stacks for native pid 1714
+09-08 11:15:35.185 I/system_server( 1932): libdebuggerd_client: started dumping process 1714
+09-08 11:15:35.186 I//system/bin/tombstoned( 1831): registered intercept for pid 1714 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.187 I/libc    ( 1714): Requested dump for tid 1714 (provider@2.4-se)
+09-08 11:15:35.230 I/crash_dump32( 2723): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.231 I//system/bin/tombstoned( 1831): received crash request for pid 1714
+09-08 11:15:35.231 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1714 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.232 I/crash_dump32( 2723): performing dump of process 1714 (target tid = 1714)
+09-08 11:15:35.241 I/system_server( 1932): libdebuggerd_client: done dumping process 1714
+09-08 11:15:35.259 I/ActivityManager( 1932): Collecting stacks for native pid 1826
+09-08 11:15:35.260 I/system_server( 1932): libdebuggerd_client: started dumping process 1826
+09-08 11:15:35.261 I//system/bin/tombstoned( 1831): registered intercept for pid 1826 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.262 I//system/bin/tombstoned( 1831): received crash request for pid 1826
+09-08 11:15:35.262 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1826 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.285 I/system_server( 1932): libdebuggerd_client: done dumping process 1826
+09-08 11:15:35.308 I/ActivityManager( 1932): Collecting stacks for native pid 1732
+09-08 11:15:35.308 I/system_server( 1932): libdebuggerd_client: started dumping process 1732
+09-08 11:15:35.309 I//system/bin/tombstoned( 1831): registered intercept for pid 1732 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.310 I/libc    ( 1732): Requested dump for tid 1732 (sensors@1.0-ser)
+09-08 11:15:35.532 I/crash_dump64( 2728): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.533 I//system/bin/tombstoned( 1831): received crash request for pid 1732
+09-08 11:15:35.533 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1732 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.534 I/crash_dump64( 2728): performing dump of process 1732 (target tid = 1732)
+09-08 11:15:35.543 I/system_server( 1932): libdebuggerd_client: done dumping process 1732
+09-08 11:15:35.573 I/ActivityManager( 1932): Collecting stacks for native pid 1820
+09-08 11:15:35.573 I/system_server( 1932): libdebuggerd_client: started dumping process 1820
+09-08 11:15:35.574 I//system/bin/tombstoned( 1831): registered intercept for pid 1820 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.576 I//system/bin/tombstoned( 1831): received crash request for pid 1820
+09-08 11:15:35.576 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1820 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.671 I/system_server( 1932): libdebuggerd_client: done dumping process 1820
+09-08 11:15:35.683 I/ActivityManager( 1932): Collecting stacks for native pid 1709
+09-08 11:15:35.683 I/system_server( 1932): libdebuggerd_client: started dumping process 1709
+09-08 11:15:35.684 I//system/bin/tombstoned( 1831): registered intercept for pid 1709 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.685 I/libc    ( 1709): Requested dump for tid 1709 (healthd)
+09-08 11:15:35.695 I/crash_dump64( 2733): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.696 I//system/bin/tombstoned( 1831): received crash request for pid 1709
+09-08 11:15:35.696 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1709 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.696 I/crash_dump64( 2733): performing dump of process 1709 (target tid = 1709)
+09-08 11:15:35.700 I/system_server( 1932): libdebuggerd_client: done dumping process 1709
+09-08 11:15:35.720 I/ActivityManager( 1932): Collecting stacks for native pid 1726
+09-08 11:15:35.721 I/system_server( 1932): libdebuggerd_client: started dumping process 1726
+09-08 11:15:35.722 I//system/bin/tombstoned( 1831): registered intercept for pid 1726 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.723 I/libc    ( 1726): Requested dump for tid 1726 (allocator@2.0-s)
+09-08 11:15:35.740 I/crash_dump64( 2738): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.741 I//system/bin/tombstoned( 1831): received crash request for pid 1726
+09-08 11:15:35.741 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1726 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.742 I/crash_dump64( 2738): performing dump of process 1726 (target tid = 1726)
+09-08 11:15:35.748 I/system_server( 1932): libdebuggerd_client: done dumping process 1726
+09-08 11:15:35.766 I/ActivityManager( 1932): Collecting stacks for native pid 1727
+09-08 11:15:35.766 I/system_server( 1932): libdebuggerd_client: started dumping process 1727
+09-08 11:15:35.767 I//system/bin/tombstoned( 1831): registered intercept for pid 1727 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.768 I/libc    ( 1727): Requested dump for tid 1727 (composer@2.1-se)
+09-08 11:15:35.792 I/crash_dump64( 2743): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.792 I//system/bin/tombstoned( 1831): received crash request for pid 1727
+09-08 11:15:35.792 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1727 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.793 I/crash_dump64( 2743): performing dump of process 1727 (target tid = 1727)
+09-08 11:15:35.806 I/system_server( 1932): libdebuggerd_client: done dumping process 1727
+09-08 11:15:35.841 I/ActivityManager( 1932): Collecting stacks for native pid 1564
+09-08 11:15:35.841 I/system_server( 1932): libdebuggerd_client: started dumping process 1564
+09-08 11:15:35.842 I//system/bin/tombstoned( 1831): registered intercept for pid 1564 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.843 I/libc    ( 1564): Requested dump for tid 1564 (Binder:1564_2)
+09-08 11:15:35.864 I/crash_dump64( 2748): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.867 I//system/bin/tombstoned( 1831): received crash request for pid 1564
+09-08 11:15:35.867 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1564 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.868 I/crash_dump64( 2748): performing dump of process 1564 (target tid = 1564)
+09-08 11:15:35.901 I/system_server( 1932): libdebuggerd_client: done dumping process 1564
+09-08 11:15:35.913 I/ActivityManager( 1932): Collecting stacks for native pid 1749
+09-08 11:15:35.913 I/system_server( 1932): libdebuggerd_client: started dumping process 1749
+09-08 11:15:35.915 I//system/bin/tombstoned( 1831): registered intercept for pid 1749 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.915 I/libc    ( 1749): Requested dump for tid 1749 (audioserver)
+09-08 11:15:35.936 I/crash_dump64( 2753): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:35.937 I//system/bin/tombstoned( 1831): received crash request for pid 1749
+09-08 11:15:35.937 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1749 and type kDebuggerdNativeBacktrace
+09-08 11:15:35.938 I/crash_dump64( 2753): performing dump of process 1749 (target tid = 1749)
+09-08 11:15:35.988 I/system_server( 1932): libdebuggerd_client: done dumping process 1749
+09-08 11:15:35.999 I/ActivityManager( 1932): Collecting stacks for native pid 1754
+09-08 11:15:35.999 I/system_server( 1932): libdebuggerd_client: started dumping process 1754
+09-08 11:15:36.003 I/libc    ( 1754): Requested dump for tid 1754 (surfaceflinger)
+09-08 11:15:36.019 I/crash_dump64( 2758): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.020 I//system/bin/tombstoned( 1831): registered intercept for pid 1754 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.020 I//system/bin/tombstoned( 1831): received crash request for pid 1754
+09-08 11:15:36.020 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1754 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.021 I/crash_dump64( 2758): performing dump of process 1754 (target tid = 1754)
+09-08 11:15:36.165 I/system_server( 1932): libdebuggerd_client: done dumping process 1754
+09-08 11:15:36.172 I/ActivityManager( 1932): Collecting stacks for native pid 1794
+09-08 11:15:36.172 I/system_server( 1932): libdebuggerd_client: started dumping process 1794
+09-08 11:15:36.173 I//system/bin/tombstoned( 1831): registered intercept for pid 1794 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.174 I/libc    ( 1794): Requested dump for tid 1794 (cameraserver)
+09-08 11:15:36.192 I/crash_dump64( 2763): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.193 I//system/bin/tombstoned( 1831): received crash request for pid 1794
+09-08 11:15:36.193 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1794 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.194 I/crash_dump64( 2763): performing dump of process 1794 (target tid = 1794)
+09-08 11:15:36.204 I/system_server( 1932): libdebuggerd_client: done dumping process 1794
+09-08 11:15:36.235 I/ActivityManager( 1932): Collecting stacks for native pid 1795
+09-08 11:15:36.235 I/system_server( 1932): libdebuggerd_client: started dumping process 1795
+09-08 11:15:36.236 I//system/bin/tombstoned( 1831): registered intercept for pid 1795 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.237 I/libc    ( 1795): Requested dump for tid 1795 (drmserver)
+09-08 11:15:36.249 I/crash_dump32( 2769): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.249 I//system/bin/tombstoned( 1831): received crash request for pid 1795
+09-08 11:15:36.249 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1795 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.250 I/crash_dump32( 2769): performing dump of process 1795 (target tid = 1795)
+09-08 11:15:36.273 I/system_server( 1932): libdebuggerd_client: done dumping process 1795
+09-08 11:15:36.290 I/ActivityManager( 1932): Collecting stacks for native pid 1804
+09-08 11:15:36.290 I/system_server( 1932): libdebuggerd_client: started dumping process 1804
+09-08 11:15:36.291 I//system/bin/tombstoned( 1831): registered intercept for pid 1804 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.292 I/libc    ( 1804): Requested dump for tid 1804 (mediadrmserver)
+09-08 11:15:36.314 I/crash_dump32( 2775): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.314 I//system/bin/tombstoned( 1831): received crash request for pid 1804
+09-08 11:15:36.314 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1804 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.315 I/crash_dump32( 2775): performing dump of process 1804 (target tid = 1804)
+09-08 11:15:36.322 I/system_server( 1932): libdebuggerd_client: done dumping process 1804
+09-08 11:15:36.331 I/ActivityManager( 1932): Collecting stacks for native pid 1806
+09-08 11:15:36.332 I/system_server( 1932): libdebuggerd_client: started dumping process 1806
+09-08 11:15:36.333 I//system/bin/tombstoned( 1831): registered intercept for pid 1806 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.333 I//system/bin/tombstoned( 1831): received crash request for pid 1806
+09-08 11:15:36.333 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1806 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.410 I/system_server( 1932): libdebuggerd_client: done dumping process 1806
+09-08 11:15:36.415 I/ActivityManager( 1932): Collecting stacks for native pid 1811
+09-08 11:15:36.415 I/system_server( 1932): libdebuggerd_client: started dumping process 1811
+09-08 11:15:36.416 I//system/bin/tombstoned( 1831): registered intercept for pid 1811 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.417 I/libc    ( 1811): Requested dump for tid 1811 (mediametrics)
+09-08 11:15:36.624 I/crash_dump64( 2781): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.625 I//system/bin/tombstoned( 1831): received crash request for pid 1811
+09-08 11:15:36.625 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1811 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.626 I/crash_dump64( 2781): performing dump of process 1811 (target tid = 1811)
+09-08 11:15:36.632 I/system_server( 1932): libdebuggerd_client: done dumping process 1811
+09-08 11:15:36.649 I/ActivityManager( 1932): Collecting stacks for native pid 1813
+09-08 11:15:36.649 I/system_server( 1932): libdebuggerd_client: started dumping process 1813
+09-08 11:15:36.661 I/libc    ( 1813): Requested dump for tid 1813 (mediaserver)
+09-08 11:15:36.662 I//system/bin/tombstoned( 1831): registered intercept for pid 1813 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.671 I/crash_dump32( 2786): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.672 I//system/bin/tombstoned( 1831): received crash request for pid 1813
+09-08 11:15:36.672 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1813 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.672 I/crash_dump32( 2786): performing dump of process 1813 (target tid = 1813)
+09-08 11:15:36.684 I/system_server( 1932): libdebuggerd_client: done dumping process 1813
+09-08 11:15:36.713 I/ActivityManager( 1932): Collecting stacks for native pid 1815
+09-08 11:15:36.713 I/system_server( 1932): libdebuggerd_client: started dumping process 1815
+09-08 11:15:36.714 I//system/bin/tombstoned( 1831): registered intercept for pid 1815 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.715 I/libc    ( 1815): Requested dump for tid 1815 (Binder:1815_2)
+09-08 11:15:36.811 I/crash_dump64( 2791): obtaining output fd from tombstoned, type: kDebuggerdNativeBacktrace
+09-08 11:15:36.812 I//system/bin/tombstoned( 1831): received crash request for pid 1815
+09-08 11:15:36.812 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1815 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.813 I/crash_dump64( 2791): performing dump of process 1815 (target tid = 1815)
+09-08 11:15:36.827 I/system_server( 1932): libdebuggerd_client: done dumping process 1815
+09-08 11:15:36.857 I/ActivityManager( 1932): Collecting stacks for native pid 1820
+09-08 11:15:36.857 I/system_server( 1932): libdebuggerd_client: started dumping process 1820
+09-08 11:15:36.858 I//system/bin/tombstoned( 1831): registered intercept for pid 1820 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.859 I//system/bin/tombstoned( 1831): received crash request for pid 1820
+09-08 11:15:36.859 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1820 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.938 I/system_server( 1932): libdebuggerd_client: done dumping process 1820
+09-08 11:15:36.946 I/ActivityManager( 1932): Collecting stacks for native pid 1826
+09-08 11:15:36.946 I/system_server( 1932): libdebuggerd_client: started dumping process 1826
+09-08 11:15:36.947 I//system/bin/tombstoned( 1831): registered intercept for pid 1826 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.948 I//system/bin/tombstoned( 1831): received crash request for pid 1826
+09-08 11:15:36.948 I//system/bin/tombstoned( 1831): found intercept fd 512 for pid 1826 and type kDebuggerdNativeBacktrace
+09-08 11:15:36.975 I/system_server( 1932): libdebuggerd_client: done dumping process 1826
+09-08 11:15:36.982 I/ActivityManager( 1932): Done dumping
+09-08 11:15:36.983 W/system_server( 1932): Long monitor contention with owner watchdog (1956) at void com.android.server.Watchdog.run()(Watchdog.java:523) waiters=0 in void com.android.server.Watchdog$HandlerChecker.run() for 26.516s
+09-08 11:15:36.983 W/system_server( 1932): Long monitor contention with owner watchdog (1956) at void com.android.server.Watchdog.run()(Watchdog.java:523) waiters=1 in void com.android.server.Watchdog.processStarted(java.lang.String, int) for 23.191s
+09-08 11:15:36.984 W/ActivityManager( 1932): Slow operation: 26172ms so far, now at startProcess: building log message
+09-08 11:15:36.984 I/ActivityManager( 1932): Start proc 2658:com.android.se/1068 for added application com.android.se
+09-08 11:15:36.984 W/ActivityManager( 1932): Slow operation: 26173ms so far, now at startProcess: starting to update pids map
+09-08 11:15:36.985 W/ActivityManager( 1932): Slow operation: 26173ms so far, now at startProcess: done updating pids map
+09-08 11:15:36.985 W/ActivityManager( 1932): Slow operation: 26152ms so far, now at startProcess: asking zygote to start proc
+09-08 11:15:36.986 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=0 in android.content.Intent com.android.server.am.ActivityManagerService.registerReceiver(android.app.IApplicationThread, java.lang.String, android.content.IIntentReceiver, android.content.IntentFilter, java.lang.String, int, int) for 23.087s
+09-08 11:15:36.988 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=1 in void com.android.server.am.ActivityManagerService.attachApplication(android.app.IApplicationThread, long) for 23.023s
+09-08 11:15:36.990 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.008 D/Zygote  ( 1699): Forked child process 2794
+09-08 11:15:37.013 W/ActivityManager( 1932): Slow operation: 26181ms so far, now at startProcess: returned from zygote!
+09-08 11:15:37.033 D/PermissionCache( 1754): checking android.permission.READ_FRAME_BUFFER for uid=1000 => granted (888 us)
+09-08 11:15:37.033 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 823296
+09-08 11:15:37.057 W/.ims.rcsservic( 2794): Unexpected CPU variant for X86 using defaults: x86_64
+09-08 11:15:37.123 W/hw-IPCThreadState( 1732): All binder threads in pool (2 threads) busy for 143 ms
+09-08 11:15:37.245 D/HostConnection( 1754): HostConnection::get() New Host Connection established 0x7c835c807b80, tid 2084
+09-08 11:15:37.246 D/HostConnection( 1754): HostComposition ext ANDROID_EMU_CHECKSUM_HELPER_v1 ANDROID_EMU_native_sync_v2 ANDROID_EMU_dma_v1 ANDROID_EMU_direct_mem ANDROID_EMU_host_composition_v1 ANDROID_EMU_host_composition_v2 ANDROID_EMU_vulkan ANDROID_EMU_deferred_vulkan_commands ANDROID_EMU_vulkan_create_resources_with_requirements ANDROID_EMU_vulkan_free_memory_sync ANDROID_EMU_vulkan_shader_float16_int8 ANDROID_EMU_vulkan_async_queue_submit ANDROID_EMU_sync_buffer_data ANDROID_EMU_vulkan_async_qsri ANDROID_EMU_hwc_color_transform GL_OES_EGL_image_external_essl3 GL_OES_vertex_array_object GL_KHR_texture_compression_astc_ldr ANDROID_EMU_host_side_tracing ANDROID_EMU_gles_max_version_3_1 
+09-08 11:15:37.263 W/InputReader( 1932): Device has associated, but no associated display id.
+09-08 11:15:37.265 I/ActivityTaskManager( 1932): Config changes=20000480 {1.0 ?mcc?mnc [en_US] ldltr sw320dp w640dp h296dp 160dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 640, 320) mAppBounds=Rect(0, 0 - 640, 320) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.6}
+09-08 11:15:37.274 I/ActivityTaskManager( 1932): Override config changes=20000480 {1.0 ?mcc?mnc [en_US] ldltr sw320dp w640dp h296dp 160dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 640, 320) mAppBounds=Rect(0, 0 - 640, 320) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.6} for displayId=0
+09-08 11:15:37.345 I/chatty  ( 1932): uid=1000(system) Binder:1932_A identical 18 lines
+09-08 11:15:37.345 W/InputReader( 1932): Device has associated, but no associated display id.
+09-08 11:15:37.440 W/system_server( 1932): Long monitor contention with owner Binder:1932_A (2663) at boolean com.android.server.wm.ActivityTaskManagerService$LocalService.attachApplication(com.android.server.wm.WindowProcessController)(ActivityTaskManagerService.java:6868) waiters=0 in void com.android.server.wm.WindowAnimator.lambda$new$1$WindowAnimator(long) for 409ms
+09-08 11:15:37.441 W/system_server( 1932): Long monitor contention with owner Binder:1932_A (2663) at boolean com.android.server.wm.ActivityTaskManagerService$LocalService.attachApplication(com.android.server.wm.WindowProcessController)(ActivityTaskManagerService.java:6868) waiters=1 in void com.android.server.wm.TaskPersister$TaskWriteQueueItem.process() for 318ms
+09-08 11:15:37.488 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 823296
+09-08 11:15:37.509 W/ActivityManager( 1932): Slow operation: 518ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+09-08 11:15:37.512 W/ActivityManager( 1932): Slow operation: 521ms so far, now at attachApplicationLocked: after updateOomAdjLocked
+09-08 11:15:37.513 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=2 in int com.android.server.am.ActivityManagerService.bindIsolatedService(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, int, java.lang.String, java.lang.String, int) for 23.482s
+09-08 11:15:37.526 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=3 in int com.android.server.am.ActivityManagerService.bindIsolatedService(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, int, java.lang.String, java.lang.String, int) for 23.490s
+09-08 11:15:37.527 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=4 in int com.android.server.am.ActivityManagerService.broadcastIntent(android.app.IApplicationThread, android.content.Intent, java.lang.String, android.content.IIntentReceiver, int, java.lang.String, android.os.Bundle, java.lang.String[], int, android.os.Bundle, boolean, boolean, int) for 23.148s
+09-08 11:15:37.528 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=5 in android.content.Intent com.android.server.am.ActivityManagerService.registerReceiver(android.app.IApplicationThread, java.lang.String, android.content.IIntentReceiver, android.content.IntentFilter, java.lang.String, int, int) for 22.988s
+09-08 11:15:37.528 I/Telecom ( 1932): CallsManager: Sending phone-account registered intent to default dialer: TSI.rPA@AAU
+09-08 11:15:37.529 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=6 in int com.android.server.am.ActivityManagerService.getMemoryTrimLevel() for 21.789s
+09-08 11:15:37.529 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=7 in int com.android.server.am.ActivityManagerService.broadcastIntent(android.app.IApplicationThread, android.content.Intent, java.lang.String, android.content.IIntentReceiver, int, java.lang.String, android.os.Bundle, java.lang.String[], int, android.os.Bundle, boolean, boolean, int) for 21.187s
+09-08 11:15:37.530 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=8 in java.lang.String com.android.server.am.ActivityManagerService.checkContentProviderAccess(java.lang.String, int) for 21.065s
+09-08 11:15:37.531 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=9 in boolean com.android.server.am.ActivityManagerService.isAppStartModeDisabled(int, java.lang.String) for 15.824s
+09-08 11:15:37.531 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=10 in int com.android.server.am.ActivityManagerService.bindIsolatedService(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, int, java.lang.String, java.lang.String, int) for 7.902s
+09-08 11:15:37.534 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=11 in android.content.Intent com.android.server.am.ActivityManagerService.registerReceiver(android.app.IApplicationThread, java.lang.String, android.content.IIntentReceiver, android.content.IntentFilter, java.lang.String, int, int) for 6.952s
+09-08 11:15:37.535 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=12 in int com.android.server.am.ActivityManagerService.broadcastIntent(android.app.IApplicationThread, android.content.Intent, java.lang.String, android.content.IIntentReceiver, int, java.lang.String, android.os.Bundle, java.lang.String[], int, android.os.Bundle, boolean, boolean, int) for 6.281s
+09-08 11:15:37.537 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=13 in void com.android.server.am.ActivityManagerService$5.handleMessage(android.os.Message) for 6.073s
+09-08 11:15:37.543 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=14 in void com.android.server.am.ActivityManagerService$LocalService.startProcess(java.lang.String, android.content.pm.ApplicationInfo, boolean, java.lang.String, android.content.ComponentName) for 3.418s
+09-08 11:15:37.547 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=15 in void com.android.server.am.ActivityManagerService.monitor() for 563ms
+09-08 11:15:37.549 W/system_server( 1932): Long monitor contention with owner Binder:1932_A (2663) at void com.android.server.am.ActivityManagerService.attachApplication(android.app.IApplicationThread, long)(ActivityManagerService.java:5176) waiters=14 in android.content.Intent com.android.server.am.ActivityManagerService.registerReceiver(android.app.IApplicationThread, java.lang.String, android.content.IIntentReceiver, android.content.IntentFilter, java.lang.String, int, int) for 558ms
+09-08 11:15:37.549 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:37.549 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:37.555 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.563 I/chatty  ( 1932): uid=1000 system_server identical 1 line
+09-08 11:15:37.570 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.572 I/InputManager-JNI( 1932): Viewport [0] to add: local:0
+09-08 11:15:37.575 W/Looper  ( 1932): Slow dispatch took 21837ms main h=com.android.server.job.JobSchedulerService$JobHandler c=null m=7
+09-08 11:15:37.579 V/NotificationAssistants( 1932): 0 notification assistant service connected: ComponentInfo{android.ext.services/android.ext.services.notification.Assistant}
+09-08 11:15:37.592 D/ExtAssistant( 2474): File doesn't exist or isn't readable yet
+09-08 11:15:37.599 I/InputReader( 1932): Reconfiguring input devices.  changes=0x00000004
+09-08 11:15:37.599 I/InputReader( 1932): Device reconfigured: id=2, name='virtio_input_multi_touch_1', size 320x640, orientation 1, mode 1, display id 0
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_10' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_7' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_4' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_11' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_8' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_5' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.599 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_2' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.600 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_9' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.600 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_6' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.600 I/InputReader( 1932): Touch device 'virtio_input_multi_touch_3' could not query the properties of its associated display.  The device will be inoperable until the display size becomes available.
+09-08 11:15:37.607 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:37.608 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:37.612 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.613 W/Looper  ( 1932): Slow dispatch took 27147ms android.fg h=android.os.Handler c=com.android.server.Watchdog$HandlerChecker@2764e95 m=0
+09-08 11:15:37.613 W/Looper  ( 1932): Slow delivery took 77433ms android.fg h=android.os.Handler c=com.android.server.am.-$$Lambda$UserController$G0WJmqt4X_QG30fRlvXobn18mrE@48f0baa m=0
+09-08 11:15:37.619 W/system_server( 1932): Long monitor contention with owner ClientModeImpl (2053) at void com.android.server.AlarmManagerService.setImpl(int, long, long, long, android.app.PendingIntent, android.app.IAlarmListener, java.lang.String, int, android.os.WorkSource, android.app.AlarmManager$AlarmClockInfo, int, java.lang.String)(AlarmManagerService.java:1756) waiters=0 in void com.android.server.AlarmManagerService.setImpl(int, long, long, long, android.app.PendingIntent, android.app.IAlarmListener, java.lang.String, int, android.os.WorkSource, android.app.AlarmManager$AlarmClockInfo, int, java.lang.String) for 15.752s
+09-08 11:15:37.639 W/system_server( 1932): Long monitor contention with owner Binder:1932_A (2663) at void com.android.server.am.ActivityManagerService.attachApplication(android.app.IApplicationThread, long)(ActivityManagerService.java:5176) waiters=15 in void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long) for 626ms
+09-08 11:15:37.648 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:37.649 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:37.649 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:37.649 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:37.650 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id -1
+09-08 11:15:37.650 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: adding default
+09-08 11:15:37.650 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] getIccId: No UICC
+09-08 11:15:37.651 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] isRttSupported: no Phone found. Invalid subId:-1
+09-08 11:15:37.669 I/com.android.se( 2658): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.743 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:37.743 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:37.751 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.754 W/Looper  ( 1932): Slow dispatch took 139ms android.fg h=com.android.server.DropBoxManagerService$DropBoxManagerBroadcastHandler c=null m=2
+09-08 11:15:37.762 W/AlarmManager( 1932): No in-flight alarm for listener android.app.AlarmManager$ListenerWrapper@f96027c
+09-08 11:15:37.762 W/AlarmManager( 1932): Spurious timeout of listener android.app.AlarmManager$ListenerWrapper@f96027c
+09-08 11:15:37.762 W/Looper  ( 1932): Slow dispatch took 179ms main h=com.android.server.AlarmManagerService$AlarmHandler c=null m=3
+09-08 11:15:37.790 W/Looper  ( 1932): Slow dispatch took 279ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=null m=53
+09-08 11:15:37.790 W/system_server( 1932): Long monitor contention with owner ActivityManager (1959) at void com.android.server.am.BroadcastQueue.processNextBroadcast(boolean)(BroadcastQueue.java:948) waiters=9 in void com.android.server.am.ActivityManagerService.unregisterReceiver(android.content.IIntentReceiver) for 155ms
+09-08 11:15:37.795 W/Looper  ( 1932): Slow delivery took 233ms android.ui h=android.hardware.display.DisplayManagerGlobal$DisplayListenerDelegate c=null m=2
+09-08 11:15:37.798 I/InputReader( 1932): Reconfiguring input devices.  changes=0x00000010
+09-08 11:15:37.816 W/Looper  ( 1932): Drained
+09-08 11:15:37.840 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:37.862 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 823296
+09-08 11:15:37.917 V/OverviewProxyService( 2098): Cannot attempt connection, is setup false, is enabled true
+09-08 11:15:37.937 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 823296
+09-08 11:15:37.944 W/ActivityManager( 1932): Slow operation: 26969ms so far, now at startProcess: done updating battery stats
+09-08 11:15:37.945 W/ActivityManager( 1932): Slow operation: 27112ms so far, now at startProcess: building log message
+09-08 11:15:37.945 I/ActivityManager( 1932): Start proc 2794:com.android.ims.rcsservice/1001 for added application com.android.ims.rcsservice
+09-08 11:15:37.945 W/ActivityManager( 1932): Slow operation: 27113ms so far, now at startProcess: starting to update pids map
+09-08 11:15:37.946 W/ActivityManager( 1932): Slow operation: 27113ms so far, now at startProcess: done updating pids map
+09-08 11:15:37.948 W/system_server( 1932): Long monitor contention with owner BackgroundDexOptService_PostBootUpdate (2538) at android.content.Intent com.android.server.am.ActivityManagerService.registerReceiver(android.app.IApplicationThread, java.lang.String, android.content.IIntentReceiver, android.content.IntentFilter, java.lang.String, int, int)(ActivityManagerService.java:14406) waiters=6 in int com.android.server.am.ActivityManagerService.bindIsolatedService(android.app.IApplicationThread, android.os.IBinder, android.content.Intent, java.lang.String, android.app.IServiceConnection, int, java.lang.String, java.lang.String, int) for 152ms
+09-08 11:15:37.969 W/ActivityManager( 1932): Slow operation: 26566ms so far, now at startProcess: asking zygote to start proc
+09-08 11:15:38.013 W/system_server( 1932): Long monitor contention with owner ActivityManager:procStart (1960) at void com.android.server.am.ProcessList.lambda$startProcessLocked$0$ProcessList(com.android.server.am.ProcessRecord, java.lang.String, int[], int, int, java.lang.String, java.lang.String, java.lang.String, long)(ProcessList.java:1671) waiters=7 in void com.android.server.am.ActivityManagerService$LocalService.updateActivityUsageStats(android.content.ComponentName, int, int, android.os.IBinder, android.content.ComponentName) for 197ms
+09-08 11:15:38.017 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.017 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.019 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:38.019 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:38.051 V/BackupManagerConstants( 1932): getKeyValueBackupIntervalMilliseconds(...) returns 14400000
+09-08 11:15:38.052 V/BackupManagerConstants( 1932): getKeyValueBackupFuzzMilliseconds(...) returns 600000
+09-08 11:15:38.052 V/BackupManagerConstants( 1932): getKeyValueBackupRequiredNetworkType(...) returns 1
+09-08 11:15:38.052 V/BackupManagerConstants( 1932): getKeyValueBackupRequireCharging(...) returns true
+09-08 11:15:38.052 V/KeyValueBackupJob( 1932): Scheduling k/v pass in 241 minutes
+09-08 11:15:38.055 W/Looper  ( 1932): Slow dispatch took 300ms android.fg h=com.android.server.DropBoxManagerService$DropBoxManagerBroadcastHandler c=null m=2
+09-08 11:15:38.057 W/GrantDefaultRolesRequest( 1932): timed out after 15000 ms
+09-08 11:15:38.060 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.066 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.067 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:38.067 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:38.073 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.086 W/Looper  ( 1932): Slow dispatch took 322ms main h=android.os.Handler c=<recycled PooledLambda@7eaa92f> m=0
+09-08 11:15:38.077 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.120 I/SecureElementService( 2658): main onCreate
+09-08 11:15:38.123 I/hwservicemanager( 1556): getTransport: Cannot find entry android.hardware.secure_element@1.1::ISecureElement/eSE1 in either framework or device manifest.
+09-08 11:15:38.182 D/SecureElement-Terminal-eSE1( 2658): SE Hal V1.1 is not supported
+09-08 11:15:38.183 I/hwservicemanager( 1556): getTransport: Cannot find entry android.hardware.secure_element@1.0::ISecureElement/eSE1 in either framework or device manifest.
+09-08 11:15:38.186 I/SecureElementService( 2658): No HAL implementation for eSE1
+09-08 11:15:38.187 I/hwservicemanager( 1556): getTransport: Cannot find entry android.hardware.secure_element@1.1::ISecureElement/SIM1 in either framework or device manifest.
+09-08 11:15:38.188 D/SecureElement-Terminal-SIM1( 2658): SE Hal V1.1 is not supported
+09-08 11:15:38.188 I/hwservicemanager( 1556): getTransport: Cannot find entry android.hardware.secure_element@1.0::ISecureElement/SIM1 in either framework or device manifest.
+09-08 11:15:38.188 I/SecureElementService( 2658): No HAL implementation for SIM1
+09-08 11:15:38.201 I/netd    ( 1698): interfaceGetCfg("wlan0") <0.45ms>
+09-08 11:15:38.225 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.240 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@AAg
+09-08 11:15:38.242 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@AAg
+09-08 11:15:38.252 W/ActivityManager( 1932): Slow operation: 51ms so far, now at attachApplicationLocked: immediately after bindApplication
+09-08 11:15:38.252 W/ActivityManager( 1932): Slow operation: 51ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+09-08 11:15:38.267 W/ActivityManager( 1932): Slow operation: 67ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+09-08 11:15:38.272 W/ActivityManager( 1932): Slow operation: 71ms so far, now at attachApplicationLocked: after updateOomAdjLocked
+09-08 11:15:38.314 I/RoleManagerService( 1932): Granting default permissions...
+09-08 11:15:38.315 W/Looper  ( 1932): Slow dispatch took 223ms main h=android.app.ActivityThread$H c=android.app.-$$Lambda$LoadedApk$ReceiverDispatcher$Args$_BumDX2UKsnxLVrE6UJsJZkotuA@86e8ae2 m=0
+09-08 11:15:38.352 W/Looper  ( 1932): Slow dispatch took 245ms android.fg h=android.os.Handler c=com.android.server.-$$Lambda$NetworkManagementService$NetdUnsolicitedEventListener$pOV71EYm5PphEVG1PGQnV_c6XiA@5333ecf m=0
+09-08 11:15:38.308 I/chatty  ( 1932): uid=1000 system_server identical 6 lines
+09-08 11:15:38.310 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.359 I/netd    ( 1698): interfaceGetCfg("wlan0") <0.40ms>
+09-08 11:15:38.366 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:38.374 I/GnssNetworkConnectivityHandler( 1932): updateNetworkState, state=CLOSED, connected=true, network=100, capabilities=[ Transports: WIFI Capabilities: NOT_METERED&INTERNET&NOT_RESTRICTED&TRUSTED&NOT_VPN&VALIDATED&NOT_ROAMING&FOREGROUND&NOT_CONGESTED&NOT_SUSPENDED LinkUpBandwidth>=1048576Kbps LinkDnBandwidth>=1048576Kbps SignalStrength: -30 SSID: "AndroidWifi"], apn: null, availableNetworkCount: 1
+09-08 11:15:38.393 I/.ims.rcsservic( 2794): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.407 I/.ims.rcsservic( 2794): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.488 D/KeyguardClockSwitch( 2098): Updating clock: 315
+09-08 11:15:38.488 I/Choreographer( 2098): Skipped 515 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:38.500 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:38.500 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:38.510 I/rcs     ( 2794): [RcsStackAdaptor] mPublishingState=1 publishState=1
+09-08 11:15:38.539 W/Looper  ( 1932): Slow dispatch took 224ms main h=android.app.ActivityThread$H c=android.app.-$$Lambda$LoadedApk$ReceiverDispatcher$Args$_BumDX2UKsnxLVrE6UJsJZkotuA@883f2db m=0
+09-08 11:15:38.608 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.693 W/AppWidgetServiceImpl( 1932): Failed to read state: java.io.FileNotFoundException: /data/system/users/0/appwidgets.xml: open failed: ENOENT (No such file or directory)
+09-08 11:15:38.694 V/AppWidgetServiceImpl( 1932): Upgrading widget database from 0 to 1
+09-08 11:15:38.694 W/Looper  ( 1932): Slow dispatch took 152ms main h=android.app.ActivityThread$H c=android.app.-$$Lambda$LoadedApk$ReceiverDispatcher$Args$_BumDX2UKsnxLVrE6UJsJZkotuA@674ff52 m=0
+09-08 11:15:38.629 I/chatty  ( 1932): uid=1000 system_server identical 3 lines
+09-08 11:15:38.632 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.738 I/OpenGLRenderer( 2098): Davey! duration=8846ms; Flags=0, IntendedVsync=265092491987, Vsync=273675824977, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=273689262000, AnimationStart=273689444000, PerformTraversalsStart=273689929000, DrawStart=273898762000, SyncQueued=273899090000, SyncStart=273899350000, IssueDrawCommandsStart=273899612000, SwapBuffers=273937083000, FrameCompleted=273939203000, DequeueBufferDuration=159000, QueueBufferDuration=785000, 
+09-08 11:15:38.740 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.772 I/chatty  ( 1932): uid=1000 system_server identical 3 lines
+09-08 11:15:38.777 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:38.809 D/StatusBar( 2098): disable<e i a s b h r c s > disable2<q i n >
+09-08 11:15:38.895 I/ActivityTaskManager( 1932): Loading recents for user 0 into memory.
+09-08 11:15:38.896 E/TaskPersister( 1932): restoreTasksForUserLocked: Unable to list files from /data/system_ce/0/recent_tasks
+09-08 11:15:38.901 W/system_server( 1932): Long monitor contention with owner Binder:1932_9 (2423) at long java.lang.System.currentTimeMillis()(System.java:-2) waiters=0 in void android.telecom.Logging.SessionManager.startSession(java.lang.String, java.lang.String) for 205ms
+09-08 11:15:38.903 I/Telecom ( 1932): DefaultDialerCache: Refreshing default dialer for user 0: now com.android.dialer: DDC.oR@AAs
+09-08 11:15:38.904 W/Looper  ( 1932): Slow dispatch took 207ms main h=android.app.ActivityThread$H c=android.app.-$$Lambda$LoadedApk$ReceiverDispatcher$Args$_BumDX2UKsnxLVrE6UJsJZkotuA@3a40862 m=0
+09-08 11:15:38.915 D/installd( 1800): Found quota mount /dev/block/vdc at /data
+09-08 11:15:38.916 D/installd( 1800): Found storage mount /data/media at /mnt/runtime/default/emulated
+09-08 11:15:38.927 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:38.931 W/PhoneGlobals( 2341): Can't get phone with sub id = -1
+09-08 11:15:38.937 W/Looper  ( 1932): Drained
+09-08 11:15:39.009 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:39.029 W/WindowManager( 1932): Window freeze timeout expired.
+09-08 11:15:39.038 W/WindowManager( 1932): Force clearing orientation change: Window{8a7c8ce u0 StatusBar}
+09-08 11:15:39.078 I/WindowManager( 1932): Screen frozen for +2s83ms due to Window{8a7c8ce u0 StatusBar}
+09-08 11:15:39.200 E/BackupHelper( 2148): Could not parse delayed permissions
+09-08 11:15:39.200 E/BackupHelper( 2148): java.io.FileNotFoundException: /data/user_de/0/com.android.permissioncontroller/files/delayed_restore_permissions.xml: open failed: ENOENT (No such file or directory)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at libcore.io.IoBridge.open(IoBridge.java:496)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at java.io.FileInputStream.<init>(FileInputStream.java:159)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at android.app.ContextImpl.openFileInput(ContextImpl.java:600)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at com.android.packageinstaller.permission.service.BackupHelper.restoreDelayedState(BackupHelper.java:338)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at com.android.packageinstaller.permission.service.PermissionControllerServiceImpl.onRestoreDelayedRuntimePermissionsBackup(PermissionControllerServiceImpl.java:358)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at com.android.packageinstaller.permission.service.PermissionControllerServiceImpl.lambda$onRestoreDelayedRuntimePermissionsBackup$3$PermissionControllerServiceImpl(PermissionControllerServiceImpl.java:352)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at com.android.packageinstaller.permission.service.-$$Lambda$PermissionControllerServiceImpl$wHAhob5PsX8wKMTaFp8IJWkb1LE.run(Unknown Source:8)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at android.os.AsyncTask$SerialExecutor$1.run(AsyncTask.java:289)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at java.lang.Thread.run(Thread.java:919)
+09-08 11:15:39.200 E/BackupHelper( 2148): Caused by: android.system.ErrnoException: open failed: ENOENT (No such file or directory)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at libcore.io.Linux.open(Native Method)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at libcore.io.ForwardingOs.open(ForwardingOs.java:167)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at libcore.io.BlockGuardOs.open(BlockGuardOs.java:252)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at libcore.io.ForwardingOs.open(ForwardingOs.java:167)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at android.app.ActivityThread$AndroidOs.open(ActivityThread.java:7255)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	at libcore.io.IoBridge.open(IoBridge.java:482)
+09-08 11:15:39.200 E/BackupHelper( 2148): 	... 10 more
+09-08 11:15:39.214 W/system_server( 1932): Long monitor contention with owner android.fg (1950) at android.os.Message android.os.MessageQueue.next()(MessageQueue.java:338) waiters=0 in boolean android.os.MessageQueue.enqueueMessage(android.os.Message, long) for 258ms
+09-08 11:15:39.263 W/Looper  ( 1932): Slow dispatch took 246ms main h=com.android.server.notification.NotificationManagerService$WorkerHandler c=com.android.server.notification.NotificationManagerService$PostNotificationRunnable@924395e m=0
+09-08 11:15:39.416 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:39.434 W/Looper  ( 1932): Slow dispatch took 161ms main h=com.android.server.notification.NotificationManagerService$WorkerHandler c=com.android.server.notification.NotificationManagerService$PostNotificationRunnable$1@65827c5 m=0
+09-08 11:15:39.495 W/Looper  ( 1932): Slow dispatch took 214ms android.fg h=com.android.server.location.GnssLocationProvider$ProviderHandler c=null m=18
+09-08 11:15:39.442 I/chatty  ( 1932): uid=1000 system_server identical 2 lines
+09-08 11:15:39.444 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:39.543 I/netd    ( 1698): trafficSwapActiveStatsMap() <1175.64ms>
+09-08 11:15:39.558 I/netd    ( 1698): tetherGetStats() <8.54ms>
+09-08 11:15:39.575 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:39.585 I/chatty  ( 1932): uid=1000 system_server identical 1 line
+09-08 11:15:39.590 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:39.636 I/rcs     ( 2794): [PresencePublication] onMobileDataChanged, mDataEnabled=true value=true
+09-08 11:15:39.679 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:39.735 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:39.737 V/BackupManagerService( 1932): No ancestral data
+09-08 11:15:39.757 I/BackupManagerService( 1932): isBackupEnabled() => false due to absent settings file
+09-08 11:15:39.757 I/BackupManagerService( 1932): Backup enabled => false
+09-08 11:15:39.908 D/QueuedWork( 2794): waited: [<1: 0, <2: 0, <4: 0, <8: 0, <16: 0, <32: 0, <64: 0, <128: 0, <256: 0, <512: 0, <1024: 0, <2048: 1, <4096: 0, <8192: 0, <16384: 0, >=16384: 0]
+09-08 11:15:39.961 W/Looper  ( 1932): Drained
+09-08 11:15:39.998 E/netmgr  ( 1688): Failed to open QEMU pipe 'qemud:network': Invalid argument
+09-08 11:15:40.091 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:40.354 W/oid.documentsu( 2824): Unexpected CPU variant for X86 using defaults: x86_64
+09-08 11:15:40.401 D/Zygote  ( 1699): Forked child process 2824
+09-08 11:15:40.434 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:40.452 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:40.472 I/.ims.rcsservic( 2794): Background young concurrent copying GC freed 22880(1759KB) AllocSpace objects, 0(0B) LOS objects, 85% free, 1037KB/7181KB, paused 239.211ms total 835.057ms
+09-08 11:15:40.478 W/ActivityManager( 1932): Slow operation: 29075ms so far, now at startProcess: returned from zygote!
+09-08 11:15:40.485 W/ActivityManager( 1932): Slow operation: 29082ms so far, now at startProcess: done updating battery stats
+09-08 11:15:40.486 W/ActivityManager( 1932): Slow operation: 29082ms so far, now at startProcess: building log message
+09-08 11:15:40.486 I/ActivityManager( 1932): Start proc 2824:com.android.documentsui/u0a58 for broadcast {com.android.documentsui/com.android.documentsui.PreBootReceiver}
+09-08 11:15:40.486 W/ActivityManager( 1932): Slow operation: 29083ms so far, now at startProcess: starting to update pids map
+09-08 11:15:40.487 W/ActivityManager( 1932): Slow operation: 29083ms so far, now at startProcess: done updating pids map
+09-08 11:15:40.487 W/ActivityManager( 1932): Slow operation: 29001ms so far, now at startProcess: asking zygote to start proc
+09-08 11:15:40.515 E/wifi_forwarder( 1693): RemoteConnection failed to initialize: RemoteConnection failed to open pipe
+09-08 11:15:40.635 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:40.976 I/chatty  ( 1932): uid=1000 system_server identical 16 lines
+09-08 11:15:41.168 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:41.186 W/system_server( 1932): Long monitor contention with owner Binder:1932_8 (2393) at void com.android.server.power.PowerManagerService.releaseWakeLockInternal(android.os.IBinder, int)(PowerManagerService.java:1149) waiters=0 in void com.android.server.power.PowerManagerService.acquireWakeLockInternal(android.os.IBinder, int, java.lang.String, java.lang.String, android.os.WorkSource, java.lang.String, int, int) for 134ms
+09-08 11:15:41.194 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:41.201 I/system_server( 1932): The ClassLoaderContext is a special shared library.
+09-08 11:15:41.202 I/BackgroundDexOptService( 1932): Pinning optimized code {}
+09-08 11:15:41.210 W/m.android.phon( 2341): Long monitor contention with owner HwBinder:2341_1 (2623) at void com.android.internal.telephony.RIL.decrementWakeLock(com.android.internal.telephony.RILRequest)(RIL.java:4949) waiters=0 in void com.android.internal.telephony.RIL.acquireWakeLock(com.android.internal.telephony.RILRequest, int) for 185ms
+09-08 11:15:41.315 D/IntentBroadcaster( 2341): Broadcasting and adding intent for rebroadcast: android.intent.action.SIM_STATE_CHANGED READY for slotId 0
+09-08 11:15:41.328 I/rcs     ( 2794): [PresencePublication] onReceive intent=Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x5000010 (has extras) }
+09-08 11:15:41.328 I/rcs     ( 2794): [PresencePublication] ACTION_SIM_STATE_CHANGED INTENT_KEY_ICC_STATE=READY
+09-08 11:15:41.328 I/rcs     ( 2794): [RcsService] onReceive intent=Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x5000010 (has extras) }
+09-08 11:15:41.400 I/system_server( 1932): ThreadFlipBegin blocked for 6.288ms
+09-08 11:15:41.503 I/system_server( 1932): IncrementDisableThreadFlip blocked for 108.557ms
+09-08 11:15:41.504 I/system_server( 1932): IncrementDisableThreadFlip blocked for 103.457ms
+09-08 11:15:41.506 I/system_server( 1932): IncrementDisableThreadFlip blocked for 9.418ms
+09-08 11:15:41.515 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:41.520 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:41.627 W/KeyguardUpdateMonitor( 2098): invalid subId in handleServiceStateChange()
+09-08 11:15:41.636 I/Choreographer( 2098): Skipped 187 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:41.655 I/TelecomFramework( 2341): PstnPhoneCapabilitiesNotifier: handleVideoCapabilitesChanged. Video capability - false
+09-08 11:15:41.717 I/system_server( 1932): Explicit concurrent copying GC freed 38336(2698KB) AllocSpace objects, 34(1540KB) LOS objects, 42% free, 6504KB/11MB, paused 96.237ms total 579.289ms
+09-08 11:15:41.934 W/ActivityManager( 1932): Slow operation: 109ms so far, now at attachApplicationLocked: immediately after bindApplication
+09-08 11:15:41.935 W/ActivityManager( 1932): Slow operation: 109ms so far, now at attachApplicationLocked: after updateLruProcessLocked
+09-08 11:15:41.937 W/ActivityManager( 1932): Slow operation: 111ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+09-08 11:15:41.979 D/EGL_emulation( 2098): eglMakeCurrent: 0x7693a0e88a60: ver 3 1 (tinfo 0x7693eca121e0)
+09-08 11:15:41.983 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 65536
+09-08 11:15:42.007 D/StatusBar( 2098): disable<e i a s b h r c s > disable2<q i n >
+09-08 11:15:42.023 D/CarrierSvcBindHelper( 2341): No carrier app for: 0
+09-08 11:15:42.034 W/ActivityManager( 1932): Slow operation: 209ms so far, now at attachApplicationLocked: after sendPendingBroadcastsLocked
+09-08 11:15:42.050 D/ApplicationLoaders( 2824): Returning zygote-cached class loader: /system/framework/android.hidl.base-V1.0-java.jar
+09-08 11:15:42.051 D/ApplicationLoaders( 2824): Returning zygote-cached class loader: /system/framework/android.hidl.manager-V1.0-java.jar
+09-08 11:15:42.051 D/ApplicationLoaders( 2824): Returning zygote-cached class loader: /system/framework/android.hidl.base-V1.0-java.jar
+09-08 11:15:42.053 I/oid.documentsu( 2824): The ClassLoaderContext is a special shared library.
+09-08 11:15:42.077 D/EGL_emulation( 2098): eglMakeCurrent: 0x7693a0e88a60: ver 3 1 (tinfo 0x7693eca121e0)
+09-08 11:15:42.117 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 65536
+09-08 11:15:42.120 I/OpenGLRenderer( 2098): Davey! duration=3606ms; Flags=1, IntendedVsync=273711936373, Vsync=276828602915, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=276836910000, AnimationStart=276837214000, PerformTraversalsStart=276839642000, DrawStart=277275913000, SyncQueued=277277212000, SyncStart=277280288000, IssueDrawCommandsStart=277280826000, SwapBuffers=277285126000, FrameCompleted=277321289000, DequeueBufferDuration=2537000, QueueBufferDuration=19243000, 
+09-08 11:15:42.391 E/VvmPkgInstalledRcvr( 2341): cannot create TelephonyManager from ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:42.392 I/TelecomFramework( 2341): PstnPhoneCapabilitiesNotifier: handleVideoCapabilitesChanged. Video capability - false
+09-08 11:15:42.394 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] getIccId: No UICC
+09-08 11:15:42.395 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] isRttSupported: no Phone found. Invalid subId:-1
+09-08 11:15:42.399 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@AA8
+09-08 11:15:42.400 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@AA8
+09-08 11:15:42.473 V/KeyguardUpdateMonitor( 2098): action android.intent.action.SIM_STATE_CHANGED state: READY slotId: 0 subid: -1
+09-08 11:15:42.474 I/Choreographer( 2098): Skipped 49 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:42.505 D/KeyguardUpdateMonitor( 2098): handleSimStateChange(subId=-1, slotId=0, state=READY)
+09-08 11:15:42.505 W/KeyguardUpdateMonitor( 2098): invalid subId in handleSimStateChange()
+09-08 11:15:42.562 D/gralloc_ranchu( 1726): gralloc_alloc: Creating ashmem region of size 65536
+09-08 11:15:42.571 I/OpenGLRenderer( 2098): Davey! duration=919ms; Flags=0, IntendedVsync=276851658432, Vsync=277668325066, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=277675647000, AnimationStart=277675889000, PerformTraversalsStart=277676384000, DrawStart=277676661000, SyncQueued=277676860000, SyncStart=277677731000, IssueDrawCommandsStart=277677888000, SwapBuffers=277681848000, FrameCompleted=277771911000, DequeueBufferDuration=7968000, QueueBufferDuration=1389000, 
+09-08 11:15:42.937 W/System  ( 2341): A resource failed to call end. 
+09-08 11:15:43.008 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:43.028 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:43.031 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:43.033 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.27ms>
+09-08 11:15:43.082 W/PreBootReceiver( 2824): Can't get valid overlay info
+09-08 11:15:43.083 D/DocumentsApplication( 2824): OverlayManager.setEnabled() result: true
+09-08 11:15:43.084 I/PreBootBroadcaster( 1932): Pre-boot of {com.android.managedprovisioning/com.android.managedprovisioning.ota.PreBootListener} for user 0
+09-08 11:15:43.198 D/ServiceStateProvider( 2341): subId=-1
+09-08 11:15:43.218 W/KeyguardUpdateMonitor( 2098): invalid subId in handleServiceStateChange()
+09-08 11:15:43.373 W/Looper  ( 1932): Slow dispatch took 110ms main h=com.android.server.notification.NotificationManagerService$WorkerHandler c=com.android.server.notification.NotificationManagerService$NotificationListeners$2@b37001a m=0
+09-08 11:15:43.440 W/system_server( 1932): Long monitor contention with owner ActivityManager (1959) at void com.android.server.am.BroadcastQueue.processNextBroadcast(boolean)(BroadcastQueue.java:948) waiters=1 in java.lang.String com.android.server.am.ActivityManagerService.checkContentProviderAccess(java.lang.String, int) for 241ms
+09-08 11:15:43.533 W/Looper  ( 1932): Slow dispatch took 393ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=null m=53
+09-08 11:15:43.602 D/CarrierConfigLoader( 2341): mHandler: 9 phoneId: 0
+09-08 11:15:43.700 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:43.700 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:43.700 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:43.700 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id -1
+09-08 11:15:43.701 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: adding default
+09-08 11:15:43.702 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] getIccId: No UICC
+09-08 11:15:43.704 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] isRttSupported: no Phone found. Invalid subId:-1
+09-08 11:15:43.714 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ABA
+09-08 11:15:43.714 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ABA
+09-08 11:15:43.719 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:43.719 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:43.814 D/Zygote  ( 1699): Forked child process 2848
+09-08 11:15:43.843 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:44.009 W/PhoneGlobals( 2341): Can't get phone with sub id = -1
+09-08 11:15:44.508 W/ndroid.sdksetu( 2848): Unexpected CPU variant for X86 using defaults: x86_64
+09-08 11:15:44.913 D/SntpClient( 1932): request time failed: java.net.SocketTimeoutException: Poll timed out
+09-08 11:15:44.914 E/NtpTimeHelper( 1932): requestTime failed
+09-08 11:15:44.929 W/ActivityManager( 1932): Slow operation: 33443ms so far, now at startProcess: returned from zygote!
+09-08 11:15:44.930 W/ActivityManager( 1932): Slow operation: 33443ms so far, now at startProcess: done updating battery stats
+09-08 11:15:44.930 W/ActivityManager( 1932): Slow operation: 33444ms so far, now at startProcess: building log message
+09-08 11:15:44.930 I/ActivityManager( 1932): Start proc 2848:com.android.sdksetup/u0a66 for activity {com.android.sdksetup/com.android.sdksetup.DefaultActivity}
+09-08 11:15:44.938 W/ActivityManager( 1932): Slow operation: 33444ms so far, now at startProcess: starting to update pids map
+09-08 11:15:44.941 W/ActivityManager( 1932): Slow operation: 33454ms so far, now at startProcess: done updating pids map
+09-08 11:15:44.941 W/ActivityManager( 1932): Slow operation: 33235ms so far, now at startProcess: asking zygote to start proc
+09-08 11:15:44.985 D/MccTable( 2341): updateMccMncConfiguration mccmnc='310260
+09-08 11:15:44.985 D/MccTable( 2341): updateMccMncConfiguration: mcc=310, mnc=260
+09-08 11:15:45.004 D/AlarmManagerService( 1932): Kernel timezone updated to 240 minutes west of GMT
+09-08 11:15:45.020 D/ConditionProviders.SCP( 1932): onReceive android.intent.action.TIMEZONE_CHANGED
+09-08 11:15:45.028 D/KeyguardClockSwitch( 2098): Updating clock: 1115
+09-08 11:15:45.051 D/ConditionProviders.SCP( 1932): evaluateSubscriptionLocked cal=ScheduleCalendar[mDays={1, 2, 3, 4, 5, 6, 7}, mSchedule=ScheduleInfo{days=[1, 2, 3, 4, 5, 6, 7], startHour=22, startMinute=0, endHour=7, endMinute=0, exitAtAlarm=true, nextAlarm=Wed Dec 31 19:00:00 EST 1969 (0)}], now=Tue Sep 08 11:15:45 EDT 2026 (1788880545020), nextUserAlarmTime=Wed Dec 31 19:00:00 EST 1969 (0)
+09-08 11:15:45.052 D/ConditionProviders.SCP( 1932): notifyCondition condition://android/schedule?days=1.2.3.4.5.6.7&start=22.0&end=7.0&exitAtAlarm=true STATE_FALSE reason=!meetsSchedule
+09-08 11:15:45.055 D/ConditionProviders.SCP( 1932): Scheduling evaluate for Tue Sep 08 22:00:00 EDT 2026 (1788919200000), in +10h44m14s980ms, now=Tue Sep 08 11:15:45 EDT 2026 (1788880545020)
+09-08 11:15:45.145 D/MccTable( 2341): timezone set to America/New_York
+09-08 11:15:45.145 D/MccTable( 2341): updateMccMncConfiguration updateConfig config={0.0 310mcc260mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined}}
+09-08 11:15:45.150 I/ActivityTaskManager( 1932): Config changes=3 {1.0 310mcc260mnc [en_US] ldltr sw320dp w640dp h296dp 160dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 640, 320) mAppBounds=Rect(0, 0 - 640, 320) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.18}
+09-08 11:15:45.174 I/ActivityTaskManager( 1932): Override config changes=3 {1.0 310mcc260mnc [en_US] ldltr sw320dp w640dp h296dp 160dpi nrml long land finger qwerty/v/v -nav/h winConfig={ mBounds=Rect(0, 0 - 640, 320) mAppBounds=Rect(0, 0 - 640, 320) mWindowingMode=fullscreen mDisplayWindowingMode=fullscreen mActivityType=undefined mAlwaysOnTop=undefined mRotation=ROTATION_90} s.18} for displayId=0
+09-08 11:15:45.361 V/SettingsProvider( 1932): Notifying for 0: content://settings/global/audio_safe_volume_state
+09-08 11:15:45.636 I/TelecomFramework( 2341): PstnPhoneCapabilitiesNotifier: handleVideoCapabilitesChanged. Video capability - false
+09-08 11:15:45.638 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] getIccId: No UICC
+09-08 11:15:45.640 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] isRttSupported: no Phone found. Invalid subId:-1
+09-08 11:15:45.722 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ABM
+09-08 11:15:45.722 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ABM
+09-08 11:15:46.311 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:46.319 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:46.323 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:46.325 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.56ms>
+09-08 11:15:46.350 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:46.350 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:46.350 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:46.350 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id -1
+09-08 11:15:46.350 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: adding default
+09-08 11:15:46.352 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] getIccId: No UICC
+09-08 11:15:46.354 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] isRttSupported: no Phone found. Invalid subId:-1
+09-08 11:15:46.359 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}(addr: tel:**********54 -> tel:)(subAddr: tel:**********54 -> tel:)]: TSI.rPA@ABQ
+09-08 11:15:46.359 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ABQ
+09-08 11:15:46.523 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:46.536 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:46.563 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:46.575 I/TelecomFramework( 2341): PstnPhoneCapabilitiesNotifier: handleVideoCapabilitesChanged. Video capability - false
+09-08 11:15:46.577 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] getIccId: No UICC
+09-08 11:15:46.578 E/PhoneInterfaceManager( 2341): [PhoneIntfMgr] isRttSupported: no Phone found. Invalid subId:-1
+09-08 11:15:46.582 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ABc
+09-08 11:15:46.583 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ABc
+09-08 11:15:46.776 D/MccTable( 2341): updateMccMncConfiguration mccmnc='310260
+09-08 11:15:46.776 D/MccTable( 2341): updateMccMncConfiguration: mcc=310, mnc=260
+09-08 11:15:46.776 D/MccTable( 2341): updateMccMncConfiguration updateConfig config={0.0 310mcc260mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined}}
+09-08 11:15:46.931 W/Telecom ( 1932): PhoneAccountRegistrar: Trying to set nonexistent default outgoing ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}: TSI.sUSOPA@ABk
+09-08 11:15:46.953 D/Zygote  ( 1699): Forked child process 2859
+09-08 11:15:47.122 I/oid.documentsu( 2824): Waiting for a blocking GC ProfileSaver
+09-08 11:15:47.169 W/droid.launcher( 2859): Unexpected CPU variant for X86 using defaults: x86_64
+09-08 11:15:47.391 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:47.391 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:47.395 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:47.395 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:47.397 E/memtrack( 1932): Couldn't load memtrack module
+09-08 11:15:47.398 W/android.os.Debug( 1932): failed to get memory consumption info: -1
+09-08 11:15:47.400 W/Looper  ( 1932): Slow dispatch took 50965ms android.bg h=com.android.server.am.ActivityManagerService$5 c=null m=1
+09-08 11:15:47.400 W/Looper  ( 1932): Slow delivery took 62234ms android.bg h=com.android.server.usage.UsageStatsService$H c=null m=3
+09-08 11:15:47.503 E/GnssLocationProvider( 1932): android_location_GnssLocationProvider_set_agps_server: AGPS interface not supported
+09-08 11:15:47.504 W/Looper  ( 1932): Slow dispatch took 587ms android.fg h=com.android.server.location.GnssLocationProvider$ProviderHandler c=android.app.-$$Lambda$LoadedApk$ReceiverDispatcher$Args$_BumDX2UKsnxLVrE6UJsJZkotuA@492d25d m=0
+09-08 11:15:47.507 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:47.547 I/oid.documentsu( 2824): WaitForGcToComplete blocked ProfileSaver on ClassLinker for 424.917ms
+09-08 11:15:47.569 W/ActivityManager( 1932): Slow operation: 35863ms so far, now at startProcess: returned from zygote!
+09-08 11:15:47.570 W/ActivityManager( 1932): Slow operation: 35863ms so far, now at startProcess: done updating battery stats
+09-08 11:15:47.570 W/ActivityManager( 1932): Slow operation: 35863ms so far, now at startProcess: building log message
+09-08 11:15:47.570 I/ActivityManager( 1932): Start proc 2859:com.android.launcher3/u0a100 for service {com.android.launcher3/com.android.launcher3.notification.NotificationListener}
+09-08 11:15:47.570 W/ActivityManager( 1932): Slow operation: 35864ms so far, now at startProcess: starting to update pids map
+09-08 11:15:47.571 W/ActivityManager( 1932): Slow operation: 35864ms so far, now at startProcess: done updating pids map
+09-08 11:15:47.571 W/ActivityManager( 1932): Slow operation: 10048ms so far, now at startProcess: asking zygote to start proc
+09-08 11:15:47.589 W/Looper  ( 1932): Slow dispatch took 680ms main h=com.android.server.TelephonyRegistry$1 c=null m=2
+09-08 11:15:47.589 V/SettingsProvider( 1932): Notifying for 0: content://settings/global/multi_sim_data_call
+09-08 11:15:47.589 W/Looper  ( 1932): Slow delivery took 676ms main h=com.android.providers.settings.SettingsProvider$SettingsRegistry$MyHandler c=null m=1
+09-08 11:15:47.591 V/SettingsProvider( 1932): Notifying for 0: content://settings/global/multi_sim_sms
+09-08 11:15:47.592 V/SettingsProvider( 1932): Notifying for 0: content://settings/global/multi_sim_voice_call
+09-08 11:15:47.599 W/Looper  ( 1932): Drained
+09-08 11:15:47.606 I/ndroid.sdksetu( 2848): The ClassLoaderContext is a special shared library.
+09-08 11:15:47.825 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:48.051 E/StatusBarSignalPolicy( 2098): Unexpected subscription 1
+09-08 11:15:48.101 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:48.125 E/GnssLocationProvider( 1932): android_location_GnssLocationProvider_set_agps_server: AGPS interface not supported
+09-08 11:15:48.138 I/NetworkPolicy( 1932): No policy for subscriber 310260...; generating default policy
+09-08 11:15:48.142 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:48.411 W/ActivityManager( 1932): Slow operation: 63ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+09-08 11:15:48.806 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=-1 displayName=Android carrierName= nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@5cb7f6c mcc null mnc nullmCountryIso=null isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:48.838 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:48.845 W/system_server( 1932): Long monitor contention with owner NetworkPolicy (2050) at boolean android.os.BinderProxy.transactNative(int, android.os.Parcel, android.os.Parcel, int)(BinderProxy.java:-2) waiters=0 in void com.android.server.net.NetworkPolicyManagerService.handleUidChanged(int, int, long) for 422ms
+09-08 11:15:48.849 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:48.851 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.77ms>
+09-08 11:15:48.861 D/MccTable( 2341): updateMccMncConfiguration mccmnc='310260
+09-08 11:15:48.862 D/MccTable( 2341): updateMccMncConfiguration: mcc=310, mnc=260
+09-08 11:15:48.862 D/MccTable( 2341): updateMccMncConfiguration updateConfig config={0.0 310mcc260mnc ?localeList ?layoutDir ?swdp ?wdp ?hdp ?density ?lsize ?long ?ldr ?wideColorGamut ?orien ?uimode ?night ?touch ?keyb/?/? ?nav/? winConfig={ mBounds=Rect(0, 0 - 0, 0) mAppBounds=null mWindowingMode=undefined mDisplayWindowingMode=undefined mActivityType=undefined mAlwaysOnTop=undefined mRotation=undefined}}
+09-08 11:15:48.868 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:48.883 D/KeyguardViewMediator( 2098): onSimStateChanged(subId=1, slotId=0,state=READY)
+09-08 11:15:48.885 D/KeyguardViewMediator( 2098): READY, reset state? false
+09-08 11:15:49.029 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.030 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.20ms>
+09-08 11:15:49.083 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:49.131 I/droid.launcher( 2859): The ClassLoaderContext is a special shared library.
+09-08 11:15:49.163 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:49.275 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.411 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.433 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:49.505 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.19ms>
+09-08 11:15:49.511 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.684 I/droid.launcher( 2859): Waiting for a blocking GC ClassLinker
+09-08 11:15:49.687 I/droid.launcher( 2859): Background young concurrent copying GC freed 26288(1952KB) AllocSpace objects, 0(0B) LOS objects, 85% free, 1010KB/7154KB, paused 3.873ms total 514.505ms
+09-08 11:15:49.703 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.705 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.18ms>
+09-08 11:15:49.713 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.719 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:49.720 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.20ms>
+09-08 11:15:49.739 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=-1 displayName=Android carrierName= nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@5dfb85d mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:49.802 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:50.022 I/Choreographer( 2098): Skipped 56 frames!  The application may be doing too much work on its main thread.
+09-08 11:15:50.145 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:50.147 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=-1 displayName=Android carrierName= nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@74d09ff mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:50.151 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:50.295 I/OpenGLRenderer( 2098): Davey! duration=1219ms; Flags=0, IntendedVsync=284275824840, Vsync=285209158136, OldestInputEvent=9223372036854775807, NewestInputEvent=0, HandleInputStart=285223436000, AnimationStart=285330464000, PerformTraversalsStart=285331952000, DrawStart=285332239000, SyncQueued=285332428000, SyncStart=285332813000, IssueDrawCommandsStart=285333315000, SwapBuffers=285411057000, FrameCompleted=285495943000, DequeueBufferDuration=2220000, QueueBufferDuration=3972000, 
+09-08 11:15:50.362 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:50.371 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:50.372 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.31ms>
+09-08 11:15:50.382 V/SettingsProvider( 1932): Notifying for 0: content://settings/global/preferred_network_mode1
+09-08 11:15:50.484 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=-1 displayName=Android carrierName= nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@f1323cc mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:50.493 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:50.496 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=-1 displayName=Android carrierName= nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@bd69615 mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:50.996 W/system_server( 1932): Long monitor contention with owner Binder:1932_7 (2376) at void com.android.server.power.PowerManagerService.updateWakeLockWorkSourceInternal(android.os.IBinder, android.os.WorkSource, java.lang.String, int)(PowerManagerService.java:1217) waiters=0 in void com.android.server.power.PowerManagerService.acquireWakeLockInternal(android.os.IBinder, int, java.lang.String, java.lang.String, android.os.WorkSource, java.lang.String, int, int) for 101ms
+09-08 11:15:51.132 D/IntentBroadcaster( 2341): Broadcasting and adding intent for rebroadcast: android.intent.action.SIM_STATE_CHANGED LOADED for slotId 0
+09-08 11:15:51.142 D/WifiService( 1932): resetting networks because SIM was loaded
+09-08 11:15:51.144 D/WifiClientModeImpl( 1932): resetting EAP-SIM/AKA/AKA' networks since SIM was changed
+09-08 11:15:51.145 V/KeyguardUpdateMonitor( 2098): action android.intent.action.SIM_STATE_CHANGED state: LOADED slotId: 0 subid: 1
+09-08 11:15:51.146 D/KeyguardUpdateMonitor( 2098): handleSimStateChange(subId=1, slotId=0, state=READY)
+09-08 11:15:51.189 I/rcs     ( 2794): [PresencePublication] onReceive intent=Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x5000010 (has extras) }
+09-08 11:15:51.190 I/rcs     ( 2794): [PresencePublication] ACTION_SIM_STATE_CHANGED INTENT_KEY_ICC_STATE=LOADED
+09-08 11:15:51.192 I/rcs     ( 2794): [RcsService] onReceive intent=Intent { act=android.intent.action.SIM_STATE_CHANGED flg=0x5000010 (has extras) }
+09-08 11:15:51.260 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:51.260 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:51.271 E/MmTelFeatureConnection( 2794): ImsRegistrationCallbackAdapter: ImsRegistration is null
+09-08 11:15:51.277 I/m.android.phon( 2341): IncrementDisableThreadFlip blocked for 15.313ms
+09-08 11:15:51.283 I/m.android.phon( 2341): IncrementDisableThreadFlip blocked for 6.271ms
+09-08 11:15:51.544 D/CarrierIdProvider( 2341): updateCarrierIdForSubId: 1
+09-08 11:15:51.555 D/CarrierIdProvider( 2341): updateCarrierIdForSubId: 1
+09-08 11:15:51.560 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:51.879 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:51.887 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=1 displayName=Android carrierName= nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@5567d2a mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:51.894 D/CarrierConfigLoader( 2341): update config for phoneId: 0 simState: LOADED
+09-08 11:15:51.946 D/CarrierSvcBindHelper( 2341): update binding for phoneId: 0 simState: LOADED
+09-08 11:15:51.960 D/TelephonyProvider( 2341): match current APN size:  1
+09-08 11:15:52.022 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:52.058 D/TelephonyProvider( 2341): match MNO APN: 1
+09-08 11:15:52.060 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:52.060 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:52.176 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:52.179 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.27ms>
+09-08 11:15:52.186 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:52.186 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:52.314 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:52.314 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:52.327 D/MultiSimSettingController( 2341): onDefaultDataSettingChanged
+09-08 11:15:52.334 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:52.334 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:52.334 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:52.557 I/m.android.phon( 2341): Background young concurrent copying GC freed 12918(1021KB) AllocSpace objects, 2(104KB) LOS objects, 26% free, 2233KB/3027KB, paused 83.121ms total 1.388s
+09-08 11:15:52.599 I/Telecom ( 1932): PhoneAccountRegistrar: New phone account registered: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ABo
+09-08 11:15:52.604 I/Telecom ( 1932): CallsManager: Sending phone-account ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} registered intent as user: TSI.rPA@ABo
+09-08 11:15:52.636 I/Telecom ( 1932): CallsManager: Sending phone-account registered intent to default dialer: TSI.rPA@ABo
+09-08 11:15:52.637 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:52.637 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:52.643 I/TelecomFramework( 2341): TelecomAccountRegistry: Unregistering phone account ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}.
+09-08 11:15:52.658 I/Telecom ( 1932): CallsManager: Sending phone-account ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} unregistered intent as user: TSI.uPA@ABw
+09-08 11:15:52.662 I/Telecom ( 1932): CallsManager: Sending phone-account unregistered intent to default dialer: TSI.uPA@ABw
+09-08 11:15:52.668 D/MultiSimSettingController( 2341): onDefaultDataSettingChanged
+09-08 11:15:52.674 D/MultiSimSettingController( 2341): onAllSubscriptionsLoaded
+09-08 11:15:52.675 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:52.676 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 6
+09-08 11:15:52.676 D/MultiSimSettingController( 2341): [updateDefaultValues] to only primary sub 1
+09-08 11:15:52.903 I/Telecom ( 1932): PhoneAccountRegistrar: setUserSelectedOutgoingPhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}: TSI.sUSOPA@AB8
+09-08 11:15:52.936 W/Looper  ( 1932): Slow delivery took 266ms main h=android.os.AsyncTask$InternalHandler c=null m=1
+09-08 11:15:52.936 V/NotificationListeners( 1932): 0 notification listener service connected: ComponentInfo{com.android.launcher3/com.android.launcher3.notification.NotificationListener}
+09-08 11:15:53.113 D/Zygote  ( 1699): Forked child process 2900
+09-08 11:15:53.203 W/Looper  ( 1932): Drained
+09-08 11:15:53.427 E/GnssLocationProvider( 1932): android_location_GnssLocationProvider_set_agps_server: AGPS interface not supported
+09-08 11:15:53.427 W/Looper  ( 1932): Slow dispatch took 551ms android.fg h=com.android.server.location.GnssLocationProvider$ProviderHandler c=android.app.-$$Lambda$LoadedApk$ReceiverDispatcher$Args$_BumDX2UKsnxLVrE6UJsJZkotuA@96811d8 m=0
+09-08 11:15:53.835 W/system_server( 1932): Long monitor contention with owner Binder:1932_7 (2376) at void com.android.server.power.PowerManagerService.updateWakeLockWorkSourceInternal(android.os.IBinder, android.os.WorkSource, java.lang.String, int)(PowerManagerService.java:1217) waiters=0 in void com.android.server.power.PowerManagerService.releaseWakeLockInternal(android.os.IBinder, int) for 407ms
+09-08 11:15:53.837 W/Looper  ( 1932): Slow dispatch took 410ms android.fg h=com.android.server.location.GnssLocationProvider$ProviderHandler c=null m=18
+09-08 11:15:54.018 W/android.smspus( 2900): Unexpected CPU variant for X86 using defaults: x86_64
+09-08 11:15:54.205 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:54.511 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:54.520 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:54.527 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:54.550 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:54.628 W/ActivityManager( 1932): Slow operation: 17104ms so far, now at startProcess: returned from zygote!
+09-08 11:15:54.628 W/ActivityManager( 1932): Slow operation: 17105ms so far, now at startProcess: done updating battery stats
+09-08 11:15:54.629 W/ActivityManager( 1932): Slow operation: 17105ms so far, now at startProcess: building log message
+09-08 11:15:54.629 I/ActivityManager( 1932): Start proc 2900:com.android.smspush/u0a79 for service {com.android.smspush/com.android.smspush.WapPushManager}
+09-08 11:15:54.629 W/ActivityManager( 1932): Slow operation: 17106ms so far, now at startProcess: starting to update pids map
+09-08 11:15:54.630 W/ActivityManager( 1932): Slow operation: 17107ms so far, now at startProcess: done updating pids map
+09-08 11:15:54.631 W/ActivityManager( 1932): Slow operation: 17098ms so far, now at startProcess: asking zygote to start proc
+09-08 11:15:54.699 W/android.smspus( 2900): Verification of void com.android.org.conscrypt.TrustedCertificateStore$PreloadHolder.<clinit>() took 650.575ms
+09-08 11:15:54.723 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.19ms>
+09-08 11:15:54.831 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:54.843 W/BestClock( 1932): java.time.DateTimeException: Missing NTP fix
+09-08 11:15:54.844 I/netd    ( 1698): bandwidthSetGlobalAlert(2097152) <0.17ms>
+09-08 11:15:54.892 W/Looper  ( 1932): Slow dispatch took 137ms android.ui h=com.android.server.am.ActivityManagerService$UiHandler c=null m=53
+09-08 11:15:55.090 D/TelephonyProvider( 2341): match current APN size:  1
+09-08 11:15:55.110 D/TelephonyProvider( 2341): match MNO APN: 1
+09-08 11:15:55.111 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:55.111 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:55.130 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:55.130 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:55.152 D/TelephonyProvider( 2341): subIdString = 1 subId = 1
+09-08 11:15:55.152 D/TelephonyProvider( 2341): getPreferredApnIdFromApn: for subId 1
+09-08 11:15:55.185 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:55.185 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.185 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:55.185 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:55.255 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ACA
+09-08 11:15:55.256 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ACA
+09-08 11:15:55.256 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:55.256 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.263 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=1 displayName=Android carrierName=Android nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@872471b mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:55.266 I/android.smspus( 2900): The ClassLoaderContext is a special shared library.
+09-08 11:15:55.331 V/KeyguardUpdateMonitor( 2098): onSubscriptionInfoChanged()
+09-08 11:15:55.346 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:55.347 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:55.347 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 0
+09-08 11:15:55.351 D/CallNotifier( 2341): updatePhoneStateListeners: update CF notifications.
+09-08 11:15:55.351 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:55.351 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.351 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:55.352 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:55.376 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ACM
+09-08 11:15:55.378 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ACM
+09-08 11:15:55.407 V/KeyguardUpdateMonitor( 2098): SubInfo:{id=1, iccId=89014103211118510720 simSlotIndex=0 carrierId=1 displayName=Android carrierName=Android nameSource=0 iconTint=-16746133 mNumber=+15555215554 dataRoaming=0 iconBitmap=android.graphics.Bitmap@434b0b8 mcc 310 mnc 260mCountryIso=us isEmbedded false accessRules null cardString=89014103211118510720 cardId=-1 isOpportunistic false mGroupUUID=null mIsGroupDisabled=false profileClass=-1 ehplmns = null hplmns = null subscriptionType=0 mGroupOwner=null}
+09-08 11:15:55.614 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:55.614 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.710 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:55.710 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:55.711 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 0
+09-08 11:15:55.714 D/CallNotifier( 2341): updatePhoneStateListeners: update CF notifications.
+09-08 11:15:55.714 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:55.714 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.715 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:55.715 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:55.893 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ACY
+09-08 11:15:55.893 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ACY
+09-08 11:15:55.895 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:55.897 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.917 I/m.android.phon( 2341): Background concurrent copying GC freed 12008(813KB) AllocSpace objects, 2(104KB) LOS objects, 49% free, 2108KB/4216KB, paused 3.112ms total 800.126ms
+09-08 11:15:55.918 W/System  ( 2341): A resource failed to call close. 
+09-08 11:15:55.928 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:55.928 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:55.928 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 0
+09-08 11:15:55.962 D/CallNotifier( 2341): updatePhoneStateListeners: update CF notifications.
+09-08 11:15:55.962 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:55.962 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:55.962 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:55.963 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:55.983 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ACk
+09-08 11:15:55.983 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ACk
+09-08 11:15:56.003 D/Zygote  ( 1699): Forked child process 2922
+09-08 11:15:56.092 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:56.092 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:56.098 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:56.098 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:56.098 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 0
+09-08 11:15:56.101 D/CallNotifier( 2341): updatePhoneStateListeners: update CF notifications.
+09-08 11:15:56.160 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:56.183 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:56.183 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:56.183 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:56.286 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@ACw
+09-08 11:15:56.289 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@ACw
+09-08 11:15:56.318 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:56.318 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:56.329 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:56.330 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:56.330 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 0
+09-08 11:15:56.461 D/CallNotifier( 2341): updatePhoneStateListeners: update CF notifications.
+09-08 11:15:56.461 I/TelecomFramework( 2341): : onSubscriptionsChanged - update accounts
+09-08 11:15:56.461 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Unregistering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:56.462 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Found 1 phones.  Attempting to register.
+09-08 11:15:56.462 I/TelecomFramework( 2341): TelecomAccountRegistry: setupAccounts: Phone with subscription id 1
+09-08 11:15:56.557 I/Telecom ( 1932): PhoneAccountRegistrar: Modify account: [ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}]: TSI.rPA@AC8
+09-08 11:15:56.595 I/Telecom ( 1932): CallsManager: handlePhoneAccountChanged: phoneAccount=[[X] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***]: TSI.rPA@AC8
+09-08 11:15:56.597 I/TelecomFramework( 2341): AccountEntry: Registered phoneAccount: [[ ] PhoneAccount: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0} Capabilities: CallProvider MultiUser PlaceEmerg SimSub  Audio Routes: BESW Schemes: tel voicemail  Extras: Bundle[{android.telecom.extra.SUPPORTS_VIDEO_CALLING_FALLBACK=true}] GroupId: ***] with handle: ComponentInfo{com.android.phone/com.android.services.telephony.TelephonyConnectionService}, ***, UserHandle{0}
+09-08 11:15:56.597 I/TelecomFramework( 2341): PstnIncomingCallNotifier: Registering: Handler (com.android.internal.telephony.GsmCdmaPhone) {53892c}
+09-08 11:15:56.605 D/MultiSimSettingController( 2341): onSubscriptionsChanged
+09-08 11:15:56.605 D/MultiSimSettingController( 2341): updateDefaults
+09-08 11:15:56.606 D/MultiSimSettingController( 2341): [updateDefaultValues] change: 0
+09-08 11:15:56.606 D/CarrierConfigLoader( 2341): mHandler: 7 phoneId: 0
+09-08 11:15:56.611 E/CarrierConfigLoader( 2341): java.io.FileNotFoundException: /data/user_de/0/com.android.phone/files/carrierconfig-com.android.carrierconfig-89014103211118510720-1.xml: open failed: ENOENT (No such file or directory)
+09-08 11:15:56.611 D/CarrierConfigLoader( 2341): Binding to com.android.carrierconfig for phone 0
+09-08 11:15:56.618 D/CarrierSvcBindHelper( 2341): mHandler: 0
+09-08 11:15:56.618 D/CarrierSvcBindHelper( 2341): Rebinding if necessary for phoneId: 0
+09-08 11:15:56.697 W/ndroid.keychai( 2922): Unexpected CPU variant for X86 using defaults: x86_64
+09-08 11:15:56.757 D/CarrierSvcBindHelper( 2341): No carrier app for: 0
+09-08 11:15:56.758 I/TelecomFramework( 2341): PstnPhoneCapabilitiesNotifier: handleVideoCapabilitesChanged. Video capability - false
+09-08 11:15:56.758 D/MultiSimSettingController( 2341): onDefaultDataSettingChanged
