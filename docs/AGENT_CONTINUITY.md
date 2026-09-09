@@ -1102,3 +1102,29 @@ Do not describe this branch/build as user-accepted until James runs the packaged
 10. Keith moves without clipping through room geometry.
 11. Talking to Keith pauses cleaning; closing dialogue resumes it.
 12. Abuse the interaction loop and report anything weird.
+
+## 2026-09-09 — First physical Android interaction playtest
+
+Manual result from James on the `9abace6` Android build:
+- Keith moves and visually reads acceptably.
+- Coffee maker toggles on/off with visible animation/feedback.
+- Fridge opens, but the old visual body exposed a solid slab instead of a believable cavity.
+- Wetberry pickup succeeds and produces pickup audio.
+- Right-side touch-look control can still become stuck on physical Android.
+
+Repair response:
+- `bf35531` — `fix(mobile): reset touch ownership on gameplay input lock`
+  - FirstPersonHUD now clears stale look/stick ownership on any gameplay input lock, including inspection.
+  - TouchLookZone.gd, VirtualStick.gd, and FirstPersonPlayer.gd remain untouched.
+  - Native acceptance includes a generic input-lock stale-touch regression case.
+- `c197393` — `fix(visuals): rebuild fridge as hollow interior shell`
+  - Replaces the solid visible refrigerator body with thin shell panels and dark interior backs.
+  - Moves ooze to the interior back wall; shrinks/pushes fly geometry deeper into the cavity.
+
+Verification after both repairs:
+- Native acceptance: 264 / 264 passed.
+- Python suite: 439 passed, 1 skipped.
+- `python tools/verify_native_contract.py`: ALL GATES PASSED.
+
+Physical Android retest is still REQUIRED for the right-look fix and fridge visuals.
+Do not mark these two defects closed until James confirms them on the rebuilt APK.
