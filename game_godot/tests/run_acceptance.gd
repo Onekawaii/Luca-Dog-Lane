@@ -79,6 +79,7 @@ func _run_all_tests() -> void:
 	test_phone_playtest_fixes()
 	test_touch_look_zone_robustness()
 	test_chalk_circle_bridge()
+	test_breakroom_interaction_pass()
 
 
 func test_campaign_loading() -> void:
@@ -774,6 +775,97 @@ func test_chalk_circle_bridge() -> void:
 		6,
 		"Chalk state survives save-v3 WorldState round trip"
 	)
+
+
+func test_breakroom_interaction_pass() -> void:
+	print("\n--- 15. Breakroom Interaction Pass I Acceptance ---")
+	var bootstrap_scene = load("res://scenes/bootstrap/FirstPersonBootstrap.tscn")
+	assert_true(bootstrap_scene != null, "FirstPersonBootstrap loads for interaction tests")
+	var bootstrap = bootstrap_scene.instantiate()
+	assert_true(bootstrap != null, "FirstPersonBootstrap instantiates")
+	add_child(bootstrap)
+
+	var breakroom = bootstrap.find_child("FirstPersonBreakroom", true, false) as FirstPersonBreakroom
+	assert_true(breakroom != null, "FirstPersonBreakroom node found in tree")
+
+	var player = bootstrap.find_child("Player", true, false)
+	assert_true(player != null, "Player found in tree")
+
+	var held_slot = player.find_child("HeldSlot", true, false)
+	assert_true(held_slot != null, "Player has HeldSlot node in Head hierarchy")
+
+	var wetberry = bootstrap.find_child("Wetberry", true, false) as StaticBody3D
+	assert_true(wetberry != null, "Wetberry static body found")
+
+	# 1. Coffee Maker Toggle & Visual Feedback
+	assert_false(breakroom.is_coffee_on, "Coffee maker starts OFF")
+	breakroom.toggle_coffee_maker()
+	assert_true(breakroom.is_coffee_on, "Coffee maker toggled to ON")
+	var coffee_led = breakroom.quantum_coffee_maker.find_child("StatusLED", true, false) as MeshInstance3D
+	assert_true(coffee_led != null, "Coffee maker StatusLED exists")
+	var led_mat = coffee_led.get_active_material(0) as StandardMaterial3D
+	assert_true(led_mat != null and led_mat.emission_enabled, "StatusLED emits light when ON")
+
+	var coffee_steam = breakroom.quantum_coffee_maker.find_child("BrewSteam", true, false) as MeshInstance3D
+	assert_true(coffee_steam != null and coffee_steam.visible, "BrewSteam visible when ON")
+
+	breakroom.toggle_coffee_maker()
+	assert_false(breakroom.is_coffee_on, "Coffee maker toggled back to OFF")
+	assert_false(coffee_steam.visible, "BrewSteam hidden when OFF")
+
+	# 2. Fridge Hinge Animation & Fly Swarm Visibility
+	assert_false(breakroom.is_fridge_open, "Fridge starts closed")
+	var fridge_pivot = breakroom.fridge_door_pivot
+	assert_true(fridge_pivot != null, "Fridge has FridgeDoorPivot node")
+	var freezer_pivot = breakroom.freezer_door_pivot
+	assert_true(freezer_pivot != null, "Fridge has FreezerDoorPivot node")
+	var fly_swarm = breakroom.fridge_fly_swarm
+	assert_true(fly_swarm != null, "Fridge has FlySwarm node")
+
+	breakroom.toggle_fridge_door()
+	assert_true(breakroom.is_fridge_open, "Fridge is toggled to open")
+	assert_true(breakroom.is_fridge_animating, "Fridge is animating door swing")
+
+	# 3. Focus / Inspect / Zoom component
+	assert_false(breakroom.is_inspecting, "Inspect mode starts inactive")
+	breakroom._start_inspect(wetberry, "Wetberry", 0.9, 0.0)
+	assert_true(breakroom.is_inspecting, "Inspect mode active on Wetberry")
+	assert_equal(breakroom.inspecting_target, wetberry, "Inspect target is Wetberry")
+
+	breakroom.exit_inspect()
+	assert_false(breakroom.is_inspecting, "Exit inspect restores exploration mode")
+
+	# 4. Pick Up / Place Wetberry (Duplication Impossible)
+	assert_true(wetberry.visible, "Wetberry initially visible in world")
+	var pick_ok = breakroom.pick_up_wetberry()
+	assert_true(pick_ok, "Wetberry picked up successfully")
+	assert_false(wetberry.visible, "Wetberry world prop hidden while held")
+	assert_true(breakroom.held_prop != null, "Held prop reference set in breakroom")
+	assert_true(held_slot.get_child_count() > 0, "HeldSlot contains view mesh")
+
+	# Cannot pick up second object while holding
+	var pick_again = breakroom.pick_up_wetberry()
+	assert_false(pick_again, "Cannot pick up another object while holding one")
+
+	# Place held object
+	var place_ok = breakroom.place_held_object()
+	assert_true(place_ok, "Held object placed back on surface")
+	assert_true(wetberry.visible, "Wetberry world prop visible after placement")
+	assert_true(breakroom.held_prop == null, "Held prop reference cleared")
+
+	# 5. Keith Ambient Worker (Cleaning loop & Pause/Resume)
+	var keith = bootstrap.find_child("Keith", true, false)
+	assert_true(keith != null, "Keith actor exists")
+	assert_true(breakroom.keith_worker != null, "Keith ambient worker initialized")
+	var worker = breakroom.keith_worker
+	assert_false(worker.is_paused, "Keith ambient worker is initially not paused")
+	worker.pause_cleaning()
+	assert_true(worker.is_paused, "Keith ambient worker is paused for interaction")
+	worker.resume_cleaning()
+	assert_false(worker.is_paused, "Keith ambient worker is resumed after dialogue")
+
+	remove_child(bootstrap)
+	bootstrap.queue_free()
 
 
 func assert_false(condition: bool, test_name: String) -> void:

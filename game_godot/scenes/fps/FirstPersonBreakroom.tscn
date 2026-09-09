@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonBreakroom.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
 [ext_resource type="Script" path="res://scripts/interaction/Inspectable.gd" id="9_inspectable"]
+[ext_resource type="Script" path="res://scripts/interaction/Holdable.gd" id="11_holdable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonInteractable.gd" id="3_interactable"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonQuantumNPC.gd" id="4_quantum_kevin"]
 [ext_resource type="Texture2D" path="res://assets/fps/materials/breakroom_floor_tile.png" id="5_floor_tile"]
@@ -11,6 +12,7 @@
 [ext_resource type="Texture2D" path="res://assets/fps/props/fridge_property_decal.png" id="8_fridge_prop_decal"]
 [ext_resource type="Texture2D" path="res://assets/fps/props/fridge_maintenance_decal.png" id="9_fridge_maint_decal"]
 [ext_resource type="Texture2D" path="res://assets/fps/props/hidden_anomaly_plate_256.png" id="10_hidden_anomaly_tex"]
+[ext_resource type="Texture2D" path="res://assets/fps/props/fridge_ooze_decal.png" id="11_fridge_ooze_tex"]
 
 [sub_resource type="Environment" id="Environment_breakroom"]
 background_mode = 1
@@ -138,6 +140,26 @@ albedo_texture = ExtResource("8_fridge_prop_decal")
 [sub_resource type="StandardMaterial3D" id="Mat_fridge_maint_decal"]
 transparency = 1
 albedo_texture = ExtResource("9_fridge_maint_decal")
+
+[sub_resource type="StandardMaterial3D" id="Mat_fridge_interior"]
+albedo_color = Color(0.12, 0.14, 0.13, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_fridge_ooze"]
+transparency = 1
+albedo_texture = ExtResource("11_fridge_ooze_tex")
+emission_enabled = true
+emission = Color(0.15, 0.35, 0.1, 1)
+emission_energy_multiplier = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Mat_fly"]
+albedo_color = Color(0.05, 0.05, 0.05, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Mat_coffee_steam"]
+transparency = 1
+albedo_color = Color(0.85, 0.88, 0.90, 0.35)
+roughness = 1.0
 
 [sub_resource type="StandardMaterial3D" id="Mat_coffee_black"]
 albedo_color = Color(0.12, 0.13, 0.15, 1)
@@ -305,6 +327,19 @@ size = Vector3(2.4, 2.5, 0.85)
 [sub_resource type="BoxMesh" id="Mesh_fridge_body"]
 size = Vector3(2.36, 2.46, 0.80)
 
+[sub_resource type="BoxMesh" id="Mesh_fridge_cavity"]
+size = Vector3(2.10, 1.40, 0.50)
+
+[sub_resource type="BoxMesh" id="Mesh_fridge_shelf"]
+size = Vector3(2.05, 0.03, 0.48)
+
+[sub_resource type="QuadMesh" id="Mesh_fridge_ooze"]
+size = Vector2(0.9, 0.9)
+
+[sub_resource type="SphereMesh" id="Mesh_fly"]
+radius = 0.02
+height = 0.04
+
 [sub_resource type="BoxMesh" id="Mesh_freezer_door"]
 size = Vector3(2.32, 0.80, 0.06)
 
@@ -360,6 +395,10 @@ size = Vector3(0.70, 0.35, 0.04)
 top_radius = 0.05
 bottom_radius = 0.05
 height = 0.04
+
+[sub_resource type="SphereMesh" id="Mesh_coffee_steam"]
+radius = 0.15
+height = 0.30
 
 [sub_resource type="BoxMesh" id="Mesh_ceiling_fixture"]
 size = Vector3(3.0, 0.10, 0.60)
@@ -549,7 +588,6 @@ position = Vector3(0.25, 1.23, -0.55)
 script = ExtResource("3_interactable")
 interaction_id = "wetberry"
 target_id = "relic.wetberry"
-prompt = "[E / A] Inspect Wetberry"
 speaker_name = "Wetberry"
 description = "The carton stands upright with too much confidence."
 
@@ -575,6 +613,9 @@ material_override = SubResource("Mat_carton_seam")
 position = Vector3(0, -0.07, 0.142)
 mesh = SubResource("Mesh_wetberry_decal")
 material_override = SubResource("Mat_wetberry_decal")
+
+[node name="Holdable" type="Node3D" parent="World/Wetberry"]
+	script = ExtResource("11_holdable")
 
 [node name="Keith" type="StaticBody3D" parent="World"]
 position = Vector3(-5.35, 0.95, -3.55)
@@ -696,40 +737,81 @@ position = Vector3(0, 0, -0.02)
 mesh = SubResource("Mesh_fridge_body")
 material_override = SubResource("Mat_fridge_enamel")
 
-[node name="FreezerDoor" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0, 0.78, 0.40)
+[node name="InteriorCavity" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(0, -0.42, 0.10)
+mesh = SubResource("Mesh_fridge_cavity")
+material_override = SubResource("Mat_fridge_interior")
+
+[node name="InteriorShelf" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(0, -0.30, 0.10)
+mesh = SubResource("Mesh_fridge_shelf")
+material_override = SubResource("Mat_fridge_enamel")
+
+[node name="ContaminatedOoze" type="MeshInstance3D" parent="World/Fridge"]
+position = Vector3(0, -0.45, 0.25)
+rotation_degrees = Vector3(90, 0, 0)
+mesh = SubResource("Mesh_fridge_ooze")
+material_override = SubResource("Mat_fridge_ooze")
+
+[node name="FlySwarm" type="Node3D" parent="World/Fridge"]
+visible = false
+position = Vector3(0, -0.40, 0.35)
+
+[node name="Fly1" type="MeshInstance3D" parent="World/Fridge/FlySwarm"]
+position = Vector3(-0.2, 0.1, 0.0)
+mesh = SubResource("Mesh_fly")
+material_override = SubResource("Mat_fly")
+
+[node name="Fly2" type="MeshInstance3D" parent="World/Fridge/FlySwarm"]
+position = Vector3(0.15, -0.08, 0.05)
+mesh = SubResource("Mesh_fly")
+material_override = SubResource("Mat_fly")
+
+[node name="Fly3" type="MeshInstance3D" parent="World/Fridge/FlySwarm"]
+position = Vector3(0.0, 0.18, -0.05)
+mesh = SubResource("Mesh_fly")
+material_override = SubResource("Mat_fly")
+
+[node name="FridgeDoorPivot" type="Node3D" parent="World/Fridge"]
+position = Vector3(1.15, -0.42, 0.40)
+
+[node name="FridgeDoor" type="MeshInstance3D" parent="World/Fridge/FridgeDoorPivot"]
+position = Vector3(-1.15, 0, 0)
+mesh = SubResource("Mesh_fridge_door")
+material_override = SubResource("Mat_fridge_door")
+
+[node name="FridgeHandle" type="MeshInstance3D" parent="World/Fridge/FridgeDoorPivot"]
+position = Vector3(-2.10, 0.17, 0.06)
+mesh = SubResource("Mesh_fridge_handle")
+material_override = SubResource("Mat_chrome")
+
+[node name="MaintenanceDecal" type="MeshInstance3D" parent="World/Fridge/FridgeDoorPivot"]
+position = Vector3(-0.70, 0.22, 0.035)
+mesh = SubResource("Mesh_fridge_maint_decal")
+material_override = SubResource("Mat_fridge_maint_decal")
+
+[node name="FreezerDoorPivot" type="Node3D" parent="World/Fridge"]
+position = Vector3(1.15, 0.78, 0.40)
+
+[node name="FreezerDoor" type="MeshInstance3D" parent="World/Fridge/FreezerDoorPivot"]
+position = Vector3(-1.15, 0, 0)
 mesh = SubResource("Mesh_freezer_door")
 material_override = SubResource("Mat_fridge_door")
 
-[node name="FridgeDoor" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0, -0.42, 0.40)
-mesh = SubResource("Mesh_fridge_door")
-material_override = SubResource("Mat_fridge_door")
+[node name="FreezerHandle" type="MeshInstance3D" parent="World/Fridge/FreezerDoorPivot"]
+position = Vector3(-2.10, 0, 0.06)
+mesh = SubResource("Mesh_freezer_handle")
+material_override = SubResource("Mat_chrome")
+
+[node name="PropertyDecal" type="MeshInstance3D" parent="World/Fridge/FreezerDoorPivot"]
+position = Vector3(-0.70, 0.07, 0.035)
+mesh = SubResource("Mesh_fridge_prop_decal")
+material_override = SubResource("Mat_fridge_prop_decal")
 
 [node name="DoorSeam" type="MeshInstance3D" parent="World/Fridge"]
 position = Vector3(0, 0.35, 0.41)
 mesh = SubResource("Mesh_fridge_seam")
 material_override = SubResource("Mat_rubber_seal")
-
-[node name="FreezerHandle" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(-0.95, 0.78, 0.46)
-mesh = SubResource("Mesh_freezer_handle")
-material_override = SubResource("Mat_chrome")
-
-[node name="FridgeHandle" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(-0.95, -0.25, 0.46)
-mesh = SubResource("Mesh_fridge_handle")
-material_override = SubResource("Mat_chrome")
-
-[node name="PropertyDecal" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0.45, 0.85, 0.435)
-mesh = SubResource("Mesh_fridge_prop_decal")
-material_override = SubResource("Mat_fridge_prop_decal")
-
-[node name="MaintenanceDecal" type="MeshInstance3D" parent="World/Fridge"]
-position = Vector3(0.45, -0.20, 0.435)
-mesh = SubResource("Mesh_fridge_maint_decal")
-material_override = SubResource("Mat_fridge_maint_decal")
 
 [node name="Counter" type="MeshInstance3D" parent="World"]
 position = Vector3(5.8, 0.45, 3.8)
@@ -800,6 +882,12 @@ position = Vector3(0, 0.8, 0)
 light_color = Color(0.9, 0.9, 0.9, 1)
 light_energy = 0.8
 omni_range = 3.0
+
+[node name="BrewSteam" type="MeshInstance3D" parent="World/CoffeeMaker"]
+visible = false
+position = Vector3(0, 0.25, 0.20)
+mesh = SubResource("Mesh_coffee_steam")
+material_override = SubResource("Mat_coffee_steam")
 
 [node name="TrashCan" type="MeshInstance3D" parent="World"]
 position = Vector3(-7.2, 0.38, -5.2)
@@ -895,6 +983,9 @@ position = Vector3(0, 0.62, 0)
 [node name="Camera3D" type="Camera3D" parent="Player/Head"]
 current = true
 fov = 78.0
+
+[node name="HeldSlot" type="Node3D" parent="Player/Head"]
+position = Vector3(0.4, -0.2, -0.6)
 
 [node name="InteractionRay" type="RayCast3D" parent="Player/Head/Camera3D"]
 enabled = true

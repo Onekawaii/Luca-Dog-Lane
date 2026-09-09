@@ -201,6 +201,28 @@ def create_quantum_glyph_icon() -> Image.Image:
         return ic
 
 
+def create_fridge_ooze_decal() -> Image.Image:
+    """256x256 contaminated slime/ooze decal for inside the fridge."""
+    img = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+
+    # Dark gross slime pattern
+    draw.ellipse([20, 30, 236, 210], fill=(25, 42, 28, 220), outline=(15, 28, 18, 255), width=3)
+    draw.ellipse([50, 60, 200, 180], fill=(38, 62, 32, 235))
+    draw.ellipse([80, 80, 170, 150], fill=(55, 88, 42, 240))
+    # Eerie yellow-green bio nodules
+    draw.ellipse([70, 90, 105, 125], fill=(95, 130, 40, 245), outline=(40, 60, 20, 255))
+    draw.ellipse([140, 110, 185, 145], fill=(110, 145, 45, 245), outline=(40, 60, 20, 255))
+    draw.ellipse([110, 140, 135, 165], fill=(80, 115, 35, 245))
+
+    # Splatter drops
+    drops = [(30, 190), (45, 220), (120, 230), (180, 220), (215, 195), (225, 130), (40, 50)]
+    for dx, dy in drops:
+        draw.ellipse([dx - 8, dy - 8, dx + 8, dy + 8], fill=(30, 50, 26, 230))
+
+    return img
+
+
 def main() -> int:
     ensure_dirs()
     print("Generating clean decals and tiled textures...")
@@ -214,6 +236,9 @@ def main() -> int:
 
     create_fridge_maintenance_decal().save(FPS_DIR / "props" / "fridge_maintenance_decal.png")
     print("  [OK] props/fridge_maintenance_decal.png")
+
+    create_fridge_ooze_decal().save(FPS_DIR / "props" / "fridge_ooze_decal.png")
+    print("  [OK] props/fridge_ooze_decal.png")
 
     create_hidden_anomaly_plate().save(FPS_DIR / "props" / "hidden_anomaly_plate_256.png")
     print("  [OK] props/hidden_anomaly_plate_256.png")

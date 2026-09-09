@@ -47,6 +47,9 @@ func _ready() -> void:
 	EventBus.inventory_changed.connect(_refresh_pda)
 	EventBus.world_state_changed.connect(func(_delta): _refresh_pda())
 
+	EventBus.first_person_inspect_started.connect(_on_inspect_started)
+	EventBus.first_person_inspect_ended.connect(_on_inspect_ended)
+
 	continue_button.pressed.connect(_advance_dialogue)
 	pda_button.pressed.connect(_toggle_pda)
 	save_button.pressed.connect(func(): GameRuntime.save_slot("slot_1"))
@@ -100,6 +103,15 @@ func _on_prompt_changed(text: String) -> void:
 	if is_instance_valid(prompt_label):
 		prompt_label.text = _format_prompt(text)
 	_update_prompt_visibility()
+
+
+func _on_inspect_started(target_name: String) -> void:
+	var exit_hint := "Tap anywhere or press ESC to exit inspect" if is_mobile() else "[ESC / E] Exit Inspect (" + target_name + ")"
+	_on_prompt_changed(exit_hint)
+
+
+func _on_inspect_ended() -> void:
+	_on_prompt_changed("")
 
 
 func _on_objective_changed(text: String) -> void:
@@ -213,10 +225,14 @@ func _refresh_quantum_diagnostic() -> void:
 
 
 func _on_notification(message: String) -> void:
+	if not is_instance_valid(notification_label) or not is_instance_valid(notification_panel):
+		return
 	notification_label.text = message
 	notification_panel.visible = true
-	var timer := get_tree().create_timer(3.0)
-	timer.timeout.connect(func():
-		if is_instance_valid(notification_panel):
-			notification_panel.visible = false
-	)
+	var tree := get_tree()
+	if tree:
+		var timer := tree.create_timer(3.0)
+		timer.timeout.connect(func():
+			if is_instance_valid(notification_panel):
+				notification_panel.visible = false
+		)

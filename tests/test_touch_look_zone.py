@@ -126,5 +126,54 @@ class TestVisualPassModularArchitectureContract(unittest.TestCase):
         self.assertIn("Watermark", hud_tscn)
 
 
+class TestBreakroomInteractionPassContract(unittest.TestCase):
+    def setUp(self):
+        self.breakroom_gd = (ROOT / "game_godot/scripts/fps/FirstPersonBreakroom.gd").read_text(encoding="utf-8")
+        self.breakroom_tscn = (ROOT / "game_godot/scenes/fps/FirstPersonBreakroom.tscn").read_text(encoding="utf-8")
+        self.inspect_gd = (ROOT / "game_godot/scripts/fps/FirstPersonInspectable.gd").read_text(encoding="utf-8")
+        self.hold_gd = (ROOT / "game_godot/scripts/fps/FirstPersonHoldable.gd").read_text(encoding="utf-8")
+        self.keith_gd = (ROOT / "game_godot/scripts/fps/KeithAmbientWorker.gd").read_text(encoding="utf-8")
+
+    def test_inspect_system_contract(self):
+        """Verify inspect zoom and framing logic is present."""
+        self.assertIn("_start_inspect", self.breakroom_gd)
+        self.assertIn("exit_inspect", self.breakroom_gd)
+        self.assertIn("compute_inspect_transform", self.inspect_gd)
+        self.assertIn("first_person_inspect_started", self.breakroom_gd)
+        self.assertIn("first_person_inspect_ended", self.breakroom_gd)
+
+    def test_hold_and_place_system_contract(self):
+        """Verify Wetberry holdable and surface placement contracts."""
+        self.assertIn("pick_up_wetberry", self.breakroom_gd)
+        self.assertIn("place_held_object", self.breakroom_gd)
+        self.assertIn("HeldSlot", self.breakroom_tscn)
+        self.assertIn("HeldWetberryMesh", self.breakroom_gd)
+        self.assertIn("can_pick_up", self.hold_gd)
+
+    def test_coffee_maker_interaction_contract(self):
+        """Verify coffee maker toggle, LED, and steam contracts."""
+        self.assertIn("toggle_coffee_maker", self.breakroom_gd)
+        self.assertIn("is_coffee_on", self.breakroom_gd)
+        self.assertIn("BrewSteam", self.breakroom_tscn)
+        self.assertIn("StatusLED", self.breakroom_tscn)
+
+    def test_fridge_hinge_and_ooze_contract(self):
+        """Verify fridge hinge door pivots, contaminated ooze decal, and fly swarm."""
+        self.assertIn("toggle_fridge_door", self.breakroom_gd)
+        self.assertIn("FridgeDoorPivot", self.breakroom_tscn)
+        self.assertIn("FreezerDoorPivot", self.breakroom_tscn)
+        self.assertIn("ContaminatedOoze", self.breakroom_tscn)
+        self.assertIn("FlySwarm", self.breakroom_tscn)
+        self.assertTrue((ROOT / "game_godot/assets/fps/props/fridge_ooze_decal.png").exists())
+
+    def test_keith_ambient_worker_contract(self):
+        """Verify Keith deterministic cleaning waypoints and pause/resume logic."""
+        self.assertIn("KeithAmbientWorker", self.breakroom_gd)
+        self.assertIn("waypoints", self.keith_gd)
+        self.assertIn("pause_cleaning", self.keith_gd)
+        self.assertIn("resume_cleaning", self.keith_gd)
+        self.assertIn("_animate_mop", self.keith_gd)
+
+
 if __name__ == "__main__":
     unittest.main()

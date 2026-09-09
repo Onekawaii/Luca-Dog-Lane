@@ -35,6 +35,8 @@ signal first_person_dialogue_requested(speaker_name: String, lines: Array)
 signal first_person_dialogue_closed()
 signal first_person_objective_changed(objective_text: String)
 signal first_person_input_lock_changed(locked: bool)
+signal first_person_inspect_started(target_name: String)
+signal first_person_inspect_ended()
 
 
 # Chalk Circle bridge signals. These are additive runtime events; Chalk state
