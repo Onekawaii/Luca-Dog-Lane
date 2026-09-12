@@ -439,6 +439,11 @@ func test_first_person_runtime() -> void:
 	assert_true(keith.find_child("HeadHood", true, false) != null, "Keith has HeadHood mesh")
 	assert_true(keith.find_child("BadgeDecal", true, false) != null, "Keith has BadgeDecal mesh")
 
+	var ambient_hum = bootstrap.find_child("AmbientHum", true, false)
+	assert_true(ambient_hum != null, "Breakroom has fluorescent ambient hum player")
+	var ceiling_light = bootstrap.find_child("CeilingLight", true, false)
+	assert_true(ceiling_light != null, "Breakroom has active ceiling light")
+
 	var fridge = bootstrap.find_child("Fridge", true, false)
 	assert_true(fridge != null, "Fridge exists")
 	assert_true(fridge.find_child("CabinetBody", true, false) != null, "Fridge has CabinetBody mesh")
@@ -497,6 +502,8 @@ func test_phone_playtest_fixes() -> void:
 	var pda_button = hud.find_child("PDAButton", true, false)
 	var hint_label = hud.find_child("Hint", true, false)
 	var diag_label = hud.find_child("QuantumDiagnostic", true, false)
+	var interact_button = hud.find_child("InteractButton", true, false)
+	var crosshair = hud.find_child("Crosshair", true, false)
 
 	# 1. Hide interaction prompts whenever DialoguePanel or PDAPanel is open
 	hud._on_prompt_changed("Talk to Keith")
@@ -535,7 +542,22 @@ func test_phone_playtest_fixes() -> void:
 	else:
 		assert_equal(formatted_prompt, raw_desktop_prompt, "Desktop prompt preserves key bindings")
 
-	# 3. Notification toasts never overlap Current Objective
+	# 3. Bottom-center interaction control + contextual action feedback
+	assert_true(interact_button != null and crosshair != null, "HUD exposes centered interaction button and crosshair")
+	assert_equal(interact_button.anchor_left, 0.5, "Interact button left anchor is centered")
+	assert_equal(interact_button.anchor_right, 0.5, "Interact button right anchor is centered")
+	assert_equal(hud._action_label_for_prompt("Open Fridge"), "OPEN", "Open prompt maps to OPEN action")
+	assert_equal(hud._action_label_for_prompt("Talk to Keith"), "TALK", "Talk prompt maps to TALK action")
+	assert_equal(hud._action_label_for_prompt("Pick Up Wetberry"), "PICK UP", "Pickup prompt maps to PICK UP action")
+	hud._on_prompt_changed("Open Fridge")
+	assert_false(interact_button.disabled, "Interact button enables on actionable focus")
+	assert_equal(interact_button.text, "OPEN", "Interact button shows contextual OPEN action")
+	EventBus.first_person_input_lock_changed.emit(true)
+	assert_true(interact_button.disabled, "Input lock disables interact action")
+	EventBus.first_person_input_lock_changed.emit(false)
+	assert_false(interact_button.disabled, "Interact action restores after input unlock")
+
+	# 4. Notification toasts never overlap Current Objective
 	assert_true(notif_panel != null and obj_panel != null, "HUD contains NotificationPanel and ObjectivePanel")
 	assert_true(notif_panel.offset_top >= obj_panel.offset_bottom, "NotificationPanel top offset (>= 120) sits below ObjectivePanel bottom (105)")
 
@@ -831,10 +853,14 @@ func test_breakroom_interaction_pass() -> void:
 	assert_true(freezer_pivot != null, "Fridge has FreezerDoorPivot node")
 	var fly_swarm = breakroom.fridge_fly_swarm
 	assert_true(fly_swarm != null, "Fridge has FlySwarm node")
+	var fridge_light = breakroom.fridge_light
+	assert_true(fridge_light != null, "Fridge has interior light")
+	assert_false(fridge_light.visible, "Fridge interior light starts off")
 
 	breakroom.toggle_fridge_door()
 	assert_true(breakroom.is_fridge_open, "Fridge is toggled to open")
 	assert_true(breakroom.is_fridge_animating, "Fridge is animating door swing")
+	assert_true(fridge_light.visible, "Fridge interior light turns on with door")
 
 	# 3. Focus / Inspect / Zoom component
 	assert_false(breakroom.is_inspecting, "Inspect mode starts inactive")

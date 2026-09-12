@@ -159,11 +159,20 @@ class TestBreakroomInteractionPassContract(unittest.TestCase):
         self.assertIn("BrewSteam", self.breakroom_tscn)
         self.assertIn("StatusLED", self.breakroom_tscn)
 
+    def test_breakroom_ambient_contract(self):
+        """Verify the breakroom has low-cost fluorescent ambience."""
+        self.assertIn("AmbientHum", self.breakroom_tscn)
+        self.assertIn("fluorescent_hum.wav", self.breakroom_tscn)
+        self.assertIn("_restart_ambient_hum", self.breakroom_gd)
+        self.assertIn("_update_fluorescent_flutter", self.breakroom_gd)
+
     def test_fridge_hinge_and_ooze_contract(self):
         """Verify fridge hinge door pivots, contaminated ooze decal, and fly swarm."""
         self.assertIn("toggle_fridge_door", self.breakroom_gd)
         self.assertIn("FridgeDoorPivot", self.breakroom_tscn)
         self.assertIn("FreezerDoorPivot", self.breakroom_tscn)
+        self.assertIn("FridgeLight", self.breakroom_tscn)
+        self.assertIn("fridge_light.visible = is_fridge_open", self.breakroom_gd)
         self.assertIn("ContaminatedOoze", self.breakroom_tscn)
         self.assertIn("FlySwarm", self.breakroom_tscn)
         self.assertTrue((ROOT / "game_godot/assets/fps/props/fridge_ooze_decal.png").exists())

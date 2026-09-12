@@ -1,6 +1,7 @@
 class_name FirstPersonHUD
 extends CanvasLayer
 
+@onready var crosshair: Label = $Root/Crosshair
 @onready var prompt_label: Label = $Root/PromptLabel
 @onready var objective_label: Label = $Root/ObjectivePanel/Margin/VBox/ObjectiveLabel
 @onready var notification_label: Label = $Root/NotificationPanel/Margin/NotificationLabel
@@ -24,7 +25,13 @@ extends CanvasLayer
 var dialogue_lines: Array = []
 var dialogue_index: int = 0
 var current_objective: String = "Find Keith and get safe containment gear."
+var current_interaction_prompt: String = ""
+var pre_inspect_prompt: String = ""
+var gameplay_input_locked: bool = false
 var force_mobile_controls: bool = false
+
+const CROSSHAIR_IDLE := Color(0.82, 1.0, 0.83, 0.62)
+const CROSSHAIR_ACTIVE := Color(0.38, 1.0, 0.52, 1.0)
 
 
 func is_mobile() -> bool:
@@ -56,9 +63,10 @@ func _ready() -> void:
 	save_button.pressed.connect(func(): GameRuntime.save_slot("slot_1"))
 	load_button.pressed.connect(func(): GameRuntime.load_slot("slot_1"))
 	close_pda_button.pressed.connect(_toggle_pda)
-	interact_button.pressed.connect(func(): EventBus.first_person_interact_pressed.emit())
+	interact_button.pressed.connect(_on_interact_pressed)
 
 	_refresh_pda()
+	_update_interaction_feedback()
 
 
 func _apply_platform_labels() -> void:
@@ -100,19 +108,61 @@ func _update_prompt_visibility() -> void:
 	prompt_label.visible = not modal_open and not prompt_label.text.is_empty()
 
 
+func _action_label_for_prompt(text: String) -> String:
+	var action := _format_prompt(text).strip_edges().to_lower()
+	if action.begins_with("open "):
+		return "OPEN"
+	if action.begins_with("close "):
+		return "CLOSE"
+	if action.begins_with("talk "):
+		return "TALK"
+	if action.begins_with("inspect "):
+		return "INSPECT"
+	if action.begins_with("pick up ") or action.begins_with("pickup "):
+		return "PICK UP"
+	if action.begins_with("place ") or action.begins_with("put down "):
+		return "PLACE"
+	if action.begins_with("turn on "):
+		return "TURN ON"
+	if action.begins_with("turn off "):
+		return "TURN OFF"
+	return "INTERACT"
+
+
+func _update_interaction_feedback() -> void:
+	var modal_open := (is_instance_valid(dialogue_panel) and dialogue_panel.visible) or (is_instance_valid(pda_panel) and pda_panel.visible)
+	var actionable := not current_interaction_prompt.is_empty() and not gameplay_input_locked and not modal_open
+	if is_instance_valid(interact_button):
+		interact_button.disabled = not actionable
+		interact_button.text = _action_label_for_prompt(current_interaction_prompt) if actionable else "INTERACT"
+	if is_instance_valid(crosshair):
+		crosshair.modulate = CROSSHAIR_ACTIVE if actionable else CROSSHAIR_IDLE
+
+
+func _on_interact_pressed() -> void:
+	if gameplay_input_locked or not is_instance_valid(interact_button) or interact_button.disabled:
+		return
+	EventBus.first_person_interact_pressed.emit()
+
+
 func _on_prompt_changed(text: String) -> void:
+	current_interaction_prompt = _format_prompt(text)
 	if is_instance_valid(prompt_label):
-		prompt_label.text = _format_prompt(text)
+		prompt_label.text = current_interaction_prompt
 	_update_prompt_visibility()
+	_update_interaction_feedback()
 
 
 func _on_inspect_started(target_name: String) -> void:
-	var exit_hint := "Tap anywhere or press ESC to exit inspect" if is_mobile() else "[ESC / E] Exit Inspect (" + target_name + ")"
+	pre_inspect_prompt = current_interaction_prompt
+	var exit_hint := "Tap anywhere to exit inspect" if is_mobile() else "[ESC / E] Exit Inspect (" + target_name + ")"
 	_on_prompt_changed(exit_hint)
 
 
 func _on_inspect_ended() -> void:
-	_on_prompt_changed("")
+	var restored_prompt := pre_inspect_prompt
+	pre_inspect_prompt = ""
+	_on_prompt_changed(restored_prompt)
 
 
 func _on_objective_changed(text: String) -> void:
@@ -180,6 +230,8 @@ func _toggle_pda() -> void:
 
 
 func _on_first_person_input_lock_changed(locked: bool) -> void:
+	gameplay_input_locked = locked
+	_update_interaction_feedback()
 	if not locked or not is_instance_valid(mobile_controls):
 		return
 	var look_zone := mobile_controls.find_child("TouchLookZone", true, false)

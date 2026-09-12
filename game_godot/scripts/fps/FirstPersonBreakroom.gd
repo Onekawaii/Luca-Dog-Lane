@@ -6,6 +6,8 @@ const QuantumEntanglementClass = preload("res://scripts/quantum/QuantumEntanglem
 const FirstPersonInspectableClass = preload("res://scripts/fps/FirstPersonInspectable.gd")
 const KeithAmbientWorkerClass = preload("res://scripts/fps/KeithAmbientWorker.gd")
 
+@onready var ceiling_light: DirectionalLight3D = get_node_or_null("CeilingLight")
+@onready var ambient_hum: AudioStreamPlayer = get_node_or_null("AmbientHum")
 @onready var quantum_player: CharacterBody3D = get_node_or_null("Player")
 @onready var quantum_kevin: Node3D = get_node_or_null("World/FirstPersonKevin")
 @onready var quantum_coffee_maker: StaticBody3D = get_node_or_null("World/CoffeeMaker")
@@ -17,6 +19,7 @@ const KeithAmbientWorkerClass = preload("res://scripts/fps/KeithAmbientWorker.gd
 @onready var fridge_door_pivot: Node3D = get_node_or_null("World/Fridge/FridgeDoorPivot")
 @onready var freezer_door_pivot: Node3D = get_node_or_null("World/Fridge/FreezerDoorPivot")
 @onready var fridge_fly_swarm: Node3D = get_node_or_null("World/Fridge/FlySwarm")
+@onready var fridge_light: OmniLight3D = get_node_or_null("World/Fridge/FridgeLight")
 
 @onready var keith_actor: CharacterBody3D = get_node_or_null("World/Keith")
 @onready var wetberry_prop: Node3D = get_node_or_null("World/Wetberry")
@@ -58,6 +61,8 @@ func _ready() -> void:
 	_setup_interaction_systems()
 	_refresh_world()
 	_init_quantum_system()
+	if is_instance_valid(ambient_hum) and not ambient_hum.finished.is_connected(_restart_ambient_hum):
+		ambient_hum.finished.connect(_restart_ambient_hum)
 
 
 func _setup_interaction_systems() -> void:
@@ -92,6 +97,8 @@ func _restore_persistence() -> void:
 		is_fridge_open = bool(mem.get("fridge_open"))
 		if is_instance_valid(fridge_fly_swarm):
 			fridge_fly_swarm.visible = is_fridge_open
+		if is_instance_valid(fridge_light):
+			fridge_light.visible = is_fridge_open
 		if is_instance_valid(fridge_door_pivot):
 			fridge_door_pivot.rotation.y = deg_to_rad(95.0) if is_fridge_open else 0.0
 		if is_instance_valid(freezer_door_pivot):
@@ -107,7 +114,22 @@ func _restore_persistence() -> void:
 				node.global_transform = tr
 
 
+func _restart_ambient_hum() -> void:
+	if is_instance_valid(ambient_hum):
+		ambient_hum.play()
+
+
+func _update_fluorescent_flutter() -> void:
+	if not is_instance_valid(ceiling_light):
+		return
+	var seconds := Time.get_ticks_msec() * 0.001
+	var flutter := sin(seconds * 7.3) * 0.014 + sin(seconds * 17.1) * 0.006
+	var rare_dip := -0.08 if sin(seconds * 0.41) > 0.997 else 0.0
+	ceiling_light.light_energy = clampf(0.95 + flutter + rare_dip, 0.82, 1.0)
+
+
 func _process(delta: float) -> void:
+	_update_fluorescent_flutter()
 	if keith_worker:
 		keith_worker.update(delta)
 
@@ -401,6 +423,8 @@ func toggle_fridge_door() -> void:
 
 	is_fridge_open = not is_fridge_open
 	is_fridge_animating = true
+	if is_instance_valid(fridge_light):
+		fridge_light.visible = is_fridge_open
 
 	var target_angle := deg_to_rad(95.0) if is_fridge_open else 0.0
 

@@ -1128,3 +1128,28 @@ Verification after both repairs:
 
 Physical Android retest is still REQUIRED for the right-look fix and fridge visuals.
 Do not mark these two defects closed until James confirms them on the rebuilt APK.
+
+## 2026-09-11 — Mobile interaction + atmosphere overhaul
+
+Implemented with Desktop Commander from clean `07f1697` on `feat/fps-world-interactions`.
+
+Mobile HUD overhaul:
+- INTERACT moved from bottom-right to bottom-center.
+- Action button now maps focus prompts to OPEN/CLOSE/TALK/INSPECT/PICK UP/PLACE/TURN ON/TURN OFF.
+- Button uses active/pressed/disabled visual states and disables when no valid target or input is locked.
+- Crosshair brightens when a valid interaction is focused.
+- Prompt text moved above the centered action button and given outline contrast.
+- Inspection now restores the pre-inspect world prompt instead of losing it until focus changes.
+
+Breakroom atmosphere/polish:
+- Fridge gains an interior light tied to open/closed persisted state.
+- Added low-volume fluorescent room hum using the existing local WAV asset.
+- Added subtle deterministic fluorescent-light flutter; no random state or gameplay mutation.
+
+Verification:
+- Focused Python contracts: 25 passed.
+- Full Python suite: 446 passed, 1 skipped.
+- Native acceptance: 279 / 279 passed.
+- `python tools/verify_native_contract.py`: ALL GATES PASSED.
+
+Physical Android retest still required for control ergonomics, contextual button feel, fridge light, and ambient mix.
