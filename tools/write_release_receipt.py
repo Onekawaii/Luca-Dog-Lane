@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import subprocess
 import zipfile
 from datetime import datetime, timezone
@@ -60,11 +61,17 @@ def verify_apk(apk: Path) -> str:
     signer = find_apksigner()
     if signer is None:
         raise RuntimeError("apksigner not found; cannot qualify Android signature")
+    env = os.environ.copy()
+    java_home = Path.home() / ".jdk17"
+    if java_home.exists():
+        env["JAVA_HOME"] = str(java_home)
+        env["PATH"] = str(java_home / "bin") + os.pathsep + env.get("PATH", "")
     result = subprocess.run(
         [str(signer), "verify", "--verbose", str(apk)],
         capture_output=True,
         text=True,
         check=False,
+        env=env,
     )
     if result.returncode != 0:
         raise RuntimeError("APK signature verification failed")
