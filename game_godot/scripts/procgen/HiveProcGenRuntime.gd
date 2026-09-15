@@ -6,6 +6,7 @@ const ChunkRendererClass = preload("res://scripts/procgen/HiveProcGenChunkRender
 const MEMORY_CATALOG_PATH := "res://data/procgen/memory_catalog.json"
 const FALL_RECOVERY_Y := -6.0
 const SAFE_FLOOR_Y := -1.0
+const BREAKROOM_AUDIO_EXIT_X := 8.5
 
 @export var simulate_streaming := true
 @export var streaming_interval := 0.35
@@ -20,6 +21,7 @@ var _current_level_index: int = -99
 var _last_safe_transform := Transform3D.IDENTITY
 var _has_safe_transform := false
 var _breakroom: Node3D
+var _breakroom_audio_inside := true
 
 
 func _ready() -> void:
@@ -51,6 +53,9 @@ func _initialize() -> void:
 		chunk_renderer.name = "HiveProcGenChunkRenderer"
 		bootstrap.add_child(chunk_renderer)
 		chunk_renderer.configure(world_plan, _player, _breakroom)
+	# First-person owns its Breakroom ambience locally. Disable the legacy global hum to avoid a doubled drone.
+	if AudioManager.has_method("set_breakroom_ambience_active"):
+		AudioManager.set_breakroom_ambience_active(false)
 	AtmosphereDirector.enter_gameplay()
 	_update_level_state(true)
 	EventBus.procgen_world_ready.emit(world_plan.get("receipt", {}))
@@ -66,6 +71,7 @@ func _process(delta: float) -> void:
 	if not is_inside_tree() or not simulate_streaming or world_plan.is_empty():
 		return
 	_update_fall_recovery()
+	_update_audio_boundary()
 	_stream_timer += delta
 	if _stream_timer < streaming_interval:
 		return
@@ -146,18 +152,28 @@ func _update_level_state(force: bool = false) -> void:
 		return
 	_current_level_index = level_index
 	var title := chunk_renderer.level_title(level_index)
-	_set_breakroom_audio_active(level_index < 0)
 	AtmosphereDirector.set_level(maxi(level_index, 0), title)
 	if level_index >= 0:
 		EventBus.notification_posted.emit("LEVEL %02d // %s" % [level_index + 1, title])
 		EventBus.first_person_objective_changed.emit("Traverse %s. Follow the threshold lights deeper into the Lattice." % title)
 
 
+func _update_audio_boundary() -> void:
+	if not is_instance_valid(_player):
+		return
+	var inside := _player.global_position.x <= BREAKROOM_AUDIO_EXIT_X
+	if inside == _breakroom_audio_inside:
+		return
+	_breakroom_audio_inside = inside
+	_set_breakroom_audio_active(inside)
+
+
 func _set_breakroom_audio_active(active: bool) -> void:
 	if is_instance_valid(_breakroom) and _breakroom.has_method("set_breakroom_audio_active"):
 		_breakroom.call("set_breakroom_audio_active", active)
+	# Never re-enable the legacy global fluorescent hum in first-person; the room node owns local ambience.
 	if AudioManager.has_method("set_breakroom_ambience_active"):
-		AudioManager.set_breakroom_ambience_active(active)
+		AudioManager.set_breakroom_ambience_active(false)
 
 
 func _update_fall_recovery() -> void:

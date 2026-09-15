@@ -29,6 +29,16 @@ func _is_excluded_position(screen_pos: Vector2) -> bool:
 		if pda_btn.get_global_rect().has_point(screen_pos):
 			return true
 
+	var inventory_btn := get_node_or_null("../../InventoryButton") as Control
+	if is_instance_valid(inventory_btn) and inventory_btn.is_visible_in_tree():
+		if inventory_btn.get_global_rect().has_point(screen_pos):
+			return true
+
+	var inventory_panel := get_node_or_null("../../InventoryPanel") as Control
+	if is_instance_valid(inventory_panel) and inventory_panel.is_visible_in_tree():
+		if inventory_panel.get_global_rect().has_point(screen_pos):
+			return true
+
 	var pda_panel := get_node_or_null("../../PDAPanel") as Control
 	if is_instance_valid(pda_panel) and pda_panel.is_visible_in_tree():
 		if pda_panel.get_global_rect().has_point(screen_pos):

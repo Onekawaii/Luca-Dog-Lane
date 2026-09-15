@@ -27,13 +27,13 @@ class CompleteWitnessRunContractTests(unittest.TestCase):
         self.assertTrue(ENDING.exists())
         self.assertTrue(ENDING_SCRIPT.exists())
 
-    def test_release_metadata_matches_v090(self):
+    def test_release_metadata_matches_v091(self):
         project = (GODOT / "project.godot").read_text(encoding="utf-8")
         exports = EXPORTS.read_text(encoding="utf-8")
-        self.assertIn('config/version="0.9.0"', project)
-        self.assertIn('application/product_version="0.9.0"', exports)
-        self.assertIn('version/name="0.9.0"', exports)
-        self.assertIn("version/code=9", exports)
+        self.assertIn('config/version="0.9.1"', project)
+        self.assertIn('application/product_version="0.9.1"', exports)
+        self.assertIn('version/name="0.9.1"', exports)
+        self.assertIn("version/code=10", exports)
 
     def test_ending_has_return_and_revisit_actions(self):
         scene = ENDING.read_text(encoding="utf-8")

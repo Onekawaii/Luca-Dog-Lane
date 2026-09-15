@@ -32,6 +32,7 @@ func _load_sounds() -> void:
 		"hum": "res://assets/audio/fluorescent_hum.wav",
 		"click": "res://assets/audio/ui_click.wav",
 		"pickup": "res://assets/audio/item_pickup.wav",
+		"bag_zip": "res://assets/audio/bag_zip.wav",
 		"pulse": "res://assets/audio/wetberry_pulse.wav",
 		"footstep": "res://assets/audio/footstep.wav",
 	}
@@ -58,6 +59,8 @@ func set_breakroom_ambience_active(active: bool) -> void:
 		start_ambience()
 	else:
 		hum_player.stop()
+		if is_instance_valid(pulse_player):
+			pulse_player.stop()
 
 
 func play_ui_click() -> void:
@@ -70,14 +73,21 @@ func play_ui_click() -> void:
 func play_item_pickup() -> void:
 	if sound_streams.has("pickup") and sfx_player:
 		sfx_player.stream = sound_streams["pickup"]
-		sfx_player.volume_db = -2.0
+		sfx_player.volume_db = -12.0
+		sfx_player.play()
+
+
+func play_bag_zip() -> void:
+	if sound_streams.has("bag_zip") and sfx_player:
+		sfx_player.stream = sound_streams["bag_zip"]
+		sfx_player.volume_db = -18.0
 		sfx_player.play()
 
 
 func play_wetberry_pulse() -> void:
 	if sound_streams.has("pulse") and pulse_player:
 		pulse_player.stream = sound_streams["pulse"]
-		pulse_player.volume_db = -6.0
+		pulse_player.volume_db = -18.0
 		pulse_player.play()
 
 

@@ -15,6 +15,7 @@ const QuantumStateAnchorScript = preload("res://scripts/quantum/QuantumStateAnch
 const QuantumEntanglementScript = preload("res://scripts/quantum/QuantumEntanglement.gd")
 const HiveProcGenEngineScript = preload("res://scripts/procgen/HiveProcGenEngine.gd")
 const HiveProcGenChunkRendererScript = preload("res://scripts/procgen/HiveProcGenChunkRenderer.gd")
+const HiveProcGenRuntimeScript = preload("res://scripts/procgen/HiveProcGenRuntime.gd")
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -556,9 +557,9 @@ func test_phone_playtest_fixes() -> void:
 	hud._on_prompt_changed("Open Fridge")
 	assert_false(interact_button.disabled, "Interact button enables on actionable focus")
 	assert_equal(interact_button.text, "OPEN", "Interact button shows contextual OPEN action")
-	EventBus.first_person_input_lock_changed.emit(true)
+	hud._on_first_person_input_lock_changed(true)
 	assert_true(interact_button.disabled, "Input lock disables interact action")
-	EventBus.first_person_input_lock_changed.emit(false)
+	hud._on_first_person_input_lock_changed(false)
 	assert_false(interact_button.disabled, "Interact action restores after input unlock")
 
 	# 4. Notification toasts never overlap Current Objective
@@ -639,9 +640,9 @@ func test_touch_look_zone_robustness() -> void:
 	t_down.position = touch_look.global_position + Vector2(50.0, 50.0)
 	touch_look._input(t_down)
 	assert_equal(touch_look.active_touch_index, 7, "TouchLookZone captures touch before generic input lock")
-	EventBus.first_person_input_lock_changed.emit(true)
+	hud._on_first_person_input_lock_changed(true)
 	assert_equal(touch_look.active_touch_index, -1, "Generic input lock resets active touch ownership")
-	EventBus.first_person_input_lock_changed.emit(false)
+	hud._on_first_person_input_lock_changed(false)
 
 	# 4. Modal opens while look finger is active -> index cleared & drag suppressed
 	t_down.index = 3
@@ -1018,15 +1019,39 @@ func test_gameflow_atmosphere_and_level_suite() -> void:
 	assert_true(project_text.contains('AtmosphereDirector="*res://scripts/runtime/AtmosphereDirector.gd"'), "Persistent atmosphere is autoloaded")
 	assert_true(FileAccess.file_exists("res://assets/audio/hive_roomtone.wav"), "Persistent Hive roomtone asset exists")
 	assert_true(FileAccess.file_exists("res://assets/audio/hive_waterdrop.wav"), "Waterdrop motif asset exists")
+	assert_true(FileAccess.file_exists("res://assets/audio/bag_zip.wav"), "Dedicated quiet evidence-bag zipper asset exists")
+	var fps_hud_scene = load("res://scenes/fps/FirstPersonHUD.tscn")
+	assert_true(fps_hud_scene != null, "First-person HUD scene loads with inventory overlay")
+	var fps_hud = fps_hud_scene.instantiate()
+	assert_true(fps_hud.find_child("InventoryButton", true, false) != null, "First-person HUD exposes Inventory button")
+	assert_true(fps_hud.find_child("InventoryPanel", true, false) != null, "First-person HUD contains dedicated Inventory panel")
+	assert_true(fps_hud.find_child("Items", true, false) != null, "Inventory panel owns a real item-slot container")
+	fps_hud.queue_free()
 	var breakroom_text := FileAccess.get_file_as_string("res://scripts/fps/FirstPersonBreakroom.gd")
 	assert_false(breakroom_text.contains("disappointed zipper sound"), "Legacy zipper line is removed")
-	assert_true(breakroom_text.contains("water drops answer"), "Containment now uses the waterdrop motif")
+	assert_true(breakroom_text.contains("distant drops answer"), "Containment now uses the waterdrop motif")
 	assert_true(breakroom_text.contains("set_breakroom_audio_active"), "Breakroom exposes an explicit audio boundary")
 	AudioManager.set_breakroom_ambience_active(false)
 	assert_false(AudioManager.breakroom_ambience_active, "Global Breakroom hum is disabled outside the room")
 	assert_false(AudioManager.hum_player.playing, "Breakroom hum player stops across the service threshold")
 	AudioManager.set_breakroom_ambience_active(true)
 	assert_true(AudioManager.breakroom_ambience_active, "Breakroom ambience can resume on return")
+	var boundary_runtime = HiveProcGenRuntimeScript.new()
+	var boundary_player := Node3D.new()
+	add_child(boundary_player)
+	boundary_runtime._player = boundary_player
+	boundary_runtime._breakroom_audio_inside = true
+	boundary_player.position = Vector3(9.0, 0.0, 0.0)
+	boundary_runtime._update_audio_boundary()
+	assert_false(boundary_runtime._breakroom_audio_inside, "Crossing the east service threshold exits Breakroom audio scope")
+	assert_false(AudioManager.breakroom_ambience_active, "Legacy global fluorescent hum stays off in first-person traversal")
+	boundary_player.position = Vector3(0.0, 0.0, 0.0)
+	boundary_runtime._update_audio_boundary()
+	assert_true(boundary_runtime._breakroom_audio_inside, "Returning west of the threshold restores local Breakroom audio scope")
+	assert_false(AudioManager.breakroom_ambience_active, "Returning to Breakroom does not restore the duplicate global hum")
+	boundary_runtime.free()
+	remove_child(boundary_player)
+	boundary_player.free()
 
 	var engine = HiveProcGenEngineScript.new()
 	var plan: Dictionary = engine.generate(6060, {"pressure": 0.4, "instability": 0.3, "observation": 0.5, "familiarity": 0.6}, [])

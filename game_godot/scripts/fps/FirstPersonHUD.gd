@@ -15,6 +15,11 @@ extends CanvasLayer
 @onready var inventory_label: Label = $Root/PDAPanel/Margin/VBox/InventoryLabel
 @onready var quantum_diagnostic_label: Label = $Root/PDAPanel/Margin/VBox/QuantumDiagnostic
 @onready var pda_button: Button = $Root/PDAButton
+@onready var inventory_button: Button = $Root/InventoryButton
+@onready var inventory_panel: PanelContainer = $Root/InventoryPanel
+@onready var inventory_items: VBoxContainer = $Root/InventoryPanel/Margin/VBox/Scroll/Items
+@onready var inventory_detail: Label = $Root/InventoryPanel/Margin/VBox/Detail
+@onready var close_inventory_button: Button = $Root/InventoryPanel/Margin/VBox/CloseInventoryButton
 @onready var save_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/SaveButton
 @onready var load_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/LoadButton
 @onready var close_pda_button: Button = $Root/PDAPanel/Margin/VBox/Buttons/CloseButton
@@ -42,6 +47,7 @@ func _ready() -> void:
 	prompt_label.visible = false
 	dialogue_panel.visible = false
 	pda_panel.visible = false
+	inventory_panel.visible = false
 	notification_panel.visible = false
 	mobile_controls.visible = is_mobile()
 
@@ -52,6 +58,7 @@ func _ready() -> void:
 	EventBus.first_person_objective_changed.connect(_on_objective_changed)
 	EventBus.notification_posted.connect(_on_notification)
 	EventBus.inventory_changed.connect(_refresh_pda)
+	EventBus.inventory_changed.connect(_refresh_inventory_panel)
 	EventBus.world_state_changed.connect(func(_delta): _refresh_pda())
 
 	EventBus.first_person_inspect_started.connect(_on_inspect_started)
@@ -60,22 +67,27 @@ func _ready() -> void:
 
 	continue_button.pressed.connect(_advance_dialogue)
 	pda_button.pressed.connect(_toggle_pda)
+	inventory_button.pressed.connect(_toggle_inventory)
+	close_inventory_button.pressed.connect(_toggle_inventory)
 	save_button.pressed.connect(func(): GameRuntime.save_slot(GameRuntime.current_save_slot()))
 	load_button.pressed.connect(func(): GameRuntime.load_slot(GameRuntime.current_save_slot()))
 	close_pda_button.pressed.connect(_toggle_pda)
 	interact_button.pressed.connect(_on_interact_pressed)
 
 	_refresh_pda()
+	_refresh_inventory_panel()
 	_update_interaction_feedback()
 
 
 func _apply_platform_labels() -> void:
 	if is_mobile():
 		pda_button.text = "PDA"
+		inventory_button.text = "INV"
 		if is_instance_valid(hint_label):
 			hint_label.text = "Touch: Left stick move • Drag to look • INTERACT button • Save/Load buttons"
 	else:
 		pda_button.text = "PDA [P]"
+		inventory_button.text = "INVENTORY [I]"
 		if is_instance_valid(hint_label):
 			hint_label.text = "Desktop: WASD move • Mouse look • E interact • Shift sprint • F5/F9 save/load"
 
@@ -85,6 +97,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var key := event as InputEventKey
 		if key.keycode == KEY_P:
 			_toggle_pda()
+		elif key.keycode == KEY_I:
+			_toggle_inventory()
 		elif dialogue_panel.visible and (key.keycode == KEY_ENTER or key.keycode == KEY_SPACE):
 			_advance_dialogue()
 
@@ -104,7 +118,7 @@ func _format_prompt(text: String) -> String:
 func _update_prompt_visibility() -> void:
 	if not is_instance_valid(prompt_label):
 		return
-	var modal_open := (is_instance_valid(dialogue_panel) and dialogue_panel.visible) or (is_instance_valid(pda_panel) and pda_panel.visible)
+	var modal_open := _modal_open()
 	prompt_label.visible = not modal_open and not prompt_label.text.is_empty()
 
 
@@ -130,13 +144,17 @@ func _action_label_for_prompt(text: String) -> String:
 
 
 func _update_interaction_feedback() -> void:
-	var modal_open := (is_instance_valid(dialogue_panel) and dialogue_panel.visible) or (is_instance_valid(pda_panel) and pda_panel.visible)
+	var modal_open := _modal_open()
 	var actionable := not current_interaction_prompt.is_empty() and not gameplay_input_locked and not modal_open
 	if is_instance_valid(interact_button):
 		interact_button.disabled = not actionable
 		interact_button.text = _action_label_for_prompt(current_interaction_prompt) if actionable else "INTERACT"
 	if is_instance_valid(crosshair):
 		crosshair.modulate = CROSSHAIR_ACTIVE if actionable else CROSSHAIR_IDLE
+
+
+func _modal_open() -> bool:
+	return (is_instance_valid(dialogue_panel) and dialogue_panel.visible) or (is_instance_valid(pda_panel) and pda_panel.visible) or (is_instance_valid(inventory_panel) and inventory_panel.visible)
 
 
 func _on_interact_pressed() -> void:
@@ -181,6 +199,8 @@ func _on_dialogue_requested(speaker: String, lines: Array) -> void:
 		dialogue_panel.visible = true
 	if is_instance_valid(pda_panel) and pda_panel.visible:
 		pda_panel.visible = false
+	if is_instance_valid(inventory_panel) and inventory_panel.visible:
+		inventory_panel.visible = false
 	_set_mobile_gameplay_controls_enabled(false)
 	_update_prompt_visibility()
 	EventBus.first_person_input_lock_changed.emit(true)
@@ -221,12 +241,28 @@ func _close_dialogue() -> void:
 func _toggle_pda() -> void:
 	if is_instance_valid(dialogue_panel) and dialogue_panel.visible:
 		return
+	if is_instance_valid(inventory_panel) and inventory_panel.visible:
+		inventory_panel.visible = false
 	if is_instance_valid(pda_panel):
 		pda_panel.visible = not pda_panel.visible
 		_set_mobile_gameplay_controls_enabled(not pda_panel.visible)
 		_update_prompt_visibility()
 		EventBus.first_person_input_lock_changed.emit(pda_panel.visible)
 		_refresh_pda()
+
+
+func _toggle_inventory() -> void:
+	if is_instance_valid(dialogue_panel) and dialogue_panel.visible:
+		return
+	if is_instance_valid(pda_panel) and pda_panel.visible:
+		pda_panel.visible = false
+	if not is_instance_valid(inventory_panel):
+		return
+	inventory_panel.visible = not inventory_panel.visible
+	_set_mobile_gameplay_controls_enabled(not inventory_panel.visible)
+	_update_prompt_visibility()
+	EventBus.first_person_input_lock_changed.emit(inventory_panel.visible)
+	_refresh_inventory_panel()
 
 
 func _on_first_person_input_lock_changed(locked: bool) -> void:
@@ -254,6 +290,54 @@ func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:
 		var stick := mobile_controls.find_child("MobileStick", true, false)
 		if is_instance_valid(stick) and stick.has_method("_reset_stick"):
 			stick._reset_stick()
+
+
+func _refresh_inventory_panel() -> void:
+	if not is_instance_valid(inventory_items) or GameRuntime.inventory_system == null:
+		return
+	for child in inventory_items.get_children():
+		child.queue_free()
+	var items := GameRuntime.inventory_system.get_items()
+	if items.is_empty():
+		var empty := Label.new()
+		empty.text = "Nothing carried."
+		inventory_items.add_child(empty)
+		inventory_detail.text = "Items you pick up or are handed will stay here."
+		return
+	for item in items:
+		var btn := Button.new()
+		var item_id := str(item.get("id", ""))
+		var item_name := str(item.get("name", item_id))
+		btn.text = item_name
+		btn.custom_minimum_size = Vector2(0, 72)
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		var icon_path := str(item.get("icon", ""))
+		if icon_path != "" and ResourceLoader.exists(icon_path):
+			btn.icon = load(icon_path) as Texture2D
+			btn.expand_icon = true
+			btn.icon_max_width = 52
+		var captured: Dictionary = item.duplicate(true) as Dictionary
+		btn.pressed.connect(func(): _select_inventory_item(captured))
+		inventory_items.add_child(btn)
+	inventory_detail.text = "Select an item to inspect or ready it for use."
+
+
+func _select_inventory_item(item: Dictionary) -> void:
+	var item_id := str(item.get("id", ""))
+	var item_name := str(item.get("name", item_id))
+	var description := str(item.get("description", "No description available."))
+	if GameRuntime.inventory_system.get_armed_item() == item_id:
+		GameRuntime.inventory_system.disarm_item()
+		inventory_detail.text = item_name + "
+" + description + "
+
+Not readied."
+	else:
+		GameRuntime.inventory_system.arm_item(item_id)
+		inventory_detail.text = item_name + "
+" + description + "
+
+READY FOR USE"
 
 
 func _refresh_pda() -> void:

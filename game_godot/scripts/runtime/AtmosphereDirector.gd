@@ -79,10 +79,10 @@ func play_waterdrop(volume_db: float = -14.0) -> void:
 
 
 func play_containment_drop() -> void:
-	play_waterdrop(-9.0)
+	play_waterdrop(-20.0)
 	var tree := get_tree()
 	if tree != null:
-		tree.create_timer(0.42).timeout.connect(func(): play_waterdrop(-13.0))
+		tree.create_timer(0.42).timeout.connect(func(): play_waterdrop(-24.0))
 
 
 func set_level(level_index: int, title: String = "") -> void:

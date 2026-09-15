@@ -59,7 +59,6 @@ func use_armed_item_on(target_id: String) -> Dictionary:
 	EventBus.world_state_changed.emit(res)
 	EventBus.inventory_changed.emit()
 	if res.has("result"):
-		AudioManager.play_item_pickup()
 		EventBus.notification_posted.emit(res["result"])
 	return res
 

@@ -43,7 +43,9 @@ class HiveProcGenContractTests(unittest.TestCase):
         self.assertIn("FALL_RECOVERY_Y", runtime)
         self.assertIn("_update_fall_recovery", runtime)
         self.assertIn("body.velocity = Vector3.ZERO", runtime)
-        self.assertIn("_set_breakroom_audio_active(level_index < 0)", runtime)
+        self.assertIn("BREAKROOM_AUDIO_EXIT_X", runtime)
+        self.assertIn("_update_audio_boundary", runtime)
+        self.assertIn("_set_breakroom_audio_active(inside)", runtime)
         self.assertIn("set_breakroom_ambience_active", AUDIO_MANAGER.read_text(encoding="utf-8"))
 
     def test_engine_contains_layered_generation_contract(self):

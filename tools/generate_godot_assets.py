@@ -630,17 +630,28 @@ def generate_offline_audio(base_dir: Path) -> None:
         click_samples.append(s)
     write_wav("ui_click.wav", click_samples, sr)
 
-    # 3. Item Pickup / Bag Zip (0.2s)
-    zip_samples = []
-    for i in range(int(sr * 0.2)):
+    # 3. Item Pickup (0.14s soft paper/plastic handling)
+    pickup_samples = []
+    for i in range(int(sr * 0.14)):
         t = i / sr
-        freq = 400 + 1200 * (t / 0.2)
-        env = math.sin(math.pi * (t / 0.2))
-        s = 0.25 * math.sin(2 * math.pi * freq * t) * env
-        zip_samples.append(s)
-    write_wav("item_pickup.wav", zip_samples, sr)
+        env = math.exp(-t * 24.0) * math.sin(math.pi * min(1.0, t / 0.14))
+        texture = math.sin(2 * math.pi * 310 * t) + 0.45 * math.sin(2 * math.pi * 470 * t)
+        pickup_samples.append(0.055 * texture * env)
+    write_wav("item_pickup.wav", pickup_samples, sr)
 
-    # 4. Wetberry Pulse (0.4s eerie low hum)
+    # 4. Evidence-bag zipper (0.34s: quiet friction plus zipper teeth).
+    bag_zip_samples = []
+    for i in range(int(sr * 0.34)):
+        t = i / sr
+        phase = t / 0.34
+        env = math.sin(math.pi * phase) ** 0.7
+        teeth = max(0.0, math.sin(2 * math.pi * 62 * t)) ** 7
+        carrier = math.sin(2 * math.pi * (1250 + 700 * phase) * t)
+        friction = math.sin(2 * math.pi * 1850 * t) * math.sin(2 * math.pi * 137 * t)
+        bag_zip_samples.append((0.065 * teeth * carrier + 0.018 * friction) * env)
+    write_wav("bag_zip.wav", bag_zip_samples, sr)
+
+    # 5. Wetberry Pulse (0.4s eerie low hum)
     pulse_samples = []
     for i in range(int(sr * 0.4)):
         t = i / sr

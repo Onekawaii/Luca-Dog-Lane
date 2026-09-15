@@ -132,6 +132,11 @@ func set_breakroom_audio_active(active: bool) -> void:
 				ambient_hum.play()
 		else:
 			ambient_hum.stop()
+	if keith_worker:
+		if active:
+			keith_worker.resume_cleaning()
+		else:
+			keith_worker.pause_cleaning()
 	if not active:
 		if is_instance_valid(coffee_switch_sfx):
 			coffee_switch_sfx.stop()
@@ -499,18 +504,25 @@ func _interact_keith() -> void:
 	if state == null:
 		return
 
-	if state.has_item("item.evidence_bag_not_my_business") or state.get_flag("wetberry_contained", false):
+	if state.get_flag("wetberry_contained", false):
 		_start_dialogue("Keith the Janitor", [
-			"You already have the bag.",
-			"Keith points toward the central table. “Contain the problem before it becomes a meeting.”"
+			"You got it sealed? Good. I heard the bag close from here.",
+			"That east service door should have released. If you're leaving, take the evidence with you. I am not putting that thing back in the fridge."
+		])
+		return
+	if state.has_item("item.evidence_bag_not_my_business"):
+		_start_dialogue("Keith the Janitor", [
+			"You're back. Good — you've still got the bag I gave you.",
+			"Wetberry is on the central table. Get close, use the bag on it, seal it, and then come tell me if the bag starts breathing."
 		])
 		return
 
 	GameRuntime.action_resolver.enter_scene(state, "scene.act1.keith_corner", false)
 	pending_dialogue_action = "grant_evidence_bag"
 	_start_dialogue("Keith the Janitor", [
-		"Nope. We bag it. We label it. We do not make bare-handed history.",
-		"Keith holds up a sealable evidence bag. “Use this on Wetberry. Then we can all pretend this was procedural.”"
+		"Hey — yeah, you. You came over because of the carton, right? Do not touch it bare-handed.",
+		"Here. Take this evidence bag. Open it, get Wetberry inside, seal the zipper, and keep your face away from the opening.",
+		"If it makes a noise after that, come back and tell me. I would rather know than pretend I didn't hear it."
 	])
 
 
@@ -533,10 +545,11 @@ func _interact_wetberry() -> void:
 		if outcome.has("error"):
 			EventBus.notification_posted.emit(str(outcome["error"]))
 		else:
+			AudioManager.play_bag_zip()
 			AtmosphereDirector.play_containment_drop()
 			_start_dialogue("Wetberry", [
-				"The bag seals. Two water drops answer from somewhere inside the ceiling.",
-				"Wetberry stops pulsing. The room becomes measurably less damp."
+				"The zipper closes with a short plastic rasp. A moment later, two distant drops answer from inside the ceiling.",
+				"Wetberry settles inside the clear bag. You can still see it through the plastic; it is no longer pulsing."
 			])
 		_refresh_world()
 		return
@@ -566,6 +579,7 @@ func _on_dialogue_closed() -> void:
 			return
 		if not state.has_item("item.evidence_bag_not_my_business"):
 			GameRuntime.execute_choice("ask_for_evidence_bag")
+			AudioManager.play_item_pickup()
 		GameRuntime.action_resolver.enter_scene(state, "scene.act1.first_sighting", false)
 		EventBus.world_state_changed.emit({})
 		EventBus.first_person_objective_changed.emit("Return to Wetberry at the central table and contain it.")
