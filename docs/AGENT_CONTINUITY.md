@@ -1332,3 +1332,20 @@ Next exact action:
 Commit the qualified v0.9 tree on `feat/fps-world-interactions`, rerun exact-head
 verification, then export and publish replacement Windows/Android artifacts. Do
 not merge `main`.
+
+Final v0.9 release receipt:
+- implementation/build commit: `b7711fe4e461246c9b151a1ddafa622713efd6f4`;
+- exact committed-head verifier: ALL GATES PASSED;
+- Python: 456 passed, 1 skipped; native acceptance: 333/333 passed;
+- release: `https://github.com/Onekawaii/Hive-Lattice/releases/tag/v0.9.0-open-world-hotfix`;
+- Windows SHA256: `c5890a1a5f6dae3fb15fc16b33e345f2a9fc9a05fab3a251f90a42e4b2a8ef76`;
+- Android SHA256: `cdae0288a44a1ba32fe78f18250a0091b3baf055fa82df023b3d4642b13a7eaa`;
+- source SHA256: `f60f2d86d31da9b95b2a12d5254adaaf67591466d3a69e1131a2a3d825f9d00e`;
+- Windows smoke: exit 0, 0 SCRIPT ERROR;
+- Android signed and structurally verified with arm64-v8a + x86_64;
+- branch pushed only to `feat/fps-world-interactions`; `main` not merged.
+
+Physical retest target:
+Start a new game or load the affected save, open the east service exit after
+containment, cross multiple streamed thresholds, deliberately step off any
+reachable edge, and confirm immediate recovery to the last stable floor.
