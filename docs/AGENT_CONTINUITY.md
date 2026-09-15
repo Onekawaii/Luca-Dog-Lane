@@ -1288,3 +1288,18 @@ Release sequence still required:
 3. Export/package fresh Windows and Android builds plus checksums.
 4. Publish a new immutable GitHub release/tag and record its direct links and hashes here.
 5. Push only `feat/fps-world-interactions`; do not merge `main`.
+
+Final release receipt:
+- implementation/build commit: `d4aae640bc130964756128247e07f8bfea04476e` (`feat(procgen): stream walkable Region 01 cells`);
+- exact committed-head full verifier: ALL GATES PASSED;
+- release/tag: `v0.8.0-procgen-streamer`, targeted exactly at `d4aae64`;
+- release page: `https://github.com/Onekawaii/Hive-Lattice/releases/tag/v0.8.0-procgen-streamer`;
+- Windows: `Hive-Lattice-native-windows-playtest.zip`, SHA256 `7e11478f56332e91f643a21eb8a7e1cd43f2a5fbf765a34222262c3a271b0548`;
+- Android: `Hive-Lattice-native-android-playtest.apk`, SHA256 `459cbab671a18259c517f0a1239f13876a8edd7414f1280a071fe8461a305d7d`;
+- source: `Hive-Lattice-native-playtest-source.zip`, SHA256 `922d243e2ad8a3df47059a5b6db503d70e31aab416ede6d6a001486a9379c633`;
+- Windows exported executable smoke: exit 0, 0 SCRIPT ERROR;
+- Android signature and structure: PASS; arm64-v8a + x86_64 present;
+- physical Windows/Android traversal playtest remains required for user acceptance.
+
+Next exact action:
+Physically playtest the east Breakroom portal, corridor streaming seam, neighbor-site floor/walls, return traversal, and Android touch movement across cell boundaries. Do not widen Region 01 until that traversal is accepted.
