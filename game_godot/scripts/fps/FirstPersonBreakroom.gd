@@ -8,6 +8,9 @@ const KeithAmbientWorkerClass = preload("res://scripts/fps/KeithAmbientWorker.gd
 
 @onready var ceiling_light: DirectionalLight3D = get_node_or_null("CeilingLight")
 @onready var ambient_hum: AudioStreamPlayer = get_node_or_null("AmbientHum")
+@onready var coffee_switch_sfx: AudioStreamPlayer = get_node_or_null("CoffeeSwitchSFX")
+@onready var coffee_brew_sfx: AudioStreamPlayer = get_node_or_null("CoffeeBrewSFX")
+@onready var fridge_hinge_sfx: AudioStreamPlayer = get_node_or_null("FridgeHingeSFX")
 @onready var quantum_player: CharacterBody3D = get_node_or_null("Player")
 @onready var quantum_kevin: Node3D = get_node_or_null("World/FirstPersonKevin")
 @onready var quantum_coffee_maker: StaticBody3D = get_node_or_null("World/CoffeeMaker")
@@ -23,6 +26,7 @@ const KeithAmbientWorkerClass = preload("res://scripts/fps/KeithAmbientWorker.gd
 
 @onready var keith_actor: CharacterBody3D = get_node_or_null("World/Keith")
 @onready var wetberry_prop: Node3D = get_node_or_null("World/Wetberry")
+@onready var wetberry_contamination_light: OmniLight3D = get_node_or_null("World/Wetberry/ContaminationLight")
 @onready var central_table: StaticBody3D = get_node_or_null("World/CentralTable")
 
 var witness_system = null
@@ -128,8 +132,17 @@ func _update_fluorescent_flutter() -> void:
 	ceiling_light.light_energy = clampf(0.95 + flutter + rare_dip, 0.82, 1.0)
 
 
+func _update_wetberry_presence() -> void:
+	if not is_instance_valid(wetberry_contamination_light):
+		return
+	var seconds := Time.get_ticks_msec() * 0.001
+	var pulse := sin(seconds * 2.25) * 0.065 + sin(seconds * 0.47) * 0.025
+	wetberry_contamination_light.light_energy = clampf(0.32 + pulse, 0.22, 0.42)
+
+
 func _process(delta: float) -> void:
 	_update_fluorescent_flutter()
+	_update_wetberry_presence()
 	if keith_worker:
 		keith_worker.update(delta)
 
@@ -381,6 +394,10 @@ func _interact_coffee() -> void:
 
 func toggle_coffee_maker() -> void:
 	is_coffee_on = not is_coffee_on
+	if is_instance_valid(coffee_switch_sfx):
+		coffee_switch_sfx.play()
+	if is_coffee_on and is_instance_valid(coffee_brew_sfx):
+		coffee_brew_sfx.play()
 	_update_coffee_maker_state()
 	_update_appliance_prompts()
 	# persist
@@ -423,6 +440,8 @@ func toggle_fridge_door() -> void:
 
 	is_fridge_open = not is_fridge_open
 	is_fridge_animating = true
+	if is_instance_valid(fridge_hinge_sfx):
+		fridge_hinge_sfx.play()
 	if is_instance_valid(fridge_light):
 		fridge_light.visible = is_fridge_open
 

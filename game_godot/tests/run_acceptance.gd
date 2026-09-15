@@ -829,6 +829,17 @@ func test_breakroom_interaction_pass() -> void:
 	var wetberry = bootstrap.find_child("Wetberry", true, false) as StaticBody3D
 	assert_true(wetberry != null, "Wetberry static body found")
 
+	var dressing = bootstrap.find_child("BreakroomDressing", true, false)
+	assert_true(dressing != null, "Breakroom environmental dressing group exists")
+	assert_true(dressing.find_child("NoticeBoard", true, false) != null, "Breakroom has employee notice board")
+	assert_true(dressing.find_child("UtilityBucket", true, false) != null, "Keith utility bucket is staged in room")
+	assert_true(dressing.find_child("AbandonedCup1", true, false) != null, "Coffee counter has abandoned cup dressing")
+	var wetberry_light = wetberry.find_child("ContaminationLight", true, false) as OmniLight3D
+	assert_true(wetberry_light != null, "Wetberry has low-cost contamination light")
+	assert_true(breakroom.coffee_switch_sfx != null and breakroom.coffee_switch_sfx.stream != null, "Coffee switch SFX is wired")
+	assert_true(breakroom.coffee_brew_sfx != null and breakroom.coffee_brew_sfx.stream != null, "Coffee brew SFX is wired")
+	assert_true(breakroom.fridge_hinge_sfx != null and breakroom.fridge_hinge_sfx.stream != null, "Fridge hinge SFX is wired")
+
 	# 1. Coffee Maker Toggle & Visual Feedback
 	assert_false(breakroom.is_coffee_on, "Coffee maker starts OFF")
 	breakroom.toggle_coffee_maker()
@@ -900,6 +911,9 @@ func test_breakroom_interaction_pass() -> void:
 	assert_true(keith != null, "Keith actor exists")
 	assert_true(breakroom.keith_worker != null, "Keith ambient worker initialized")
 	var worker = breakroom.keith_worker
+	assert_true(worker.has_method("_animate_walk"), "Keith worker has walking body animation")
+	assert_true(worker.has_method("_animate_cleaning_body"), "Keith worker has cleaning body animation")
+	assert_true(worker.left_leg != null and worker.right_leg != null, "Keith worker cached leg animation nodes")
 	assert_false(worker.is_paused, "Keith ambient worker is initially not paused")
 	worker.pause_cleaning()
 	assert_true(worker.is_paused, "Keith ambient worker is paused for interaction")

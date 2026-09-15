@@ -1153,3 +1153,34 @@ Verification:
 - `python tools/verify_native_contract.py`: ALL GATES PASSED.
 
 Physical Android retest still required for control ergonomics, contextual button feel, fridge light, and ambient mix.
+
+## 2026-09-14 — Presence/audio pass + reproducible export checkpoint
+
+Live repo path confirmed by Desktop Commander:
+`C:\Users\jmgar\Desktop\AI-UNIVERSE\01_ACTIVE_PROJECTS\Hive-Lattice`
+
+Branch at entry: `feat/fps-world-interactions`
+HEAD at entry: `f9555e12bf616fc3307369933074a729f9a4b81e`
+
+Verified authored pass:
+- breakroom dressing: notice board, utility bucket, abandoned cups;
+- deterministic coffee-switch, coffee-brew, and fridge-hinge WAV SFX;
+- Wetberry low-cost contamination light pulse;
+- Keith walking and cleaning body animation layered onto existing collision-safe worker;
+- native acceptance expanded to verify these additions;
+- Python contract coverage added for generated SFX and wiring.
+
+Qualification before commit:
+- Godot asset import: PASS;
+- focused presence/export tests: 3/3 PASS;
+- Python suite through full native verifier: 448 PASS, 1 intentional skip;
+- native acceptance: 290/290 PASS;
+- `python tools/verify_native_contract.py`: ALL GATES PASSED.
+
+Build hardening:
+- `tools/export_godot_campaign.py` now preserves `exported_at` when the canonical campaign hash is unchanged, preventing repeated verification/build runs from dirtying an otherwise identical export manifest;
+- regression test proves byte-identical repeated manifest export for unchanged source;
+- live manifest stability check: PASS.
+
+Next exact action:
+Commit the qualified authored tree on `feat/fps-world-interactions`, rerun exact-head verification, then build/package the Windows, Android, source, and Termux/full-suite artifacts. Do not merge to `main` as part of this pass.

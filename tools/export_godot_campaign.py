@@ -81,11 +81,22 @@ def export_campaign(campaign_dir: Path, output_dir: Path) -> Dict[str, Any]:
         with campaign_manifest_path.open("r", encoding="utf-8") as f:
             campaign_manifest = json.load(f)
 
+    existing_exported_at = None
+    existing_manifest_path = output_dir / "manifest.json"
+    if existing_manifest_path.exists():
+        try:
+            with existing_manifest_path.open("r", encoding="utf-8") as f:
+                existing_manifest = json.load(f)
+            if existing_manifest.get("combined_sha256") == overall_hash:
+                existing_exported_at = existing_manifest.get("exported_at")
+        except (OSError, json.JSONDecodeError):
+            existing_exported_at = None
+
     manifest = {
         "schema": "godot_campaign_manifest_v1",
         "campaign_id": campaign_manifest.get("id", "campaign.strawberry_omen"),
         "campaign_title": campaign_manifest.get("title", "The Strawberry Omen"),
-        "exported_at": datetime.now(timezone.utc).isoformat(),
+        "exported_at": existing_exported_at or datetime.now(timezone.utc).isoformat(),
         "combined_sha256": overall_hash,
         "entry_location": "location.breakroom",
         "entry_scene": "scene.act1.first_sighting",

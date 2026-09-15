@@ -1,4 +1,4 @@
-[gd_scene load_steps=60 format=3]
+[gd_scene load_steps=73 format=3]
 
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonBreakroom.gd" id="1_world"]
 [ext_resource type="Script" path="res://scripts/fps/FirstPersonPlayer.gd" id="2_player"]
@@ -15,6 +15,9 @@
 [ext_resource type="Texture2D" path="res://assets/fps/props/hidden_anomaly_plate_256.png" id="10_hidden_anomaly_tex"]
 [ext_resource type="Texture2D" path="res://assets/fps/props/fridge_ooze_decal.png" id="11_fridge_ooze_tex"]
 [ext_resource type="AudioStream" path="res://assets/audio/fluorescent_hum.wav" id="13_fluorescent_hum"]
+[ext_resource type="AudioStream" path="res://assets/audio/coffee_switch.wav" id="14_coffee_switch"]
+[ext_resource type="AudioStream" path="res://assets/audio/coffee_brew.wav" id="15_coffee_brew"]
+[ext_resource type="AudioStream" path="res://assets/audio/fridge_hinge.wav" id="16_fridge_hinge"]
 
 [sub_resource type="Environment" id="Environment_breakroom"]
 background_mode = 1
@@ -218,6 +221,31 @@ roughness = 0.4
 albedo_color = Color(0.55, 0.25, 0.20, 1)
 roughness = 0.7
 
+[sub_resource type="StandardMaterial3D" id="Mat_notice_board"]
+albedo_color = Color(0.28, 0.16, 0.08, 1)
+roughness = 0.92
+
+[sub_resource type="StandardMaterial3D" id="Mat_paper_white"]
+albedo_color = Color(0.82, 0.80, 0.68, 1)
+roughness = 0.96
+
+[sub_resource type="StandardMaterial3D" id="Mat_paper_yellow"]
+albedo_color = Color(0.72, 0.62, 0.24, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Mat_bucket"]
+albedo_color = Color(0.72, 0.54, 0.07, 1)
+roughness = 0.78
+
+[sub_resource type="StandardMaterial3D" id="Mat_trash"]
+albedo_color = Color(0.09, 0.11, 0.10, 1)
+metallic = 0.15
+roughness = 0.72
+
+[sub_resource type="StandardMaterial3D" id="Mat_cup"]
+albedo_color = Color(0.68, 0.70, 0.64, 1)
+roughness = 0.86
+
 [sub_resource type="StandardMaterial3D" id="Mat_quantum_kevin"]
 albedo_color = Color(0.2, 0.7, 0.9, 1)
 emission_enabled = true
@@ -416,6 +444,22 @@ top_radius = 0.26
 bottom_radius = 0.24
 height = 0.76
 
+[sub_resource type="BoxMesh" id="Mesh_notice_board"]
+size = Vector3(2.2, 1.2, 0.06)
+
+[sub_resource type="BoxMesh" id="Mesh_notice_paper"]
+size = Vector3(0.42, 0.55, 0.02)
+
+[sub_resource type="CylinderMesh" id="Mesh_bucket"]
+top_radius = 0.34
+bottom_radius = 0.28
+height = 0.48
+
+[sub_resource type="CylinderMesh" id="Mesh_cup"]
+top_radius = 0.11
+bottom_radius = 0.09
+height = 0.22
+
 [sub_resource type="BoxMesh" id="Mesh_chair_seat"]
 size = Vector3(0.48, 0.06, 0.48)
 
@@ -454,6 +498,18 @@ shadow_enabled = true
 stream = ExtResource("13_fluorescent_hum")
 volume_db = -20.0
 autoplay = true
+
+[node name="CoffeeSwitchSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("14_coffee_switch")
+volume_db = -5.0
+
+[node name="CoffeeBrewSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("15_coffee_brew")
+volume_db = -11.0
+
+[node name="FridgeHingeSFX" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("16_fridge_hinge")
+volume_db = -6.0
 
 [node name="World" type="Node3D" parent="."]
 
@@ -548,6 +604,42 @@ position = Vector3(0, -0.04, 0)
 mesh = SubResource("Mesh_light_tube")
 material_override = SubResource("Mat_light_tube")
 
+[node name="BreakroomDressing" type="Node3D" parent="World"]
+
+[node name="NoticeBoard" type="MeshInstance3D" parent="World/BreakroomDressing"]
+position = Vector3(-1.8, 1.85, -5.93)
+mesh = SubResource("Mesh_notice_board")
+material_override = SubResource("Mat_notice_board")
+
+[node name="NoticeWhite" type="MeshInstance3D" parent="World/BreakroomDressing"]
+position = Vector3(-2.18, 1.94, -5.89)
+rotation_degrees = Vector3(0, 0, -4)
+mesh = SubResource("Mesh_notice_paper")
+material_override = SubResource("Mat_paper_white")
+
+[node name="NoticeYellow" type="MeshInstance3D" parent="World/BreakroomDressing"]
+position = Vector3(-1.47, 1.72, -5.89)
+rotation_degrees = Vector3(0, 0, 6)
+mesh = SubResource("Mesh_notice_paper")
+material_override = SubResource("Mat_paper_yellow")
+
+[node name="UtilityBucket" type="MeshInstance3D" parent="World/BreakroomDressing"]
+position = Vector3(-6.55, 0.24, -3.45)
+mesh = SubResource("Mesh_bucket")
+material_override = SubResource("Mat_bucket")
+
+[node name="AbandonedCup1" type="MeshInstance3D" parent="World/BreakroomDressing"]
+position = Vector3(4.72, 1.02, 3.62)
+rotation_degrees = Vector3(0, 12, 0)
+mesh = SubResource("Mesh_cup")
+material_override = SubResource("Mat_cup")
+
+[node name="AbandonedCup2" type="MeshInstance3D" parent="World/BreakroomDressing"]
+position = Vector3(6.72, 1.02, 3.44)
+rotation_degrees = Vector3(0, -18, 0)
+mesh = SubResource("Mesh_cup")
+material_override = SubResource("Mat_cup")
+
 [node name="CentralTable" type="StaticBody3D" parent="World"]
 position = Vector3(0, 0.52, -0.6)
 
@@ -620,6 +712,14 @@ material_override = SubResource("Mat_carton_seam")
 position = Vector3(0, -0.07, 0.142)
 mesh = SubResource("Mesh_wetberry_decal")
 material_override = SubResource("Mat_wetberry_decal")
+
+[node name="ContaminationLight" type="OmniLight3D" parent="World/Wetberry"]
+position = Vector3(0, 0.02, 0.08)
+light_color = Color(0.42, 0.95, 0.36, 1)
+light_energy = 0.32
+shadow_enabled = false
+omni_range = 1.45
+omni_attenuation = 1.7
 
 [node name="Holdable" type="Node3D" parent="World/Wetberry"]
 	script = ExtResource("11_holdable")
