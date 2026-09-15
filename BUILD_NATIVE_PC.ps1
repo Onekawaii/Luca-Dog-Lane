@@ -66,13 +66,21 @@ Write-Host "  [OK] $WindowsExe created successfully." -ForegroundColor Green
 Write-Host "`n[4/4] Building Android APK..." -ForegroundColor Yellow
 python tools/build_android_apk.py
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning "Android APK build completed with warnings."
-} else {
-    Write-Host "  [OK] dist\android\Hive-Lattice-native-playtest.apk created successfully." -ForegroundColor Green
+    Write-Error "Android APK build failed. Native suite is not complete."
+}
+Write-Host "  [OK] dist\Hive-Lattice-native-android-playtest.apk created successfully." -ForegroundColor Green
+
+# Package release zip and sidecars. Missing deliverables are fatal.
+python tools/package_native_playtest.py
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Native playtest packaging failed."
 }
 
-# Package release zip and sidecars
-python tools/package_native_playtest.py
+# Generate the exact-state release receipt only after both platform artifacts exist.
+python tools/write_release_receipt.py
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Release receipt generation failed."
+}
 
 Write-Host "`n============================================================" -ForegroundColor Green
 Write-Host "[BUILD SUCCESS] All deliverables ready in dist/" -ForegroundColor Green

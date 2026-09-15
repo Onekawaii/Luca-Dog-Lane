@@ -237,6 +237,10 @@ func _on_interaction_requested(data: Dictionary) -> void:
 			_interact_fridge()
 		"world_exit":
 			_interact_world_exit()
+		"lattice_echo":
+			_interact_lattice_echo(data)
+		"lattice_terminal":
+			_interact_lattice_terminal()
 		"central_table":
 			_start_inspect(central_table, "Central Table", 2.2, 0.4)
 		_:
@@ -565,6 +569,8 @@ func _on_dialogue_closed() -> void:
 		GameRuntime.action_resolver.enter_scene(state, "scene.act1.first_sighting", false)
 		EventBus.world_state_changed.emit({})
 		EventBus.first_person_objective_changed.emit("Return to Wetberry at the central table and contain it.")
+	elif action == "complete_campaign":
+		_complete_campaign_and_show_ending()
 
 
 func _refresh_world() -> void:
@@ -649,3 +655,64 @@ func _interact_world_exit() -> void:
 	AtmosphereDirector.play_waterdrop(-11.0)
 	EventBus.notification_posted.emit("The service door drags upward. The roomtone follows you.")
 	EventBus.first_person_objective_changed.emit("Leave the breakroom. Follow the threshold lights into the Service Spine.")
+
+
+func _interact_lattice_echo(data: Dictionary) -> void:
+	var state := GameRuntime.world_state
+	if state == null:
+		return
+	var echo_id := str(data.get("target_id", "echo.unknown"))
+	var node := data.get("node") as Node
+	var level_index := int(node.get_meta("level_index", -1)) if node != null else -1
+	var echoes: Dictionary = state.world_state.get("lattice_echoes", {})
+	var description := str(data.get("description", "The recording contains only roomtone."))
+	var already_recorded := echoes.has(echo_id)
+	if not already_recorded:
+		echoes[echo_id] = {
+			"level_index": level_index,
+			"text": description,
+			"recorded_turn": state.turn_count,
+		}
+		state.world_state["lattice_echoes"] = echoes
+		EventBus.notification_posted.emit("Witness echo recorded: %d / 24" % echoes.size())
+		AtmosphereDirector.play_waterdrop(-14.0)
+	var prefix := "Already recorded. " if already_recorded else "Recorded. "
+	_start_dialogue(str(data.get("speaker_name", "Witness Echo")), [prefix + description])
+
+
+func _interact_lattice_terminal() -> void:
+	var state := GameRuntime.world_state
+	if state == null:
+		return
+	var echoes: Dictionary = state.world_state.get("lattice_echoes", {})
+	if bool(state.world_state.get("campaign_complete", false)):
+		pending_dialogue_action = "complete_campaign"
+		_start_dialogue("THE LATTICE", [
+			"The witness record is already closed.",
+			"The terminal still remembers %d optional echoes." % echoes.size(),
+		])
+		return
+	pending_dialogue_action = "complete_campaign"
+	_start_dialogue("THE LATTICE", [
+		"The final terminal accepts the witness record without asking whether you understood it.",
+		"Optional echoes recovered: %d / 24." % echoes.size(),
+		"The building stops pretending there is another mandatory corridor.",
+	])
+
+
+func _complete_campaign_and_show_ending() -> void:
+	var state := GameRuntime.world_state
+	if state == null:
+		return
+	var echoes: Dictionary = state.world_state.get("lattice_echoes", {})
+	var procedural: Dictionary = state.world_state.get("procedural_world", {})
+	state.world_state["campaign_complete"] = true
+	state.world_state["completion_echo_count"] = echoes.size()
+	var visited_cells: Dictionary = procedural.get("cell_state", {})
+	state.world_state["completion_visited_cells"] = visited_cells.size()
+	state.world_state["completion_timestamp"] = Time.get_datetime_string_from_system(true)
+	EventBus.world_state_changed.emit({"campaign_complete": true})
+	var active_slot := str(state.world_state.get("active_save_slot", "slot_1"))
+	GameRuntime.save_slot(active_slot)
+	AtmosphereDirector.play_waterdrop(-8.0)
+	get_tree().change_scene_to_file("res://scenes/ui/EndingScreen.tscn")

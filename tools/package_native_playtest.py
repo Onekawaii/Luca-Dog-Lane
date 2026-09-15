@@ -105,8 +105,7 @@ def package_source_zip(dest_zip: Path, root_dir: Path | None = None) -> None:
 def package_windows_zip(windows_dir: Path, dest_zip: Path) -> None:
     exe_path = windows_dir / "Hive-Lattice.exe"
     if not exe_path.exists():
-        print(f"[WARN] Windows executable not found at {exe_path}. Skipping windows zip.")
-        return
+        raise RuntimeError(f"Windows executable not found at {exe_path}")
 
     print(f"Creating Windows playtest archive: {dest_zip.name}...")
     with zipfile.ZipFile(dest_zip, "w", zipfile.ZIP_DEFLATED) as z:
@@ -120,9 +119,10 @@ def package_windows_zip(windows_dir: Path, dest_zip: Path) -> None:
 
 
 def package_android(android_apk: Path) -> None:
-    if android_apk.exists():
-        print(f"Recording Android playtest APK: {android_apk.name}...")
-        write_sha256_sidecar(android_apk)
+    if not android_apk.exists():
+        raise RuntimeError(f"Android APK not found at {android_apk}")
+    print(f"Recording Android playtest APK: {android_apk.name}...")
+    write_sha256_sidecar(android_apk)
 
 
 def main() -> int:

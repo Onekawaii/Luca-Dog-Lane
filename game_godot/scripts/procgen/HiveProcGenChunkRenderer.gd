@@ -73,23 +73,32 @@ func _build_region_one_slice() -> void:
 	var breakroom_site := _site_by_id("site.breakroom")
 	if breakroom_site.is_empty():
 		return
-	var route_sites: Array = []
+	var candidates: Array = []
 	for site in world_plan.get("sites", []):
 		if str(site.get("id", "")) != "site.breakroom":
-			route_sites.append(site)
-		if route_sites.size() >= LEVEL_TITLES.size():
-			break
-	if route_sites.is_empty():
+			candidates.append(site)
+	if candidates.size() < LEVEL_TITLES.size():
 		return
+	var route_sites: Array = candidates.slice(0, LEVEL_TITLES.size())
+	var branch_sites: Array = candidates.slice(LEVEL_TITLES.size())
 	neighbor_site_id = str(route_sites[0].get("id", "region.00.site.01"))
 	slice_cells = {
 		"0:0": {"kind": "portal", "site_id": "site.breakroom", "level_index": -1},
 		"1:0": {"kind": "transit", "site_id": neighbor_site_id, "level_index": -1},
 	}
+	var branch_cursor := 0
 	for i in range(route_sites.size()):
 		var site_x := 2 + i * 2
 		var site_id := str(route_sites[i].get("id", ""))
 		slice_cells["%d:0" % site_x] = {"kind": "site", "site_id": site_id, "level_index": i}
+		for direction in [-1, 1]:
+			var branch_site_id := site_id + ".branch.%d" % direction
+			if branch_cursor < branch_sites.size():
+				branch_site_id = str(branch_sites[branch_cursor].get("id", branch_site_id))
+				branch_cursor += 1
+			slice_cells["%d:%d" % [site_x, direction]] = {
+				"kind": "branch", "site_id": branch_site_id, "level_index": i, "branch_dir": direction,
+			}
 		if i < route_sites.size() - 1:
 			slice_cells["%d:0" % (site_x + 1)] = {"kind": "transit", "site_id": site_id, "level_index": i}
 
@@ -108,6 +117,7 @@ func _load_cell(key: String) -> void:
 	match str(definition.get("kind", "transit")):
 		"portal": _build_corridor(root, true)
 		"site": _build_neighbor_site(root, definition)
+		"branch": _build_branch_site(root, definition)
 		_: _build_corridor(root, false)
 
 
@@ -143,8 +153,11 @@ func _build_neighbor_site(root: Node3D, definition: Dictionary) -> void:
 	accent_mat.emission_energy_multiplier = 1.8
 	var room_height := 3.8 + float(level_index % 3) * 0.45
 	_add_static_box(root, "Floor", Vector3(LOCAL_CELL_SIZE, 0.25, 22.0), Vector3(LOCAL_CELL_SIZE * 0.5, -0.125, 0.0), floor_mat)
-	_add_static_box(root, "NorthWall", Vector3(LOCAL_CELL_SIZE, room_height, 0.3), Vector3(LOCAL_CELL_SIZE * 0.5, room_height * 0.5, -11.0), wall_mat)
-	_add_static_box(root, "SouthWall", Vector3(LOCAL_CELL_SIZE, room_height, 0.3), Vector3(LOCAL_CELL_SIZE * 0.5, room_height * 0.5, 11.0), wall_mat)
+	# Split side walls around centered branch doors so every level can be explored laterally.
+	_add_static_box(root, "NorthWallWest", Vector3(14.0, room_height, 0.3), Vector3(7.0, room_height * 0.5, -11.0), wall_mat)
+	_add_static_box(root, "NorthWallEast", Vector3(14.0, room_height, 0.3), Vector3(25.0, room_height * 0.5, -11.0), wall_mat)
+	_add_static_box(root, "SouthWallWest", Vector3(14.0, room_height, 0.3), Vector3(7.0, room_height * 0.5, 11.0), wall_mat)
+	_add_static_box(root, "SouthWallEast", Vector3(14.0, room_height, 0.3), Vector3(25.0, room_height * 0.5, 11.0), wall_mat)
 	_add_static_box(root, "Ceiling", Vector3(LOCAL_CELL_SIZE, 0.18, 22.0), Vector3(LOCAL_CELL_SIZE * 0.5, room_height, 0.0), wall_mat)
 	_add_static_box(root, "FarWallNorth", Vector3(0.3, room_height, 8.0), Vector3(LOCAL_CELL_SIZE, room_height * 0.5, -7.0), wall_mat)
 	_add_static_box(root, "FarWallSouth", Vector3(0.3, room_height, 8.0), Vector3(LOCAL_CELL_SIZE, room_height * 0.5, 7.0), wall_mat)
@@ -168,6 +181,10 @@ func _build_neighbor_site(root: Node3D, definition: Dictionary) -> void:
 	beacon.omni_range = 12.0
 	beacon.shadow_enabled = false
 	root.add_child(beacon)
+	if level_index == LEVEL_TITLES.size() - 1:
+		# The route terminates in a physical completion terminal instead of an open void.
+		_add_static_box(root, "TerminalWall", Vector3(0.3, room_height, 6.0), Vector3(LOCAL_CELL_SIZE, room_height * 0.5, 0.0), wall_mat)
+		_build_completion_terminal(root, level_index, accent_mat)
 
 
 func _open_breakroom_portal() -> void:
@@ -302,7 +319,7 @@ func _persist_streaming_state(center: Vector2i) -> void:
 	if GameRuntime.world_state == null:
 		return
 	var persistent: Dictionary = GameRuntime.world_state.world_state.get("procedural_world", {})
-	var key := "%d:0" % center.x
+	var key := "%d:%d" % [center.x, center.y]
 	var definition: Dictionary = slice_cells.get(key, {})
 	persistent["active_site"] = str(definition.get("site_id", "site.breakroom" if center.x < 2 else neighbor_site_id))
 	persistent["stream_cell"] = "%d:%d" % [center.x, center.y]
@@ -382,3 +399,138 @@ func _palette_for_level(level_index: int) -> Color:
 		Color(0.74, 0.48, 0.26), Color(0.73, 0.32, 0.50), Color(0.45, 0.95, 0.67),
 	]
 	return palette[posmod(level_index, palette.size())]
+
+
+func _build_branch_site(root: Node3D, definition: Dictionary) -> void:
+	var level_index := int(definition.get("level_index", 0))
+	var direction := int(definition.get("branch_dir", -1))
+	var palette := _palette_for_level(level_index)
+	var wall_mat := _wall_material.duplicate() as StandardMaterial3D
+	var floor_mat := _floor_material.duplicate() as StandardMaterial3D
+	var accent_mat := _accent_material.duplicate() as StandardMaterial3D
+	wall_mat.albedo_color = palette.darkened(0.48)
+	floor_mat.albedo_color = palette.darkened(0.68)
+	accent_mat.albedo_color = palette
+	accent_mat.emission = palette
+	accent_mat.emission_energy_multiplier = 2.1
+	var room_height := 3.4 + float((level_index + 1) % 3) * 0.35
+	var corridor_z := float(-direction) * 12.5
+	var chamber_z := float(direction) * 4.0
+	_add_static_box(root, "BranchCorridorFloor", Vector3(5.5, 0.25, 17.0), Vector3(16.0, -0.125, corridor_z), floor_mat)
+	_add_static_box(root, "BranchCorridorWest", Vector3(0.25, room_height, 17.0), Vector3(13.25, room_height * 0.5, corridor_z), wall_mat)
+	_add_static_box(root, "BranchCorridorEast", Vector3(0.25, room_height, 17.0), Vector3(18.75, room_height * 0.5, corridor_z), wall_mat)
+	_add_static_box(root, "BranchFloor", Vector3(20.0, 0.25, 16.0), Vector3(16.0, -0.125, chamber_z), floor_mat)
+	_add_static_box(root, "BranchWestWall", Vector3(0.3, room_height, 16.0), Vector3(6.0, room_height * 0.5, chamber_z), wall_mat)
+	_add_static_box(root, "BranchEastWall", Vector3(0.3, room_height, 16.0), Vector3(26.0, room_height * 0.5, chamber_z), wall_mat)
+	_add_static_box(root, "BranchFarWall", Vector3(20.0, room_height, 0.3), Vector3(16.0, room_height * 0.5, float(direction) * 12.0), wall_mat)
+	_add_static_box(root, "BranchCeiling", Vector3(20.0, 0.18, 16.0), Vector3(16.0, room_height, chamber_z), wall_mat)
+	_add_navigation(root, 6.2, 19.6, 15.5)
+	for x in [9.0, 16.0, 23.0]:
+		_add_mesh_box(root, "BranchGuide_%d" % int(x), Vector3(0.16, 0.10, 1.2), Vector3(x, room_height - 0.18, chamber_z), accent_mat)
+	var marker := Label3D.new()
+	marker.name = "BranchMarker"
+	marker.text = "%s // %s" % [level_title(level_index), "NORTH" if direction < 0 else "SOUTH"]
+	marker.position = Vector3(8.0, 2.1, chamber_z + float(direction) * 7.6)
+	marker.modulate = palette.lightened(0.30)
+	marker.font_size = 34
+	root.add_child(marker)
+	_build_lattice_echo(root, level_index, direction, accent_mat)
+
+
+func _build_lattice_echo(root: Node3D, level_index: int, direction: int, accent_mat: Material) -> void:
+	var echo := StaticBody3D.new()
+	var side := "north" if direction < 0 else "south"
+	echo.name = "LatticeEcho_%02d_%s" % [level_index + 1, side]
+	echo.position = Vector3(16.0, 1.05, float(direction) * 4.0)
+	echo.set_script(FirstPersonInteractableClass)
+	echo.set("interaction_id", "lattice_echo")
+	echo.set("target_id", "echo.%02d.%s" % [level_index + 1, side])
+	echo.set("prompt", "[E / A] Record Witness Echo")
+	echo.set("speaker_name", "Witness Echo %02d" % [level_index + 1])
+	echo.set("description", _echo_text(level_index, direction))
+	echo.set_meta("level_index", level_index)
+	echo.set_meta("branch_dir", direction)
+	root.add_child(echo)
+	var mesh := MeshInstance3D.new()
+	mesh.name = "EchoMesh"
+	var sphere := SphereMesh.new()
+	sphere.radius = 0.32
+	sphere.height = 0.64
+	mesh.mesh = sphere
+	mesh.material_override = accent_mat
+	echo.add_child(mesh)
+	var collision := CollisionShape3D.new()
+	collision.name = "Collision"
+	var shape := SphereShape3D.new()
+	shape.radius = 0.36
+	collision.shape = shape
+	echo.add_child(collision)
+	var light := OmniLight3D.new()
+	light.name = "EchoLight"
+	light.light_color = _palette_for_level(level_index)
+	light.light_energy = 1.1
+	light.omni_range = 3.8
+	light.shadow_enabled = false
+	echo.add_child(light)
+
+
+func _build_completion_terminal(root: Node3D, level_index: int, accent_mat: Material) -> void:
+	var terminal := StaticBody3D.new()
+	terminal.name = "LatticeCompletionTerminal"
+	terminal.position = Vector3(28.0, 1.15, 0.0)
+	terminal.set_script(FirstPersonInteractableClass)
+	terminal.set("interaction_id", "lattice_terminal")
+	terminal.set("target_id", "terminal.lattice.final")
+	terminal.set("prompt", "[E / A] Complete Witness Run")
+	terminal.set("speaker_name", "THE LATTICE")
+	terminal.set("description", "The terminal is waiting for the witness to decide whether the run is complete.")
+	terminal.set_meta("level_index", level_index)
+	root.add_child(terminal)
+	var mesh := MeshInstance3D.new()
+	mesh.name = "TerminalMesh"
+	var box := BoxMesh.new()
+	box.size = Vector3(1.4, 2.1, 0.75)
+	mesh.mesh = box
+	mesh.material_override = accent_mat
+	terminal.add_child(mesh)
+	var collision := CollisionShape3D.new()
+	collision.name = "Collision"
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(1.4, 2.1, 0.75)
+	collision.shape = shape
+	terminal.add_child(collision)
+	var label := Label3D.new()
+	label.name = "TerminalLabel"
+	label.text = "WITNESS TERMINAL\nEND OF ROUTE"
+	label.position = Vector3(0.0, 0.35, 0.39)
+	label.modulate = _palette_for_level(level_index).lightened(0.35)
+	label.font_size = 32
+	terminal.add_child(label)
+
+
+func _echo_text(level_index: int, direction: int) -> String:
+	var fragments := [
+		"A maintenance log repeats the same timestamp for three days.",
+		"Someone filed an incident report for a room that does not exist on the map.",
+		"A specimen label lists Wetberry as both evidence and employee property.",
+		"The generator ledger records power consumption while the building was disconnected.",
+		"Cold-storage inventory includes one line item marked RETURNED TO WITNESS.",
+		"Archive shelves contain copies of forms you have not filled out yet.",
+		"Observation notes describe the exact direction you are facing now.",
+		"A machine counter increments only when nobody is looking at it.",
+		"The flood line on the wall is higher than the ceiling.",
+		"Roof access paperwork lists weather from inside the building.",
+		"The cafeteria menu offers the same meal under twelve different names.",
+		"The final record contains no author, only your current save slot.",
+	]
+	var base := str(fragments[clampi(level_index, 0, fragments.size() - 1)])
+	var side_text := " The north copy ends with a wet fingerprint." if direction < 0 else " The south copy ends with a dry ring from a coffee cup."
+	return base + side_text
+
+
+func branch_cell_count() -> int:
+	var count := 0
+	for definition in slice_cells.values():
+		if str(definition.get("kind", "")) == "branch":
+			count += 1
+	return count
