@@ -1,0 +1,151 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/MainMenu.gd" id="1_menu"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.008, 0.015, 0.014, 1)
+mouse_filter = 2
+
+[node name="GlowLeft" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 0
+offset_right = 18.0
+offset_bottom = 720.0
+color = Color(0.08, 0.55, 0.31, 0.7)
+mouse_filter = 2
+
+[node name="HeaderRule" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_top = 74.0
+offset_bottom = 76.0
+grow_horizontal = 2
+color = Color(0.12, 0.72, 0.38, 0.32)
+mouse_filter = 2
+
+[node name="CornerReadout" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_top = 24.0
+offset_right = -30.0
+offset_bottom = 54.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.38, 0.82, 0.56, 0.8)
+theme_override_font_sizes/font_size = 13
+text = "WITNESS NETWORK // LOCAL // 06:06"
+horizontal_alignment = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(720, 0)
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.62, 1, 0.73, 1)
+theme_override_font_sizes/font_size = 58
+text = "HIVE-LATTICE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.68, 0.60, 1)
+theme_override_font_sizes/font_size = 16
+text = "THE STRAWBERRY OMEN // THE BUILDING REMEMBERS"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="ContinueButton" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "CONTINUE LAST WITNESS"
+
+[node name="NewGameButton" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 54)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "NEW WITNESS"
+
+[node name="SlotsLabel" type="Label" parent="Center/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.30, 0.82, 0.48, 1)
+theme_override_font_sizes/font_size = 13
+text = "WITNESS RECORDS"
+
+[node name="Slots" type="VBoxContainer" parent="Center/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Slot1" type="Button" parent="Center/VBox/Slots"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "SLOT_1 • EMPTY"
+
+[node name="Slot2" type="Button" parent="Center/VBox/Slots"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "SLOT_2 • EMPTY"
+
+[node name="Slot3" type="Button" parent="Center/VBox/Slots"]
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+text = "SLOT_3 • EMPTY"
+
+[node name="QuitButton" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 44)
+layout_mode = 2
+text = "LEAVE THE LATTICE"
+
+[node name="StatusLabel" type="Label" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 34)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.56, 0.66, 0.60, 1)
+theme_override_font_sizes/font_size = 13
+text = "No prior witness record found."
+horizontal_alignment = 1
+
+[node name="Footer" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -48.0
+offset_bottom = -18.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.28, 0.46, 0.36, 1)
+theme_override_font_sizes/font_size = 12
+text = "LOCAL SAVE // PROCEDURAL MULTIPLEX // DO NOT TRUST THE FLOOR PLAN"
+horizontal_alignment = 1

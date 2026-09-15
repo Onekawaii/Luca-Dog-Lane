@@ -217,6 +217,8 @@ func _on_interaction_requested(data: Dictionary) -> void:
 			_interact_coffee()
 		"fridge":
 			_interact_fridge()
+		"world_exit":
+			_interact_world_exit()
 		"central_table":
 			_start_inspect(central_table, "Central Table", 2.2, 0.4)
 		_:
@@ -509,8 +511,9 @@ func _interact_wetberry() -> void:
 		if outcome.has("error"):
 			EventBus.notification_posted.emit(str(outcome["error"]))
 		else:
+			AtmosphereDirector.play_containment_drop()
 			_start_dialogue("Wetberry", [
-				"The evidence bag seals with a disappointed zipper sound.",
+				"The bag seals. Two water drops answer from somewhere inside the ceiling.",
 				"Wetberry stops pulsing. The room becomes measurably less damp."
 			])
 		_refresh_world()
@@ -561,7 +564,7 @@ func _refresh_world() -> void:
 			collision.set_deferred("disabled", contained)
 
 	if state.get_flag("wetberry_contained", false):
-		EventBus.first_person_objective_changed.emit("Containment complete. Explore the breakroom and check the PDA.")
+		EventBus.first_person_objective_changed.emit("Containment complete. Find the glowing EXIT on the east wall and leave the breakroom.")
 	elif state.has_item("item.evidence_bag_not_my_business"):
 		EventBus.first_person_objective_changed.emit("Return to Wetberry at the central table and contain it.")
 	else:
@@ -601,3 +604,30 @@ func _update_coffee_machine_visuals() -> void:
 		_:
 			quantum_coffee_light.light_color = Color(0.9, 0.9, 0.9)
 			quantum_coffee_light.light_energy = 0.8
+
+
+func _interact_world_exit() -> void:
+	var state := GameRuntime.world_state
+	if state == null:
+		return
+	if not bool(state.get_flag("wetberry_contained", false)):
+		EventBus.notification_posted.emit("The service exit remains locked while Wetberry is loose.")
+		return
+	var gate := get_node_or_null("ProcGenExitGate") as StaticBody3D
+	if gate == null:
+		EventBus.notification_posted.emit("The exit mechanism is unavailable.")
+		return
+	if bool(gate.get_meta("opened", false)):
+		return
+	gate.set_meta("opened", true)
+	var collision := gate.get_node_or_null("Collision") as CollisionShape3D
+	if collision != null:
+		collision.set_deferred("disabled", true)
+	gate.set("dynamic_prompt", "EXIT OPEN")
+	var tween := create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+	tween.tween_property(gate, "position:y", gate.position.y + 3.2, 1.05)
+	state.room_memory()["exit_open"] = true
+	state.world_state["breakroom_exit_open"] = true
+	AtmosphereDirector.play_waterdrop(-11.0)
+	EventBus.notification_posted.emit("The service door drags upward. The roomtone follows you.")
+	EventBus.first_person_objective_changed.emit("Leave the breakroom. Follow the threshold lights into the Service Spine.")

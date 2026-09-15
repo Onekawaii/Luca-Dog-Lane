@@ -7,6 +7,16 @@ extends Node3D
 const LOCAL_CELL_SIZE := 32.0
 const ACTIVE_RADIUS := 1
 const WARM_RADIUS := 2
+const FirstPersonInteractableClass = preload("res://scripts/fps/FirstPersonInteractable.gd")
+const LEVEL_TITLES := [
+	"SERVICE SPINE", "RECORDS ANNEX", "WET LAB", "GENERATOR HALL",
+	"COLD STORAGE", "ARCHIVE SHAFT", "OBSERVATION WARD", "MACHINE FLOOR",
+	"FLOODED OFFICES", "ROOF UTILITY", "FALSE CAFETERIA", "THE LATTICE",
+]
+const LEVEL_ARCHETYPES := [
+	"service", "records", "laboratory", "industrial", "cold", "archive",
+	"observation", "machine", "flooded", "utility", "familiar_wrong", "lattice",
+]
 
 var world_plan: Dictionary = {}
 var active_cells: Dictionary = {}
@@ -63,22 +73,25 @@ func _build_region_one_slice() -> void:
 	var breakroom_site := _site_by_id("site.breakroom")
 	if breakroom_site.is_empty():
 		return
-	var nearest: Dictionary = {}
-	var nearest_distance := INF
-	var origin := _plan_position(breakroom_site)
+	var route_sites: Array = []
 	for site in world_plan.get("sites", []):
-		if site.get("id") == "site.breakroom" or site.get("region_id") != breakroom_site.get("region_id"):
-			continue
-		var distance := origin.distance_squared_to(_plan_position(site))
-		if distance < nearest_distance:
-			nearest_distance = distance
-			nearest = site
-	neighbor_site_id = str(nearest.get("id", "region.00.site.01"))
+		if str(site.get("id", "")) != "site.breakroom":
+			route_sites.append(site)
+		if route_sites.size() >= LEVEL_TITLES.size():
+			break
+	if route_sites.is_empty():
+		return
+	neighbor_site_id = str(route_sites[0].get("id", "region.00.site.01"))
 	slice_cells = {
-		"0:0": {"kind": "portal", "site_id": "site.breakroom"},
-		"1:0": {"kind": "transit", "site_id": neighbor_site_id},
-		"2:0": {"kind": "site", "site_id": neighbor_site_id},
+		"0:0": {"kind": "portal", "site_id": "site.breakroom", "level_index": -1},
+		"1:0": {"kind": "transit", "site_id": neighbor_site_id, "level_index": -1},
 	}
+	for i in range(route_sites.size()):
+		var site_x := 2 + i * 2
+		var site_id := str(route_sites[i].get("id", ""))
+		slice_cells["%d:0" % site_x] = {"kind": "site", "site_id": site_id, "level_index": i}
+		if i < route_sites.size() - 1:
+			slice_cells["%d:0" % (site_x + 1)] = {"kind": "transit", "site_id": site_id, "level_index": i}
 
 
 func _load_cell(key: String) -> void:
@@ -118,23 +131,43 @@ func _build_corridor(root: Node3D, portal_cell: bool) -> void:
 
 
 func _build_neighbor_site(root: Node3D, definition: Dictionary) -> void:
-	_add_static_box(root, "Floor", Vector3(LOCAL_CELL_SIZE, 0.25, 22.0), Vector3(LOCAL_CELL_SIZE * 0.5, -0.125, 0.0), _floor_material)
-	_add_static_box(root, "NorthWall", Vector3(LOCAL_CELL_SIZE, 3.8, 0.3), Vector3(LOCAL_CELL_SIZE * 0.5, 1.9, -11.0), _wall_material)
-	_add_static_box(root, "SouthWall", Vector3(LOCAL_CELL_SIZE, 3.8, 0.3), Vector3(LOCAL_CELL_SIZE * 0.5, 1.9, 11.0), _wall_material)
-	_add_static_box(root, "FarWall", Vector3(0.3, 3.8, 22.0), Vector3(LOCAL_CELL_SIZE, 1.9, 0.0), _wall_material)
+	var level_index := int(definition.get("level_index", 0))
+	var wall_mat := _wall_material.duplicate() as StandardMaterial3D
+	var accent_mat := _accent_material.duplicate() as StandardMaterial3D
+	var floor_mat := _floor_material.duplicate() as StandardMaterial3D
+	var palette := _palette_for_level(level_index)
+	wall_mat.albedo_color = palette.darkened(0.35)
+	floor_mat.albedo_color = palette.darkened(0.62)
+	accent_mat.albedo_color = palette
+	accent_mat.emission = palette
+	accent_mat.emission_energy_multiplier = 1.8
+	var room_height := 3.8 + float(level_index % 3) * 0.45
+	_add_static_box(root, "Floor", Vector3(LOCAL_CELL_SIZE, 0.25, 22.0), Vector3(LOCAL_CELL_SIZE * 0.5, -0.125, 0.0), floor_mat)
+	_add_static_box(root, "NorthWall", Vector3(LOCAL_CELL_SIZE, room_height, 0.3), Vector3(LOCAL_CELL_SIZE * 0.5, room_height * 0.5, -11.0), wall_mat)
+	_add_static_box(root, "SouthWall", Vector3(LOCAL_CELL_SIZE, room_height, 0.3), Vector3(LOCAL_CELL_SIZE * 0.5, room_height * 0.5, 11.0), wall_mat)
+	_add_static_box(root, "Ceiling", Vector3(LOCAL_CELL_SIZE, 0.18, 22.0), Vector3(LOCAL_CELL_SIZE * 0.5, room_height, 0.0), wall_mat)
+	_add_static_box(root, "FarWallNorth", Vector3(0.3, room_height, 8.0), Vector3(LOCAL_CELL_SIZE, room_height * 0.5, -7.0), wall_mat)
+	_add_static_box(root, "FarWallSouth", Vector3(0.3, room_height, 8.0), Vector3(LOCAL_CELL_SIZE, room_height * 0.5, 7.0), wall_mat)
 	_add_navigation(root, 0.0, LOCAL_CELL_SIZE, 21.5)
-	var site := _site_by_id(str(definition.get("site_id", "")))
-	var archetype := str(site.get("archetype", "institutional"))
-	for i in 4:
-		var z := -7.5 + float(i) * 5.0
-		_add_static_box(root, "Support_%d" % i, Vector3(0.7, 3.1, 0.7), Vector3(10.0 + float(i % 2) * 10.0, 1.55, z), _wall_material)
+	for x in [6.0, 16.0, 26.0]:
+		_add_mesh_box(root, "Guide_%d" % int(x), Vector3(0.18, 0.12, 8.0), Vector3(x, room_height - 0.22, 0.0), accent_mat)
+	_build_level_dressing(root, level_index, wall_mat, accent_mat)
 	var marker := Label3D.new()
-	marker.name = "SiteMarker"
-	marker.text = "%s\n%s" % [neighbor_site_id, archetype.to_upper()]
-	marker.position = Vector3(17.0, 2.2, -10.6)
-	marker.modulate = Color(0.95, 0.55, 0.22)
-	marker.font_size = 38
+	marker.name = "LevelMarker"
+	marker.text = "LEVEL %02d // %s" % [level_index + 1, level_title(level_index)]
+	marker.position = Vector3(7.0, 2.25, -10.55)
+	marker.rotation_degrees = Vector3(0, 0, 0)
+	marker.modulate = palette.lightened(0.35)
+	marker.font_size = 42
 	root.add_child(marker)
+	var beacon := OmniLight3D.new()
+	beacon.name = "LevelBeacon"
+	beacon.position = Vector3(16.0, room_height - 0.55, 0.0)
+	beacon.light_color = palette
+	beacon.light_energy = 1.35
+	beacon.omni_range = 12.0
+	beacon.shadow_enabled = false
+	root.add_child(beacon)
 
 
 func _open_breakroom_portal() -> void:
@@ -153,6 +186,47 @@ func _open_breakroom_portal() -> void:
 	_add_static_box(portal, "NorthJamb", Vector3(0.3, 3.2, 4.2), Vector3(8.0, 1.6, -3.9), _wall_material)
 	_add_static_box(portal, "SouthJamb", Vector3(0.3, 3.2, 4.2), Vector3(8.0, 1.6, 3.9), _wall_material)
 	_add_static_box(portal, "Lintel", Vector3(0.3, 0.55, 3.6), Vector3(8.0, 2.925, 0.0), _wall_material)
+
+	var gate := StaticBody3D.new()
+	gate.name = "ProcGenExitGate"
+	gate.position = Vector3(7.86, 1.45, 0.0)
+	gate.set_script(FirstPersonInteractableClass)
+	gate.set("interaction_id", "world_exit")
+	gate.set("target_id", "route.service_spine")
+	gate.set("prompt", "[E / A] EXIT ? Service Spine")
+	gate.set("speaker_name", "East Service Exit")
+	gate.set("description", "The door leads away from the breakroom.")
+	_breakroom.add_child(gate)
+	var gate_mesh := MeshInstance3D.new()
+	gate_mesh.name = "DoorMesh"
+	var gate_box := BoxMesh.new()
+	gate_box.size = Vector3(0.22, 2.8, 3.35)
+	gate_mesh.mesh = gate_box
+	var gate_mat := StandardMaterial3D.new()
+	gate_mat.albedo_color = Color(0.08, 0.13, 0.11)
+	gate_mat.metallic = 0.45
+	gate_mat.roughness = 0.58
+	gate_mesh.material_override = gate_mat
+	gate.add_child(gate_mesh)
+	var gate_collision := CollisionShape3D.new()
+	gate_collision.name = "Collision"
+	var gate_shape := BoxShape3D.new()
+	gate_shape.size = Vector3(0.22, 2.8, 3.35)
+	gate_collision.shape = gate_shape
+	gate.add_child(gate_collision)
+	if GameRuntime.world_state != null and bool(GameRuntime.world_state.world_state.get("breakroom_exit_open", false)):
+		gate.set_meta("opened", true)
+		gate.position.y += 3.2
+		gate_collision.disabled = true
+
+	var exit_sign := Label3D.new()
+	exit_sign.name = "ExitSign"
+	exit_sign.text = "EXIT // SERVICE SPINE"
+	exit_sign.position = Vector3(7.70, 3.23, 0.0)
+	exit_sign.rotation_degrees = Vector3(0, 90, 0)
+	exit_sign.modulate = Color(0.45, 1.0, 0.62)
+	exit_sign.font_size = 48
+	_breakroom.add_child(exit_sign)
 
 
 func _add_static_box(parent: Node3D, node_name: String, size: Vector3, position: Vector3, material: Material) -> void:
@@ -228,14 +302,18 @@ func _persist_streaming_state(center: Vector2i) -> void:
 	if GameRuntime.world_state == null:
 		return
 	var persistent: Dictionary = GameRuntime.world_state.world_state.get("procedural_world", {})
-	persistent["active_site"] = neighbor_site_id if center.x >= 2 else "site.breakroom"
+	var key := "%d:0" % center.x
+	var definition: Dictionary = slice_cells.get(key, {})
+	persistent["active_site"] = str(definition.get("site_id", "site.breakroom" if center.x < 2 else neighbor_site_id))
 	persistent["stream_cell"] = "%d:%d" % [center.x, center.y]
 	persistent["loaded_cells"] = loaded_cell_keys()
+	persistent["current_level"] = level_index_for_cell_x(center.x)
+	persistent["current_level_title"] = level_title(int(persistent["current_level"]))
 	var cell_state: Dictionary = persistent.get("cell_state", {})
-	for key in active_cells.keys():
-		if not cell_state.has(key):
-			cell_state[key] = {"visited": false}
-		cell_state[key]["visited"] = true
+	for active_key in active_cells.keys():
+		if not cell_state.has(active_key):
+			cell_state[active_key] = {"visited": false}
+		cell_state[active_key]["visited"] = true
 	persistent["cell_state"] = cell_state
 	GameRuntime.world_state.world_state["procedural_world"] = persistent
 
@@ -255,3 +333,52 @@ func _plan_position(site: Dictionary) -> Vector2:
 func _parse_cell_key(key: String) -> Vector2i:
 	var parts := key.split(":")
 	return Vector2i(int(parts[0]), int(parts[1]))
+
+
+func _build_level_dressing(root: Node3D, level_index: int, wall_mat: Material, accent_mat: Material) -> void:
+	var mode := level_index % 4
+	match mode:
+		0:
+			_add_static_box(root, "SideBayA", Vector3(8.0, 2.4, 0.35), Vector3(11.0, 1.2, -7.5), wall_mat)
+			_add_static_box(root, "SideBayB", Vector3(7.0, 2.1, 0.35), Vector3(23.0, 1.05, 7.5), wall_mat)
+		1:
+			for x in [9.0, 18.0, 27.0]:
+				_add_static_box(root, "ArchiveStack_%d" % int(x), Vector3(2.4, 2.6, 5.0), Vector3(x, 1.3, -7.2), wall_mat)
+		2:
+			for z in [-7.0, 7.0]:
+				_add_static_box(root, "LabBench_%d" % int(z), Vector3(10.0, 0.9, 2.0), Vector3(16.0, 0.45, z), wall_mat)
+		3:
+			for x in [8.0, 16.0, 24.0]:
+				_add_static_box(root, "Machine_%d" % int(x), Vector3(2.6, 2.8, 3.0), Vector3(x, 1.4, 7.6), wall_mat)
+
+	_add_mesh_box(root, "ThresholdGlow", Vector3(0.24, 2.7, 5.4), Vector3(31.7, 1.35, 0.0), accent_mat)
+
+
+func level_count() -> int:
+	return LEVEL_TITLES.size()
+
+
+func level_title(level_index: int) -> String:
+	if level_index < 0 or level_index >= LEVEL_TITLES.size():
+		return "BREAKROOM"
+	return str(LEVEL_TITLES[level_index])
+
+
+func level_index_for_cell_x(cell_x: int) -> int:
+	if cell_x < 2:
+		return -1
+	return clampi(int((cell_x - 2) / 2), 0, LEVEL_TITLES.size() - 1)
+
+
+func route_cell_count() -> int:
+	return slice_cells.size()
+
+
+func _palette_for_level(level_index: int) -> Color:
+	var palette := [
+		Color(0.95, 0.43, 0.12), Color(0.62, 0.72, 0.28), Color(0.22, 0.70, 0.62),
+		Color(0.88, 0.29, 0.17), Color(0.35, 0.64, 0.92), Color(0.55, 0.42, 0.82),
+		Color(0.82, 0.74, 0.36), Color(0.40, 0.82, 0.45), Color(0.22, 0.58, 0.72),
+		Color(0.74, 0.48, 0.26), Color(0.73, 0.32, 0.50), Color(0.45, 0.95, 0.67),
+	]
+	return palette[posmod(level_index, palette.size())]

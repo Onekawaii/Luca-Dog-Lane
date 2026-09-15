@@ -39,6 +39,9 @@ class HiveProcGenContractTests(unittest.TestCase):
         runtime = RUNTIME.read_text(encoding="utf-8")
         self.assertIn("HiveProcGenChunkRenderer.gd", runtime)
         self.assertIn("chunk_renderer.configure", runtime)
+        self.assertIn("FALL_RECOVERY_Y", runtime)
+        self.assertIn("_update_fall_recovery", runtime)
+        self.assertIn("body.velocity = Vector3.ZERO", runtime)
 
     def test_engine_contains_layered_generation_contract(self):
         source = ENGINE.read_text(encoding="utf-8")

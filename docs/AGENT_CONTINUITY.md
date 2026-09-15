@@ -1303,3 +1303,32 @@ Final release receipt:
 
 Next exact action:
 Physically playtest the east Breakroom portal, corridor streaming seam, neighbor-site floor/walls, return traversal, and Android touch movement across cell boundaries. Do not widen Region 01 until that traversal is accepted.
+
+## 2026-09-15 — Physical fall report and expanded Lattice qualification
+
+User evidence from the Windows playtest confirmed an underworld failure: after
+leaving supported streamed geometry, the character continued falling without a
+recovery boundary. This supersedes the prior traversal acceptance assumption.
+
+The live working tree also contained an in-progress v0.9 expansion which was
+preserved and qualified rather than overwritten: a locked/openable service exit,
+12 streamed procedural zones, per-zone dressing and atmosphere, a main menu, and
+runtime position/save-slot support.
+
+Fall repair:
+- `HiveProcGenRuntime` now records the last collision-confirmed safe transform;
+- positions below `FALL_RECOVERY_Y` return to that transform with velocity reset;
+- underworld positions already captured in a save are rejected during restore;
+- recovery state remains nested in the existing runtime/world dictionaries;
+- frozen `FirstPersonPlayer.gd`, `TouchLookZone.gd`, and `VirtualStick.gd` remain untouched.
+
+Pre-commit verification:
+- focused procgen Python tests: 4/4 PASS;
+- Godot parse: 50 scripts PASS;
+- native acceptance: 333/333 PASS, including forced underworld recovery;
+- full `python tools/verify_native_contract.py`: ALL GATES PASSED.
+
+Next exact action:
+Commit the qualified v0.9 tree on `feat/fps-world-interactions`, rerun exact-head
+verification, then export and publish replacement Windows/Android artifacts. Do
+not merge `main`.

@@ -65,6 +65,8 @@ func use_armed_item_on(target_id: String) -> Dictionary:
 
 
 func save_slot(slot: String = "slot_1") -> bool:
+	world_state.world_state["active_save_slot"] = slot
+	_capture_runtime_state()
 	var ok = save_system.save_game(world_state, slot)
 	if ok:
 		EventBus.notification_posted.emit("Game saved to " + slot + ".")
@@ -74,12 +76,18 @@ func save_slot(slot: String = "slot_1") -> bool:
 func load_slot(slot: String = "slot_1") -> bool:
 	var ok = save_system.load_game(world_state, slot)
 	if ok:
+		world_state.world_state["active_save_slot"] = slot
 		chalk_circle_router.initialize(world_state)
 		EventBus.world_state_changed.emit({})
 		EventBus.inventory_changed.emit()
 		EventBus.notification_posted.emit("Game loaded from " + slot + ".")
 	return ok
 
+
+func current_save_slot() -> String:
+	if world_state == null:
+		return "slot_1"
+	return str(world_state.world_state.get("active_save_slot", "slot_1"))
 
 func chalk_circle_snapshot() -> Dictionary:
 	if chalk_circle_router == null:
@@ -132,3 +140,19 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.keycode == KEY_ESCAPE:
 			EventBus.dialogue_closed.emit()
 			EventBus.overlay_closed.emit("all")
+
+
+func _capture_runtime_state() -> void:
+	if world_state == null or get_tree() == null or get_tree().root == null:
+		return
+	var player := get_tree().root.find_child("Player", true, false) as Node3D
+	if player == null:
+		return
+	var runtime: Dictionary = world_state.world_state.get("runtime", {})
+	runtime["player_position"] = {
+		"x": player.global_position.x,
+		"y": player.global_position.y,
+		"z": player.global_position.z,
+	}
+	runtime["player_rotation_y"] = player.rotation.y
+	world_state.world_state["runtime"] = runtime

@@ -81,3 +81,23 @@ func delete_save(slot: String) -> bool:
 		var err = DirAccess.remove_absolute(path)
 		return err == OK
 	return false
+
+
+func get_slot_metadata(slot: String) -> Dictionary:
+	var path := _get_save_path(slot)
+	if not FileAccess.file_exists(path):
+		return {"exists": false, "slot": slot}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return {"exists": false, "slot": slot, "error": "unreadable"}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	file.close()
+	if not (parsed is Dictionary):
+		return {"exists": false, "slot": slot, "error": "corrupt"}
+	return {
+		"exists": true,
+		"slot": slot,
+		"timestamp": str(parsed.get("timestamp", "unknown")),
+		"location": str(parsed.get("current_location", "unknown")),
+		"turn_count": int(parsed.get("turn_count", 0)),
+	}

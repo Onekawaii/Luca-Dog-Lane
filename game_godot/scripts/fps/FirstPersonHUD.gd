@@ -60,8 +60,8 @@ func _ready() -> void:
 
 	continue_button.pressed.connect(_advance_dialogue)
 	pda_button.pressed.connect(_toggle_pda)
-	save_button.pressed.connect(func(): GameRuntime.save_slot("slot_1"))
-	load_button.pressed.connect(func(): GameRuntime.load_slot("slot_1"))
+	save_button.pressed.connect(func(): GameRuntime.save_slot(GameRuntime.current_save_slot()))
+	load_button.pressed.connect(func(): GameRuntime.load_slot(GameRuntime.current_save_slot()))
 	close_pda_button.pressed.connect(_toggle_pda)
 	interact_button.pressed.connect(_on_interact_pressed)
 
