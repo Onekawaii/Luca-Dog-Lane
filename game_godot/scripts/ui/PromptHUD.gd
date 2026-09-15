@@ -2,7 +2,7 @@ extends CanvasLayer
 
 class_name PromptHUD
 
-onready var prompt_label: Label = $MarginContainer/PromptLabel
+@onready var prompt_label: Label = $MarginContainer/PromptLabel
 
 func _ready() -> void:
 	set_process(true)

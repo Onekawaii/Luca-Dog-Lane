@@ -114,6 +114,12 @@ def main() -> int:
             timeout=180,
         ):
             return 1
+        if not run_command(
+            [str(godot_bin), "--headless", "--path", "game_godot", "--script", "res://tests/ValidateScripts.gd"],
+            "Godot GDScript Parse Gate",
+            timeout=180,
+        ):
+            return 1
 
     # 4. Python Unit Tests Discovery (Timeout: 300s)
     if not run_command([sys.executable, "-m", "unittest", "discover", "-s", "tests", "-p", "test*.py"], "Python Unit Tests", timeout=300):
