@@ -46,8 +46,12 @@ def package_source_zip(dest_zip: Path) -> None:
         "dist",
         "build",
         "tmp",
+        "build_artifacts",
+        "outputs",
+        "debug_artifacts",
+        ".pytest_cache",
     }
-    exclude_exts = {".pyc", ".tmp", ".log"}
+    exclude_exts = {".pyc", ".tmp", ".log", ".zip", ".apk", ".aab", ".exe", ".pck"}
 
     with zipfile.ZipFile(dest_zip, "w", zipfile.ZIP_DEFLATED) as z:
         for root, dirs, files in os.walk(root_dir):

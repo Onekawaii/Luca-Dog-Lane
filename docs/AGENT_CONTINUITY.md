@@ -1184,3 +1184,14 @@ Build hardening:
 
 Next exact action:
 Commit the qualified authored tree on `feat/fps-world-interactions`, rerun exact-head verification, then build/package the Windows, Android, source, and Termux/full-suite artifacts. Do not merge to `main` as part of this pass.
+
+## 2026-09-14 — Full-suite packaging hygiene hardening
+
+During release packaging, the native source ZIP was found to include historical/generated payloads such as `build_artifacts/`, `outputs/`, `debug_artifacts/`, `.pytest_cache/`, and nested distributable binaries. This inflated the source archive and weakened artifact boundaries.
+
+Hardening applied:
+- `tools/package_native_playtest.py` now excludes generated/output directories and nested `.zip/.apk/.aab/.exe/.pck` binaries from the source archive;
+- `tests/test_native_source_package_hygiene.py` independently builds a temporary source archive and proves those payload classes are absent;
+- focused packaging hygiene regression: PASS.
+
+Final release pass must run from the next committed exact head, then regenerate Windows, Android, source, Termux, checksums, and the aggregate full-suite receipt.
