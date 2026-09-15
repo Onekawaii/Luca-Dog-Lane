@@ -35,9 +35,41 @@ def write_sha256_sidecar(target_file: Path) -> Path:
     return sidecar_path
 
 
-def package_source_zip(dest_zip: Path) -> None:
+def _release_source_files(root_dir: Path) -> list[str]:
+    """Resolve release inputs from Git, or from the packaged manifest offline."""
+    git_result = subprocess.run(
+        ["git", "ls-files"],
+        cwd=root_dir,
+        text=True,
+        encoding="utf-8",
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if git_result.returncode == 0 and git_result.stdout.strip():
+        return git_result.stdout.splitlines()
+
+    manifest = root_dir / "BUILD_MANIFEST.sha256"
+    if not manifest.is_file():
+        raise RuntimeError(
+            "Cannot determine release source files: no Git worktree and no BUILD_MANIFEST.sha256"
+        )
+
+    files: list[str] = []
+    for line in manifest.read_text(encoding="utf-8").splitlines():
+        parts = line.strip().split(maxsplit=1)
+        if len(parts) != 2:
+            continue
+        rel = parts[1].lstrip("*").replace("\\", "/")
+        if rel:
+            files.append(rel)
+    files.append("BUILD_MANIFEST.sha256")
+    return files
+
+
+def package_source_zip(dest_zip: Path, root_dir: Path | None = None) -> None:
     print(f"Creating source archive: {dest_zip.name}...")
-    root_dir = Path(".")
+    root_dir = Path.cwd() if root_dir is None else Path(root_dir)
     exclude_dirs = {
         ".git",
         ".vs",
@@ -54,9 +86,7 @@ def package_source_zip(dest_zip: Path) -> None:
     }
     exclude_exts = {".pyc", ".tmp", ".log", ".zip", ".apk", ".aab", ".exe", ".pck"}
 
-    tracked = subprocess.check_output(
-        ["git", "ls-files"], text=True, encoding="utf-8"
-    ).splitlines()
+    tracked = _release_source_files(root_dir)
 
     with zipfile.ZipFile(dest_zip, "w", zipfile.ZIP_DEFLATED) as z:
         for rel in sorted(set(tracked)):
@@ -67,7 +97,7 @@ def package_source_zip(dest_zip: Path) -> None:
                 continue
             if file_path.suffix.lower() in exclude_exts:
                 continue
-            z.write(file_path, file_path.as_posix())
+            z.write(file_path, Path(rel).as_posix())
 
     write_sha256_sidecar(dest_zip)
 

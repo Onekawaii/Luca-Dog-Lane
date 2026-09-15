@@ -46,6 +46,23 @@ class TestNativeSourcePackageHygiene(unittest.TestCase):
             "source archive contains nested distributable binaries",
         )
 
+    def test_source_archive_uses_manifest_when_git_is_unavailable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "source.txt").write_text("source", encoding="utf-8")
+            (root / "junk.apk").write_bytes(b"junk")
+            (root / "BUILD_MANIFEST.sha256").write_text(
+                ("0" * 64) + "  source.txt\n",
+                encoding="utf-8",
+            )
+            archive = root / "source.zip"
+            package_source_zip(archive, root_dir=root)
+            with zipfile.ZipFile(archive, "r") as zf:
+                names = set(zf.namelist())
+
+        self.assertIn("source.txt", names)
+        self.assertIn("BUILD_MANIFEST.sha256", names)
+        self.assertNotIn("junk.apk", names)
     def test_termux_manifest_ignores_untracked_workspace_artifacts(self):
         sentinel = ROOT / "UNTRACKED_RELEASE_GOBLIN.apk"
         manifest = ROOT / "BUILD_MANIFEST.sha256"
