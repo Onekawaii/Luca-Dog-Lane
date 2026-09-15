@@ -14,6 +14,7 @@ const QuantumWitnessSystemScript = preload("res://scripts/quantum/QuantumWitness
 const QuantumStateAnchorScript = preload("res://scripts/quantum/QuantumStateAnchor.gd")
 const QuantumEntanglementScript = preload("res://scripts/quantum/QuantumEntanglement.gd")
 const HiveProcGenEngineScript = preload("res://scripts/procgen/HiveProcGenEngine.gd")
+const HiveProcGenChunkRendererScript = preload("res://scripts/procgen/HiveProcGenChunkRenderer.gd")
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -961,6 +962,31 @@ func test_hive_procgen_engine() -> void:
 	var bootstrap = bootstrap_scene.instantiate()
 	assert_true(bootstrap.find_child("HiveProcGenRuntime", true, false) != null, "First-person bootstrap owns procedural runtime")
 	bootstrap.queue_free()
+	var renderer = HiveProcGenChunkRendererScript.new()
+	var player := Node3D.new()
+	var breakroom := Node3D.new()
+	var world := Node3D.new()
+	world.name = "World"
+	var east_wall := StaticBody3D.new()
+	east_wall.name = "EastWall"
+	world.add_child(east_wall)
+	breakroom.add_child(world)
+	add_child(player)
+	add_child(breakroom)
+	add_child(renderer)
+	renderer.configure(plan_a, player, breakroom)
+	assert_equal(renderer.neighbor_site_id.begins_with("region.00.site."), true, "Renderer selects a generated Region 01 neighbor")
+	assert_true(renderer.loaded_cell_keys().has("0:0"), "Breakroom portal cell is active")
+	assert_true(renderer.get_node_or_null("Cell_0_0/Navigation") != null, "Active cell materializes navigation")
+	var streamed_floor := renderer.get_node_or_null("Cell_0_0/Floor")
+	assert_true(streamed_floor != null and streamed_floor.get_node_or_null("Collision") != null, "Active cell materializes collision")
+	player.position.x = 70.0
+	renderer.update_streaming()
+	assert_true(renderer.loaded_cell_keys().has("2:0"), "Neighboring generated site streams during traversal")
+	assert_false(renderer.loaded_cell_keys().has("0:0"), "Cold portal cell unloads outside active radius")
+	renderer.queue_free()
+	player.queue_free()
+	breakroom.queue_free()
 
 
 func assert_false(condition: bool, test_name: String) -> void:

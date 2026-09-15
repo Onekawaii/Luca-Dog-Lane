@@ -1256,3 +1256,35 @@ Final exact-head receipt for this pass:
 - Python suite observed in this pass: 453 tests OK, 1 skipped
 - no procgen SCRIPT ERROR
 - no merge to `main`
+
+## 2026-09-15 — Region 01 procedural renderer/streamer milestone
+
+Entry state:
+- live repo: `C:\Users\jmgar\Desktop\AI-UNIVERSE\01_ACTIVE_PROJECTS\Hive-Lattice`
+- branch: `feat/fps-world-interactions`
+- exact local/remote HEAD: `5485752` (`fix(build): import fresh Godot bundles before parse gate`)
+- existing untracked release artifacts were preserved without modification or deletion.
+- prior playable release preserved at `v0.7.0-playtest-5485752`.
+
+Implemented:
+- `HiveProcGenChunkRenderer.gd` consumes `hive_procgen_world_v1` and selects the nearest generated Region 01 site to `site.breakroom`;
+- the authored Breakroom gains a collision-safe east portal without editing the accepted scene or frozen player/control scripts;
+- bounded active cells materialize walkable corridor/site meshes, static collision, and navigation polygons;
+- warm cells retain definitions only; cold cells unload runtime nodes and retain state only;
+- traversal updates `active_site`, `stream_cell`, `loaded_cells`, and visited `cell_state` inside the existing `world_state.procedural_world` dictionary;
+- runtime wiring, native traversal acceptance, Python structural contracts, and engine documentation were updated.
+
+Pre-commit verification:
+- Godot 4.3 import/parse: PASS (48 scripts parsed);
+- focused procgen tests: 4/4 PASS;
+- Python suite: 456 tests OK, 1 skipped;
+- native acceptance: 313/313 PASS;
+- `python tools/verify_native_contract.py`: ALL GATES PASSED;
+- frozen `TouchLookZone.gd`, `VirtualStick.gd`, and `FirstPersonPlayer.gd`: unchanged.
+
+Release sequence still required:
+1. Commit this milestone on `feat/fps-world-interactions`.
+2. Rerun the full verifier from the exact committed head.
+3. Export/package fresh Windows and Android builds plus checksums.
+4. Publish a new immutable GitHub release/tag and record its direct links and hashes here.
+5. Push only `feat/fps-world-interactions`; do not merge `main`.

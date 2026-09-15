@@ -49,6 +49,17 @@ This milestone implements the complete **planning/simulation pipeline**, not fin
 
 Do not confuse the procedural plan with finished art. Generated structure remains subject to authored scene modules, performance budgets, traversal validation, and physical playtesting.
 
+## Region 01 walkable slice
+
+`HiveProcGenChunkRenderer` consumes the generated plan at runtime and turns the
+Breakroom's nearest Region 01 connection into a bounded walkable slice. A framed
+east portal leads through streamed transit cells into the selected generated
+site. Active cells own meshes, collision, and navigation polygons; warm cells
+retain definitions only; cold cells retain only their save-v3-compatible state.
+Visited cells, the current streaming cell, and active site are stored inside the
+existing `world_state.procedural_world` dictionary, so no save schema or quantum
+contract changes are required.
+
 ## Verification contract
 
 Native acceptance proves same-seed determinism, seed divergence, minimum world population, connected topology, Breakroom bridge preservation, resolved room constraints, scatter generation, bounded streaming activation, director budgeting, privacy-safe plans, and bootstrap integration.

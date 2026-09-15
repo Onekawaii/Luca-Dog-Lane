@@ -2,6 +2,7 @@ class_name HiveProcGenRuntime
 extends Node
 
 const EngineClass = preload("res://scripts/procgen/HiveProcGenEngine.gd")
+const ChunkRendererClass = preload("res://scripts/procgen/HiveProcGenChunkRenderer.gd")
 const MEMORY_CATALOG_PATH := "res://data/procgen/memory_catalog.json"
 
 @export var simulate_streaming := true
@@ -12,6 +13,7 @@ var world_plan: Dictionary = {}
 var active_cells: Array = []
 var _player: Node3D
 var _stream_timer := 0.0
+var chunk_renderer: HiveProcGenChunkRenderer
 
 
 func _ready() -> void:
@@ -34,6 +36,12 @@ func _initialize() -> void:
 	GameRuntime.world_state.world_state["procedural_world"] = persistent
 	var bootstrap := get_parent()
 	_player = bootstrap.find_child("Player", true, false) as Node3D if bootstrap != null else null
+	var breakroom := bootstrap.find_child("FirstPersonBreakroom", true, false) as Node3D if bootstrap != null else null
+	if is_instance_valid(_player) and is_instance_valid(breakroom):
+		chunk_renderer = ChunkRendererClass.new()
+		chunk_renderer.name = "HiveProcGenChunkRenderer"
+		bootstrap.add_child(chunk_renderer)
+		chunk_renderer.configure(world_plan, _player, breakroom)
 	EventBus.procgen_world_ready.emit(world_plan.get("receipt", {}))
 
 
@@ -55,6 +63,8 @@ func _process(delta: float) -> void:
 		_player = bootstrap.find_child("Player", true, false) as Node3D if bootstrap != null else null
 	if not is_instance_valid(_player):
 		return
+	if is_instance_valid(chunk_renderer):
+		chunk_renderer.update_streaming()
 	var site := site_by_id("site.breakroom")
 	if site.is_empty():
 		return
