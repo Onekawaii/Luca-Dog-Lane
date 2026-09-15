@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENGINE = ROOT / "game_godot/scripts/procgen/HiveProcGenEngine.gd"
 RUNTIME = ROOT / "game_godot/scripts/procgen/HiveProcGenRuntime.gd"
 RENDERER = ROOT / "game_godot/scripts/procgen/HiveProcGenChunkRenderer.gd"
+AUDIO_MANAGER = ROOT / "game_godot/scripts/audio/AudioManager.gd"
 CATALOG = ROOT / "game_godot/data/procgen/memory_catalog.json"
 BOOTSTRAP = ROOT / "game_godot/scenes/bootstrap/FirstPersonBootstrap.tscn"
 EVENT_BUS = ROOT / "game_godot/scripts/runtime/EventBus.gd"
@@ -42,6 +43,8 @@ class HiveProcGenContractTests(unittest.TestCase):
         self.assertIn("FALL_RECOVERY_Y", runtime)
         self.assertIn("_update_fall_recovery", runtime)
         self.assertIn("body.velocity = Vector3.ZERO", runtime)
+        self.assertIn("_set_breakroom_audio_active(level_index < 0)", runtime)
+        self.assertIn("set_breakroom_ambience_active", AUDIO_MANAGER.read_text(encoding="utf-8"))
 
     def test_engine_contains_layered_generation_contract(self):
         source = ENGINE.read_text(encoding="utf-8")

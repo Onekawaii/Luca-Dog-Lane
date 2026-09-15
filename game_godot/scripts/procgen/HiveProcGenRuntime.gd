@@ -19,6 +19,7 @@ var chunk_renderer: HiveProcGenChunkRenderer
 var _current_level_index: int = -99
 var _last_safe_transform := Transform3D.IDENTITY
 var _has_safe_transform := false
+var _breakroom: Node3D
 
 
 func _ready() -> void:
@@ -41,15 +42,15 @@ func _initialize() -> void:
 	GameRuntime.world_state.world_state["procedural_world"] = persistent
 	var bootstrap := get_parent()
 	_player = bootstrap.find_child("Player", true, false) as Node3D if bootstrap != null else null
-	var breakroom := bootstrap.find_child("FirstPersonBreakroom", true, false) as Node3D if bootstrap != null else null
+	_breakroom = bootstrap.find_child("FirstPersonBreakroom", true, false) as Node3D if bootstrap != null else null
 	if is_instance_valid(_player):
 		_restore_player_position()
 		_last_safe_transform = _player.global_transform
-	if is_instance_valid(_player) and is_instance_valid(breakroom):
+	if is_instance_valid(_player) and is_instance_valid(_breakroom):
 		chunk_renderer = ChunkRendererClass.new()
 		chunk_renderer.name = "HiveProcGenChunkRenderer"
 		bootstrap.add_child(chunk_renderer)
-		chunk_renderer.configure(world_plan, _player, breakroom)
+		chunk_renderer.configure(world_plan, _player, _breakroom)
 	AtmosphereDirector.enter_gameplay()
 	_update_level_state(true)
 	EventBus.procgen_world_ready.emit(world_plan.get("receipt", {}))
@@ -145,10 +146,18 @@ func _update_level_state(force: bool = false) -> void:
 		return
 	_current_level_index = level_index
 	var title := chunk_renderer.level_title(level_index)
+	_set_breakroom_audio_active(level_index < 0)
 	AtmosphereDirector.set_level(maxi(level_index, 0), title)
 	if level_index >= 0:
 		EventBus.notification_posted.emit("LEVEL %02d // %s" % [level_index + 1, title])
 		EventBus.first_person_objective_changed.emit("Traverse %s. Follow the threshold lights deeper into the Lattice." % title)
+
+
+func _set_breakroom_audio_active(active: bool) -> void:
+	if is_instance_valid(_breakroom) and _breakroom.has_method("set_breakroom_audio_active"):
+		_breakroom.call("set_breakroom_audio_active", active)
+	if AudioManager.has_method("set_breakroom_ambience_active"):
+		AudioManager.set_breakroom_ambience_active(active)
 
 
 func _update_fall_recovery() -> void:

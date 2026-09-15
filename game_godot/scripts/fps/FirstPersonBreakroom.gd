@@ -50,6 +50,7 @@ var held_prop = null
 var held_view_mesh: Node3D = null
 
 var fly_time: float = 0.0
+var breakroom_audio_active := true
 
 
 func _ready() -> void:
@@ -119,8 +120,25 @@ func _restore_persistence() -> void:
 
 
 func _restart_ambient_hum() -> void:
-	if is_instance_valid(ambient_hum):
+	if breakroom_audio_active and is_instance_valid(ambient_hum):
 		ambient_hum.play()
+
+
+func set_breakroom_audio_active(active: bool) -> void:
+	breakroom_audio_active = active
+	if is_instance_valid(ambient_hum):
+		if active:
+			if not ambient_hum.playing:
+				ambient_hum.play()
+		else:
+			ambient_hum.stop()
+	if not active:
+		if is_instance_valid(coffee_switch_sfx):
+			coffee_switch_sfx.stop()
+		if is_instance_valid(coffee_brew_sfx):
+			coffee_brew_sfx.stop()
+		if is_instance_valid(fridge_hinge_sfx):
+			fridge_hinge_sfx.stop()
 
 
 func _update_fluorescent_flutter() -> void:

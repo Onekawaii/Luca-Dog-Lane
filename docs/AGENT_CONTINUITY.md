@@ -1349,3 +1349,31 @@ Physical retest target:
 Start a new game or load the affected save, open the east service exit after
 containment, cross multiple streamed thresholds, deliberately step off any
 reachable edge, and confirm immediate recovery to the last stable floor.
+
+## 2026-09-15 — Breakroom audio-boundary hotfix
+
+User playtest evidence confirmed the expanded Lattice and fall recovery work,
+but the Breakroom fluorescent loop (heard as Keith's bell) remained audible in
+Service Spine, Records Annex, Wet Lab, and subsequent streamed levels.
+
+Root cause and repair:
+- both the global `AudioManager` and authored Breakroom owned non-spatial legacy
+  fluorescent ambience, so distance and cell streaming could not attenuate it;
+- `HiveProcGenRuntime` now applies an explicit Breakroom audio boundary whenever
+  the current procedural level changes;
+- crossing into any generated level stops the global/local fluorescent loops and
+  any active Breakroom appliance SFX;
+- returning to the authored Breakroom restores its ambience;
+- persistent per-level Lattice atmosphere remains active and unchanged.
+
+Pre-commit verification:
+- focused procgen contract: 4/4 PASS;
+- Godot parse: 50 scripts PASS;
+- Python: 456 passed, 1 skipped;
+- native acceptance: 337/337 PASS, including stop/resume audio-boundary checks;
+- full `python tools/verify_native_contract.py`: ALL GATES PASSED.
+
+Next exact action:
+Commit on `feat/fps-world-interactions`, rerun the exact-head verifier, export
+fresh Windows/Android artifacts, publish an immutable v0.9.1 hotfix release with
+checksums, and push only the feature branch. Do not merge `main`.

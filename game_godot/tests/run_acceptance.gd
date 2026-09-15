@@ -1021,6 +1021,12 @@ func test_gameflow_atmosphere_and_level_suite() -> void:
 	var breakroom_text := FileAccess.get_file_as_string("res://scripts/fps/FirstPersonBreakroom.gd")
 	assert_false(breakroom_text.contains("disappointed zipper sound"), "Legacy zipper line is removed")
 	assert_true(breakroom_text.contains("water drops answer"), "Containment now uses the waterdrop motif")
+	assert_true(breakroom_text.contains("set_breakroom_audio_active"), "Breakroom exposes an explicit audio boundary")
+	AudioManager.set_breakroom_ambience_active(false)
+	assert_false(AudioManager.breakroom_ambience_active, "Global Breakroom hum is disabled outside the room")
+	assert_false(AudioManager.hum_player.playing, "Breakroom hum player stops across the service threshold")
+	AudioManager.set_breakroom_ambience_active(true)
+	assert_true(AudioManager.breakroom_ambience_active, "Breakroom ambience can resume on return")
 
 	var engine = HiveProcGenEngineScript.new()
 	var plan: Dictionary = engine.generate(6060, {"pressure": 0.4, "instability": 0.3, "observation": 0.5, "familiarity": 0.6}, [])

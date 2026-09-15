@@ -7,6 +7,7 @@ var sfx_player: AudioStreamPlayer
 var pulse_player: AudioStreamPlayer
 
 var sound_streams: Dictionary = {}
+var breakroom_ambience_active := true
 
 
 func _ready() -> void:
@@ -40,12 +41,23 @@ func _load_sounds() -> void:
 
 
 func start_ambience() -> void:
+	breakroom_ambience_active = true
 	if sound_streams.has("hum") and hum_player:
 		hum_player.stream = sound_streams["hum"]
 		hum_player.volume_db = -12.0
 		# If available, play looping ambience
 		if not hum_player.playing:
 			hum_player.play()
+
+
+func set_breakroom_ambience_active(active: bool) -> void:
+	breakroom_ambience_active = active
+	if not is_instance_valid(hum_player):
+		return
+	if active:
+		start_ambience()
+	else:
+		hum_player.stop()
 
 
 func play_ui_click() -> void:
