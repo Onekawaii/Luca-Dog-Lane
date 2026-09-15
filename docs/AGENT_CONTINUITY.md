@@ -1377,3 +1377,19 @@ Next exact action:
 Commit on `feat/fps-world-interactions`, rerun the exact-head verifier, export
 fresh Windows/Android artifacts, publish an immutable v0.9.1 hotfix release with
 checksums, and push only the feature branch. Do not merge `main`.
+
+Final v0.9.1 release receipt:
+- implementation commit: `9a7b2ca75c33059794fbb7d5439d12504bb8b189`;
+- exact committed-head verifier: ALL GATES PASSED;
+- release: `https://github.com/Onekawaii/Hive-Lattice/releases/tag/v0.9.1-audio-boundary-hotfix`;
+- Windows SHA256: `a60f02eff45c3d0d7b87ebd020edc7f5b08d585c52388a32ff577b28043b2c93`;
+- Android SHA256: `b75033162f9f038f7764cc58637c68a8755327057765201edba494c88955485b`;
+- source SHA256: `433eeab4a9d410be46cd9295b79c19e127998f5cca8e207e908c8fa675bfb91e`;
+- Windows smoke: exit 0, 0 SCRIPT ERROR;
+- Android signed and structurally verified with arm64-v8a + x86_64;
+- branch pushed only to `feat/fps-world-interactions`; `main` not merged.
+
+Physical retest target:
+Enter Service Spine and at least two deeper levels. Confirm Keith/Breakroom hum
+is silent while the distinct Lattice atmosphere remains audible, then return to
+the Breakroom and confirm its fluorescent ambience resumes.
