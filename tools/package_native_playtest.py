@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import os
 import shutil
+import subprocess
 import sys
 import zipfile
 from pathlib import Path
@@ -53,17 +54,20 @@ def package_source_zip(dest_zip: Path) -> None:
     }
     exclude_exts = {".pyc", ".tmp", ".log", ".zip", ".apk", ".aab", ".exe", ".pck"}
 
+    tracked = subprocess.check_output(
+        ["git", "ls-files"], text=True, encoding="utf-8"
+    ).splitlines()
+
     with zipfile.ZipFile(dest_zip, "w", zipfile.ZIP_DEFLATED) as z:
-        for root, dirs, files in os.walk(root_dir):
-            dirs[:] = [d for d in dirs if d not in exclude_dirs]
-            rel_root = Path(root)
-            for file in files:
-                file_path = rel_root / file
-                if file_path.suffix in exclude_exts:
-                    continue
-                if file_path.name.endswith(".sha256") and "dist" in file_path.parts:
-                    continue
-                z.write(file_path, file_path.as_posix())
+        for rel in sorted(set(tracked)):
+            file_path = root_dir / rel
+            if not file_path.is_file():
+                continue
+            if any(part in exclude_dirs for part in file_path.parts):
+                continue
+            if file_path.suffix.lower() in exclude_exts:
+                continue
+            z.write(file_path, file_path.as_posix())
 
     write_sha256_sidecar(dest_zip)
 

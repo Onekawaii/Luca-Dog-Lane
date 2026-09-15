@@ -13,11 +13,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def compute_manifest() -> list[str]:
+    # Release bundles are snapshots of repository truth, never the caller's
+    # untracked workspace. This prevents old APK/ZIP/extracted builds from
+    # recursively contaminating a new Termux/source artifact.
     tracked = subprocess.check_output(["git", "ls-files"], cwd=ROOT).decode("utf-8").splitlines()
-    untracked = subprocess.check_output(
-        ["git", "ls-files", "--others", "--exclude-standard"], cwd=ROOT
-    ).decode("utf-8").splitlines()
-    all_files = sorted(set(tracked + untracked))
+    all_files = sorted(set(tracked))
 
     lines = []
     for rel in all_files:

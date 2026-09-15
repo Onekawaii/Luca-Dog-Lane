@@ -8,6 +8,7 @@ import zipfile
 from pathlib import Path
 
 from tools.package_native_playtest import package_source_zip
+from tools.package_termux_bundle import compute_manifest
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -44,6 +45,21 @@ class TestNativeSourcePackageHygiene(unittest.TestCase):
             any(name.lower().endswith(banned_suffixes) for name in names),
             "source archive contains nested distributable binaries",
         )
+
+    def test_termux_manifest_ignores_untracked_workspace_artifacts(self):
+        sentinel = ROOT / "UNTRACKED_RELEASE_GOBLIN.apk"
+        manifest = ROOT / "BUILD_MANIFEST.sha256"
+        original = manifest.read_bytes() if manifest.exists() else None
+        sentinel.write_bytes(b"not a release input")
+        try:
+            files = compute_manifest()
+            self.assertNotIn(sentinel.name, files)
+        finally:
+            sentinel.unlink(missing_ok=True)
+            if original is None:
+                manifest.unlink(missing_ok=True)
+            else:
+                manifest.write_bytes(original)
 
 
 if __name__ == "__main__":
