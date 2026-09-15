@@ -78,6 +78,7 @@ func load_slot(slot: String = "slot_1") -> bool:
 	if ok:
 		world_state.world_state["active_save_slot"] = slot
 		chalk_circle_router.initialize(world_state)
+		_restore_runtime_state_to_scene()
 		EventBus.world_state_changed.emit({})
 		EventBus.inventory_changed.emit()
 		EventBus.notification_posted.emit("Game loaded from " + slot + ".")
@@ -156,3 +157,21 @@ func _capture_runtime_state() -> void:
 	}
 	runtime["player_rotation_y"] = player.rotation.y
 	world_state.world_state["runtime"] = runtime
+
+
+func _restore_runtime_state_to_scene() -> void:
+	if world_state == null or get_tree() == null or get_tree().root == null:
+		return
+	var player := get_tree().root.find_child("Player", true, false) as Node3D
+	if player == null:
+		return
+	var runtime: Dictionary = world_state.world_state.get("runtime", {})
+	var saved: Dictionary = runtime.get("player_position", {})
+	if saved.is_empty():
+		return
+	player.global_position = Vector3(
+		float(saved.get("x", player.global_position.x)),
+		float(saved.get("y", player.global_position.y)),
+		float(saved.get("z", player.global_position.z))
+	)
+	player.rotation.y = float(runtime.get("player_rotation_y", player.rotation.y))
