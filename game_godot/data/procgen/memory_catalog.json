@@ -1,0 +1,10 @@
+{
+  "schema": "hive_memory_catalog_v1",
+  "privacy": "derived-metadata-only",
+  "memories": [
+    {"id":"memory.seed.domestic_surface","tags":["domestic","institutional","familiar","surface"]},
+    {"id":"memory.seed.parking_lot","tags":["outdoors","industrial","transitional","familiar"]},
+    {"id":"memory.seed.utility_corner","tags":["maintenance","industrial","utility","familiar"]},
+    {"id":"memory.seed.accidental_blur","tags":["anomalous","transitional","abstract","blur"]}
+  ]
+}

@@ -1,13 +1,17 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/interaction/InspectController.gd" id="3_inspect_controller"]
 [ext_resource type="PackedScene" path="res://scenes/fps/FirstPersonBreakroom.tscn" id="1_world"]
 [ext_resource type="PackedScene" path="res://scenes/fps/FirstPersonHUD.tscn" id="2_hud"]
+[ext_resource type="Script" path="res://scripts/procgen/HiveProcGenRuntime.gd" id="4_procgen"]
 
 [node name="FirstPersonBootstrap" type="Node"]
 
 [node name="InspectController" type="Node" parent="."]
 script = ExtResource("3_inspect_controller")
+
+[node name="HiveProcGenRuntime" type="Node" parent="."]
+script = ExtResource("4_procgen")
 
 [node name="FirstPersonBreakroom" parent="." instance=ExtResource("1_world")]
 

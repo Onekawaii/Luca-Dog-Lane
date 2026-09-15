@@ -13,6 +13,7 @@ const QuantumEntityScript = preload("res://scripts/quantum/QuantumEntity.gd")
 const QuantumWitnessSystemScript = preload("res://scripts/quantum/QuantumWitnessSystem.gd")
 const QuantumStateAnchorScript = preload("res://scripts/quantum/QuantumStateAnchor.gd")
 const QuantumEntanglementScript = preload("res://scripts/quantum/QuantumEntanglement.gd")
+const HiveProcGenEngineScript = preload("res://scripts/procgen/HiveProcGenEngine.gd")
 
 var total_tests: int = 0
 var passed_tests: int = 0
@@ -80,6 +81,7 @@ func _run_all_tests() -> void:
 	test_touch_look_zone_robustness()
 	test_chalk_circle_bridge()
 	test_breakroom_interaction_pass()
+	test_hive_procgen_engine()
 
 
 func test_campaign_loading() -> void:
@@ -921,6 +923,43 @@ func test_breakroom_interaction_pass() -> void:
 	assert_false(worker.is_paused, "Keith ambient worker is resumed after dialogue")
 
 	remove_child(bootstrap)
+	bootstrap.queue_free()
+
+
+func test_hive_procgen_engine() -> void:
+	print("\n--- 16. Hive Procedural World Generation Engine ---")
+	var engine = HiveProcGenEngineScript.new()
+	var memory_catalog := [
+		{"id": "memory.test.wall", "tags": ["institutional", "familiar", "surface"]},
+		{"id": "memory.test.blur", "tags": ["anomalous", "abstract", "blur"]},
+	]
+	var hive := {"pressure": 0.42, "instability": 0.35, "observation": 0.7, "familiarity": 0.8}
+	var plan_a: Dictionary = engine.generate(6060, hive, memory_catalog)
+	var plan_b: Dictionary = engine.generate(6060, hive, memory_catalog)
+	var plan_c: Dictionary = engine.generate(6061, hive, memory_catalog)
+	assert_equal(plan_a.get("schema"), "hive_procgen_world_v1", "Procgen world uses versioned schema")
+	assert_equal(plan_a["receipt"]["sha256"], plan_b["receipt"]["sha256"], "Same seed/state produces identical world receipt")
+	assert_true(plan_a["receipt"]["sha256"] != plan_c["receipt"]["sha256"], "Different seed produces different world receipt")
+	assert_equal(plan_a["regions"].size(), 6, "Macro generator creates six regions")
+	assert_true(plan_a["region_edges"].size() >= plan_a["regions"].size() - 1, "Region topology has connected spine")
+	assert_true(plan_a["sites"].size() >= 36, "World contains minimum systemic site population")
+	assert_true(plan_a["site_edges"].size() >= plan_a["sites"].size() - 1, "Site topology has connected spine")
+	var breakroom_site: Dictionary = {}
+	for site in plan_a["sites"]:
+		if site.get("id") == "site.breakroom": breakroom_site = site
+	assert_true(not breakroom_site.is_empty(), "Existing Breakroom is bridged into procedural world")
+	assert_equal(breakroom_site.get("authored_scene"), "res://scenes/fps/FirstPersonBreakroom.tscn", "Breakroom remains authored scene")
+	assert_true(plan_a["room_graphs"].has("site.breakroom"), "Breakroom site has procedural adjacency graph")
+	assert_equal(plan_a["room_graphs"]["site.breakroom"]["constraint_status"], "resolved", "Room constraint pass resolves")
+	assert_true(plan_a["scatter"].size() > 0, "Density scatter pass emits world details")
+	assert_true(plan_a["streaming"]["cells"].size() > 0, "Streaming partition builds occupied cells")
+	var origin := Vector2(float(breakroom_site["position"]["x"]), float(breakroom_site["position"]["y"]))
+	assert_true(engine.active_cells_for_position(plan_a, origin, 1).size() <= 9, "Runtime streaming activation remains bounded")
+	assert_true(plan_a["director"]["anomaly_budget"] > 0.0, "Hive director computes anomaly budget")
+	assert_false(JSON.stringify(plan_a).contains("C:\\"), "Generated plan contains no raw Windows photo paths")
+	var bootstrap_scene = load("res://scenes/bootstrap/FirstPersonBootstrap.tscn")
+	var bootstrap = bootstrap_scene.instantiate()
+	assert_true(bootstrap.find_child("HiveProcGenRuntime", true, false) != null, "First-person bootstrap owns procedural runtime")
 	bootstrap.queue_free()
 
 

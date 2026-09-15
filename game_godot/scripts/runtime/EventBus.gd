@@ -38,6 +38,11 @@ signal first_person_input_lock_changed(locked: bool)
 signal first_person_inspect_started(target_name: String)
 signal first_person_inspect_ended()
 
+# Procedural world signals. Generated plans remain runtime data and persist only
+# their deterministic seed/receipt through existing WorldState.world_state.
+signal procgen_world_ready(receipt: Dictionary)
+signal procgen_streaming_changed(active_cells: Array)
+
 
 # Chalk Circle bridge signals. These are additive runtime events; Chalk state
 # is persisted inside WorldState.world_state and does not change save schema v3.
