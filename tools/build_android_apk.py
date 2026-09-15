@@ -195,6 +195,26 @@ def verify_export_templates() -> None:
         raise RuntimeError("Godot 4.3 Android export template (android_debug.apk) not found in export_templates/4.3.stable/")
 
 
+def cleanup_godot_temp_apks() -> int:
+    """Remove stale Godot Android temp APKs left by interrupted exports."""
+    if sys.platform != "win32":
+        return 0
+    local_appdata = os.environ.get("LOCALAPPDATA")
+    if not local_appdata:
+        return 0
+    temp_dir = Path(local_appdata) / "Godot"
+    removed = 0
+    for candidate in temp_dir.glob("tmpexport*.apk") if temp_dir.exists() else []:
+        try:
+            candidate.unlink()
+            removed += 1
+        except OSError as exc:
+            print(f"[WARN] Could not remove stale Godot temp APK {candidate}: {exc}")
+    if removed:
+        print(f"[CLEANUP] Removed {removed} stale Godot temp APK(s).")
+    return removed
+
+
 def find_build_tool(sdk_path: Path, tool_name: str) -> Path | None:
     which = shutil.which(tool_name) or shutil.which(f"{tool_name}.exe") or shutil.which(f"{tool_name}.bat")
     if which:
@@ -328,6 +348,9 @@ def main() -> int:
     dist_root.mkdir(parents=True, exist_ok=True)
 
     output_apk = dist_android / "Hive-Lattice-native-android-playtest.apk"
+    if output_apk.exists():
+        output_apk.unlink()
+    cleanup_godot_temp_apks()
 
     # 5. Ensure textures are imported with etc2_astc
     print("[EXPORT] Re-importing Godot assets in headless mode...")
@@ -346,7 +369,13 @@ def main() -> int:
     print(f"[EXPORT] Executing Godot Android Export:\n  {' '.join(export_cmd)}")
     res = subprocess.run(export_cmd)
     if res.returncode != 0 or not output_apk.exists():
-        print(f"[ERROR] Godot Android export failed with exit code {res.returncode}", file=sys.stderr)
+        print(f"[RETRY] Android export failed with exit code {res.returncode}; cleaning stale temp APKs and retrying once.")
+        cleanup_godot_temp_apks()
+        if output_apk.exists():
+            output_apk.unlink()
+        res = subprocess.run(export_cmd)
+    if res.returncode != 0 or not output_apk.exists():
+        print(f"[ERROR] Godot Android export failed after clean retry with exit code {res.returncode}", file=sys.stderr)
         return 1
 
     # 7. Verify / sign APK
