@@ -2,11 +2,15 @@ name: Hive-Lattice Native Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, feat/fps-world-interactions]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+
+concurrency:
+  group: hive-lattice-native-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -25,7 +29,7 @@ jobs:
           python-version: '3.12'
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
@@ -77,6 +81,7 @@ jobs:
       - name: Package Native Deliverables & Compute Checksums
         run: |
           python tools/package_native_playtest.py
+          python tools/package_termux_bundle.py
 
       - name: Validate Deliverable Integrity
         run: |
@@ -88,42 +93,65 @@ jobs:
           test -s dist/Hive-Lattice-native-android-playtest.apk.sha256
           test -s dist/Hive-Lattice-native-playtest-source.zip
           test -s dist/Hive-Lattice-native-playtest-source.zip.sha256
+          test -s outputs/Hive-Lattice-v0.7.0-visual-slice.zip
+          test -s outputs/Hive-Lattice-v0.7.0-visual-slice.zip.sha256
           echo "[OK] All deliverables validated."
 
-      - name: Upload Windows Native Playtest Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Hive-Lattice-Native-Windows
-          path: |
-            dist/Hive-Lattice-native-windows-playtest.zip
-            dist/Hive-Lattice-native-windows-playtest.zip.sha256
-          if-no-files-found: error
-          retention-days: 30
+      - name: Write Continuous Build Receipt
+        run: |
+          {
+            echo "# Hive-Lattice Continuous Build Receipt"
+            echo
+            echo "- Commit: \`${GITHUB_SHA}\`"
+            echo "- Branch: \`${GITHUB_REF_NAME}\`"
+            echo "- Workflow run: \`${GITHUB_RUN_ID}\`"
+            echo "- Godot: \`4.3.stable.official.77dcf97d8\`"
+            echo "- Generated: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo
+            echo "## Checksums"
+            echo '```text'
+            cat dist/Hive-Lattice-native-windows-playtest.zip.sha256
+            cat dist/Hive-Lattice-native-android-playtest.apk.sha256
+            cat dist/Hive-Lattice-native-playtest-source.zip.sha256
+            cat outputs/Hive-Lattice-v0.7.0-visual-slice.zip.sha256
+            echo '```'
+          } > dist/CONTINUOUS_BUILD_RECEIPT.md
+          cat dist/CONTINUOUS_BUILD_RECEIPT.md
 
-      - name: Upload Android Native Playtest Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Hive-Lattice-Native-Android
-          path: |
-            dist/Hive-Lattice-native-android-playtest.apk
-            dist/Hive-Lattice-native-android-playtest.apk.sha256
-          if-no-files-found: error
-          retention-days: 30
+      - name: Publish Continuous Playtest Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="hive-lattice-continuous"
+          TITLE="Hive-Lattice Continuous Playtest"
+          NOTES="Automated native playtest build from ${GITHUB_REF_NAME} at ${GITHUB_SHA}. This prerelease is replaced as the branch advances."
 
-      - name: Upload Native Source Package Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Hive-Lattice-Native-Source
-          path: |
-            dist/Hive-Lattice-native-playtest-source.zip
-            dist/Hive-Lattice-native-playtest-source.zip.sha256
-          if-no-files-found: error
-          retention-days: 30
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            git tag -f "$TAG" "$GITHUB_SHA"
+            git push --force origin "refs/tags/$TAG"
+            gh release edit "$TAG" --title "$TITLE" --notes "$NOTES" --prerelease
+          else
+            gh release create "$TAG" --target "$GITHUB_SHA" --title "$TITLE" --notes "$NOTES" --prerelease
+          fi
+
+          gh release upload "$TAG" --clobber \
+            dist/Hive-Lattice-native-windows-playtest.zip \
+            dist/Hive-Lattice-native-windows-playtest.zip.sha256 \
+            dist/Hive-Lattice-native-android-playtest.apk \
+            dist/Hive-Lattice-native-android-playtest.apk.sha256 \
+            dist/Hive-Lattice-native-playtest-source.zip \
+            dist/Hive-Lattice-native-playtest-source.zip.sha256 \
+            outputs/Hive-Lattice-v0.7.0-visual-slice.zip \
+            outputs/Hive-Lattice-v0.7.0-visual-slice.zip.sha256 \
+            dist/CONTINUOUS_BUILD_RECEIPT.md
 
   verify-android:
     name: Verify Android Boot on Emulator
     needs: build
     runs-on: macos-15-intel
+    permissions:
+      contents: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -133,11 +161,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Download Android Deliverable
-        uses: actions/download-artifact@v4
-        with:
-          name: Hive-Lattice-Native-Android
-          path: dist
+      - name: Download Android Deliverable From Continuous Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p dist
+          gh release download hive-lattice-continuous \
+            --pattern 'Hive-Lattice-native-android-playtest.apk' \
+            --dir dist \
+            --clobber
+          test -s dist/Hive-Lattice-native-android-playtest.apk
 
       - name: Execute Android Emulator Boot Verification
         uses: reactivecircus/android-emulator-runner@v2
@@ -151,14 +184,22 @@ jobs:
           disable-animations: true
           script: python tools/verify_android_boot.py
 
-      - name: Upload Android Boot Diagnostics
+      - name: Publish Android Boot Diagnostics To Continuous Release
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Hive-Lattice-Android-Boot-Diagnostics
-          path: |
-            dist/android_boot_logcat.txt
-            dist/android_boot_screenshot.png
-            dist/android_crash_logcat.txt
-          if-no-files-found: ignore
-          retention-days: 14
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=()
+          for candidate in \
+            dist/android_boot_logcat.txt \
+            dist/android_boot_screenshot.png \
+            dist/android_crash_logcat.txt; do
+            if [ -s "$candidate" ]; then
+              files+=("$candidate")
+            fi
+          done
+          if [ ${#files[@]} -gt 0 ]; then
+            gh release upload hive-lattice-continuous --clobber "${files[@]}"
+          else
+            echo "No diagnostics files were produced."
+          fi
