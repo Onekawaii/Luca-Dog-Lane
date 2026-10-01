@@ -31,17 +31,26 @@ if (-not $GodotBin -or -not (Test-Path $GodotBin)) {
     Write-Error "Godot 4 binary not found in $HOME\.godot_bin or PATH."
 }
 
+function Invoke-GodotSafe {
+    param([string[]]$Arguments)
+    $escapedArguments = @($Arguments | ForEach-Object {
+        if ($_ -match '\s') { '"{0}"' -f ($_ -replace '"', '\"') } else { $_ }
+    })
+    $proc = Start-Process -FilePath $GodotBin -ArgumentList $escapedArguments -NoNewWindow -Wait -PassThru
+    return $proc.ExitCode
+}
+
 # 4. Import once so a fresh extracted bundle has class metadata and imported assets.
 Write-Host "`n[PRECHECK] Importing Godot project and rebuilding class cache..." -ForegroundColor Yellow
-& $GodotBin --headless --path (Join-Path $PSScriptRoot "game_godot") --import 2>&1
-if ($LASTEXITCODE -ne 0) {
+$GodotExit = Invoke-GodotSafe @("--headless", "--path", (Join-Path $PSScriptRoot "game_godot"), "--import")
+if ($GodotExit -ne 0) {
     Write-Error "Godot project import failed."
 }
 
 # 5. Parse-check all production GDScript before export.
 Write-Host "`n[PRECHECK] Parsing all production GDScript..." -ForegroundColor Yellow
-& $GodotBin --headless --path (Join-Path $PSScriptRoot "game_godot") --script "res://tests/ValidateScripts.gd" 2>&1
-if ($LASTEXITCODE -ne 0) {
+$GodotExit = Invoke-GodotSafe @("--headless", "--path", (Join-Path $PSScriptRoot "game_godot"), "--script", "res://tests/ValidateScripts.gd")
+if ($GodotExit -ne 0) {
     Write-Error "GDScript parse gate failed. Fix parser errors before packaging."
 }
 
@@ -51,13 +60,13 @@ $WindowsDir = Join-Path $PSScriptRoot "dist\windows"
 $WindowsExe = Join-Path $WindowsDir "Hive-Lattice.exe"
 New-Item -ItemType Directory -Force -Path $WindowsDir | Out-Null
 Get-ChildItem $WindowsDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-& $GodotBin --headless --path (Join-Path $PSScriptRoot "game_godot") --export-release "Windows Desktop" $WindowsExe 2>&1
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path $WindowsExe)) {
+$GodotExit = Invoke-GodotSafe @("--headless", "--path", (Join-Path $PSScriptRoot "game_godot"), "--export-release", "Windows Desktop", $WindowsExe)
+if ($GodotExit -ne 0 -or -not (Test-Path $WindowsExe)) {
     Write-Warning "Initial Windows export failed. Clearing stale safe-save files and retrying once."
     Get-ChildItem $WindowsDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
-    & $GodotBin --headless --path (Join-Path $PSScriptRoot "game_godot") --export-release "Windows Desktop" $WindowsExe 2>&1
+    $GodotExit = Invoke-GodotSafe @("--headless", "--path", (Join-Path $PSScriptRoot "game_godot"), "--export-release", "Windows Desktop", $WindowsExe)
 }
-if ($LASTEXITCODE -ne 0 -or -not (Test-Path $WindowsExe)) {
+if ($GodotExit -ne 0 -or -not (Test-Path $WindowsExe)) {
     Write-Error "Windows Desktop export failed after clean retry."
 }
 Write-Host "  [OK] $WindowsExe created successfully." -ForegroundColor Green
