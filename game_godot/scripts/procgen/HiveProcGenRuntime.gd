@@ -3,6 +3,8 @@ extends Node
 
 const EngineClass = preload("res://scripts/procgen/HiveProcGenEngine.gd")
 const ChunkRendererClass = preload("res://scripts/procgen/HiveProcGenChunkRenderer.gd")
+const OpenWorldRendererClass = preload("res://scripts/procgen/HiveOpenWorldRenderer.gd")
+const WorldAuditorClass = preload("res://scripts/procgen/HiveWorldAuditor.gd")
 const MEMORY_CATALOG_PATH := "res://data/procgen/memory_catalog.json"
 const FALL_RECOVERY_Y := -6.0
 const SAFE_FLOOR_Y := -1.0
@@ -17,7 +19,9 @@ var active_cells: Array = []
 var _player: Node3D
 var _stream_timer := 0.0
 var chunk_renderer: HiveProcGenChunkRenderer
+var world_audit: Dictionary = {}
 var _current_level_index: int = -99
+var _last_biome := ""
 var _last_safe_transform := Transform3D.IDENTITY
 var _has_safe_transform := false
 var _breakroom: Node3D
@@ -35,10 +39,16 @@ func _initialize() -> void:
 	var catalog := _load_memory_catalog()
 	var hive_state := _current_hive_state()
 	world_plan = engine.generate(GameRuntime.world_state.rng_seed, hive_state, catalog)
+	var auditor = WorldAuditorClass.new()
+	world_audit = auditor.audit(world_plan)
+	if not bool(world_audit.get("passed", false)):
+		push_error("OPEN WORLD AUDIT BLOCKED RUNTIME: " + str(world_audit.get("issues", [])))
+		return
 	var persistent: Dictionary = GameRuntime.world_state.world_state.get("procedural_world", {})
 	persistent["schema"] = world_plan.get("schema")
 	persistent["seed"] = world_plan.get("seed")
 	persistent["receipt"] = world_plan.get("receipt", {}).duplicate(true)
+	persistent["audit"] = world_audit.duplicate(true)
 	if not persistent.has("active_site"):
 		persistent["active_site"] = "site.breakroom"
 	GameRuntime.world_state.world_state["procedural_world"] = persistent
@@ -49,8 +59,8 @@ func _initialize() -> void:
 		_restore_player_position()
 		_last_safe_transform = _player.global_transform
 	if is_instance_valid(_player) and is_instance_valid(_breakroom):
-		chunk_renderer = ChunkRendererClass.new()
-		chunk_renderer.name = "HiveProcGenChunkRenderer"
+		chunk_renderer = OpenWorldRendererClass.new()
+		chunk_renderer.name = "HiveOpenWorldRenderer"
 		bootstrap.add_child(chunk_renderer)
 		chunk_renderer.configure(world_plan, _player, _breakroom)
 	# First-person owns its Breakroom ambience locally. Disable the legacy global hum to avoid a doubled drone.
@@ -59,6 +69,7 @@ func _initialize() -> void:
 	AtmosphereDirector.enter_gameplay()
 	_update_level_state(true)
 	EventBus.procgen_world_ready.emit(world_plan.get("receipt", {}))
+	EventBus.notification_posted.emit("PCO WORLD AUDIT // " + str(world_audit.get("summary", "UNKNOWN")))
 
 
 func regenerate_for_hive_state(hive_state: Dictionary) -> void:
@@ -146,6 +157,15 @@ func _restore_player_position() -> void:
 func _update_level_state(force: bool = false) -> void:
 	if not is_instance_valid(_player) or not is_instance_valid(chunk_renderer):
 		return
+	var free_roam := absf(_player.global_position.z) > 40.0 and chunk_renderer.has_method("biome_at_local_position")
+	if free_roam:
+		var biome := str(chunk_renderer.call("biome_at_local_position", Vector2(_player.global_position.x, _player.global_position.z)))
+		if force or biome != _last_biome:
+			_last_biome = biome
+			EventBus.notification_posted.emit("BIOME // " + biome.replace("_", " ").to_upper())
+			EventBus.first_person_objective_changed.emit("FREE ROAM // Explore, drive, climb and locate Arkheopantheochive sites.")
+		return
+	_last_biome = ""
 	var cell_x := int(floor(_player.global_position.x / chunk_renderer.LOCAL_CELL_SIZE))
 	var level_index := chunk_renderer.level_index_for_cell_x(cell_x)
 	if not force and level_index == _current_level_index:

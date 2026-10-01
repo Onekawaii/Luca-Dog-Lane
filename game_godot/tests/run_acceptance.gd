@@ -15,6 +15,9 @@ const QuantumStateAnchorScript = preload("res://scripts/quantum/QuantumStateAnch
 const QuantumEntanglementScript = preload("res://scripts/quantum/QuantumEntanglement.gd")
 const HiveProcGenEngineScript = preload("res://scripts/procgen/HiveProcGenEngine.gd")
 const HiveProcGenChunkRendererScript = preload("res://scripts/procgen/HiveProcGenChunkRenderer.gd")
+const HiveOpenWorldRendererScript = preload("res://scripts/procgen/HiveOpenWorldRenderer.gd")
+const HiveWorldAuditorScript = preload("res://scripts/procgen/HiveWorldAuditor.gd")
+const HiveVehicleScript = preload("res://scripts/vehicles/HiveVehicle.gd")
 const HiveProcGenRuntimeScript = preload("res://scripts/procgen/HiveProcGenRuntime.gd")
 
 var total_tests: int = 0
@@ -84,6 +87,7 @@ func _run_all_tests() -> void:
 	test_chalk_circle_bridge()
 	test_breakroom_interaction_pass()
 	test_hive_procgen_engine()
+	test_open_world_free_roam()
 	test_gameflow_atmosphere_and_level_suite()
 
 
@@ -940,12 +944,12 @@ func test_hive_procgen_engine() -> void:
 	var plan_a: Dictionary = engine.generate(6060, hive, memory_catalog)
 	var plan_b: Dictionary = engine.generate(6060, hive, memory_catalog)
 	var plan_c: Dictionary = engine.generate(6061, hive, memory_catalog)
-	assert_equal(plan_a.get("schema"), "hive_procgen_world_v1", "Procgen world uses versioned schema")
+	assert_equal(plan_a.get("schema"), "hive_procgen_world_v2", "Procgen world uses open-world versioned schema")
 	assert_equal(plan_a["receipt"]["sha256"], plan_b["receipt"]["sha256"], "Same seed/state produces identical world receipt")
 	assert_true(plan_a["receipt"]["sha256"] != plan_c["receipt"]["sha256"], "Different seed produces different world receipt")
-	assert_equal(plan_a["regions"].size(), 6, "Macro generator creates six regions")
+	assert_equal(plan_a["regions"].size(), 10, "Macro generator creates ten biome regions")
 	assert_true(plan_a["region_edges"].size() >= plan_a["regions"].size() - 1, "Region topology has connected spine")
-	assert_true(plan_a["sites"].size() >= 36, "World contains minimum systemic site population")
+	assert_true(plan_a["sites"].size() >= 60, "World contains minimum systemic site population")
 	assert_true(plan_a["site_edges"].size() >= plan_a["sites"].size() - 1, "Site topology has connected spine")
 	var breakroom_site: Dictionary = {}
 	for site in plan_a["sites"]:
@@ -998,6 +1002,48 @@ func test_hive_procgen_engine() -> void:
 	assert_equal(recovery_player.velocity, Vector3.ZERO, "Fall recovery clears accumulated velocity")
 	recovery_runtime.queue_free()
 	recovery_player.queue_free()
+	renderer.queue_free()
+	player.queue_free()
+	breakroom.queue_free()
+
+
+func test_open_world_free_roam() -> void:
+	print("\n--- 17. Arkheopantheochive Open World, Biomes & Vehicles ---")
+	var engine = HiveProcGenEngineScript.new()
+	var plan: Dictionary = engine.generate(6060, {"pressure": 0.4, "instability": 0.3, "observation": 0.5, "familiarity": 0.6}, [])
+	var auditor = HiveWorldAuditorScript.new()
+	var audit: Dictionary = auditor.audit(plan)
+	assert_true(bool(audit.get("passed", false)), "PCO world auditor accepts deterministic generated world")
+	assert_equal(int(audit.get("biome_count", 0)), 10, "World contains exactly ten distinct biomes")
+	assert_equal(int(audit.get("level_type_count", 0)), 20, "World covers all twenty level archetypes")
+	assert_equal(int(plan["receipt"].get("biome_count", 0)), 10, "World receipt records ten biomes")
+	assert_equal(int(plan["receipt"].get("level_type_count", 0)), 20, "World receipt records twenty level types")
+
+	var renderer = HiveOpenWorldRendererScript.new()
+	var player := Node3D.new()
+	var breakroom := Node3D.new()
+	var world := Node3D.new()
+	world.name = "World"
+	var east_wall := StaticBody3D.new()
+	east_wall.name = "EastWall"
+	var east_collision := CollisionShape3D.new()
+	east_collision.name = "Collision"
+	east_collision.shape = BoxShape3D.new()
+	east_wall.add_child(east_collision)
+	world.add_child(east_wall)
+	breakroom.add_child(world)
+	add_child(player)
+	add_child(breakroom)
+	add_child(renderer)
+	renderer.configure(plan, player, breakroom)
+	assert_equal(renderer.open_world_level_type_count(), 20, "Open-world renderer exposes twenty explorable level types")
+	assert_true(renderer.terrain_loaded_count() > 0, "Free-roam terrain streams around the authored route")
+	assert_true(renderer.find_child("TerrainCollision", true, false) != null, "Streamed terrain is physically collidable")
+	assert_true(renderer._amplitude_for_biome("ash_highlands") >= 40.0, "Ash Highlands provide mountain-scale elevation")
+	var car = renderer.find_child("StarterFieldCar", true, false)
+	assert_true(car != null and car is CharacterBody3D, "Starter field car is physically driveable")
+	assert_true(car != null and car.has_method("interact"), "Vehicle participates in normal first-person interaction")
+	assert_true(car != null and car.has_method("request_exit"), "Vehicle supports explicit driver exit")
 	renderer.queue_free()
 	player.queue_free()
 	breakroom.queue_free()

@@ -14,10 +14,15 @@ extends CharacterBody3D
 var virtual_move_input: Vector2 = Vector2.ZERO
 var input_locked: bool = false
 var _last_prompt: String = ""
+var _active_vehicle: Node = null
+var _saved_collision_layer: int = 1
+var _saved_collision_mask: int = 1
 
 
 func _ready() -> void:
 	interaction_ray.target_position = Vector3(0.0, 0.0, -interaction_distance)
+	floor_max_angle = deg_to_rad(55.0)
+	floor_snap_length = 0.45
 	EventBus.virtual_move_input.connect(_on_virtual_move_input)
 	EventBus.virtual_look_input.connect(_on_virtual_look_input)
 	EventBus.first_person_interact_pressed.connect(_try_interact)
@@ -51,6 +56,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if is_instance_valid(_active_vehicle):
+		global_position = _active_vehicle.global_position + Vector3(0.0, 1.32, 0.0)
+		velocity = Vector3.ZERO
+		return
 	var gravity := float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
 	if not is_on_floor():
 		velocity.y -= gravity * delta
@@ -86,6 +95,12 @@ func _physics_process(delta: float) -> void:
 
 func _process(_delta: float) -> void:
 	var prompt := ""
+	if is_instance_valid(_active_vehicle):
+		prompt = "EXIT VEHICLE"
+		if prompt != _last_prompt:
+			_last_prompt = prompt
+			EventBus.first_person_prompt_changed.emit(prompt)
+		return
 	var target := _interaction_target()
 	if target != null:
 		prompt = target.get_interaction_prompt()
@@ -106,6 +121,10 @@ func _interaction_target() -> Node:
 func _try_interact() -> void:
 	if input_locked:
 		return
+	if is_instance_valid(_active_vehicle):
+		if _active_vehicle.has_method("request_exit"):
+			_active_vehicle.call("request_exit", self)
+		return
 	var target := _interaction_target()
 	if target != null:
 		target.interact(self)
@@ -124,6 +143,30 @@ func _on_virtual_look_input(value: Vector2) -> void:
 	if not input_locked:
 		_apply_look(value * touch_look_sensitivity)
 
+
+func enter_vehicle(vehicle: Node) -> void:
+	if is_instance_valid(_active_vehicle):
+		return
+	_active_vehicle = vehicle
+	_saved_collision_layer = collision_layer
+	_saved_collision_mask = collision_mask
+	collision_layer = 0
+	collision_mask = 0
+	velocity = Vector3.ZERO
+	EventBus.first_person_prompt_changed.emit("EXIT VEHICLE")
+
+func exit_vehicle(vehicle: Node, exit_point: Vector3) -> void:
+	if vehicle != _active_vehicle:
+		return
+	_active_vehicle = null
+	global_position = exit_point
+	collision_layer = _saved_collision_layer
+	collision_mask = _saved_collision_mask
+	velocity = Vector3.ZERO
+	EventBus.first_person_prompt_changed.emit("")
+
+func is_driving_vehicle() -> bool:
+	return is_instance_valid(_active_vehicle)
 
 func _on_input_lock_changed(locked: bool) -> void:
 	input_locked = locked

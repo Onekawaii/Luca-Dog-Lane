@@ -101,6 +101,9 @@ def main() -> int:
     if not run_command([sys.executable, "-m", "hive_lattice.cli", "validate", "strawberry_omen"], "CLI Validate Strawberry Omen", timeout=300):
         return 1
 
+    if not run_command([sys.executable, "tools/verify_open_world_contract.py"], "Open World PCO / Bullshit Gate", timeout=120):
+        return 1
+
     # 2. Export campaign data for Godot (Timeout: 120s)
     if not run_command([sys.executable, "tools/export_godot_campaign.py"], "Deterministic Campaign Data Export", timeout=120):
         return 1

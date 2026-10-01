@@ -12,10 +12,15 @@ const LEVEL_TITLES := [
 	"SERVICE SPINE", "RECORDS ANNEX", "WET LAB", "GENERATOR HALL",
 	"COLD STORAGE", "ARCHIVE SHAFT", "OBSERVATION WARD", "MACHINE FLOOR",
 	"FLOODED OFFICES", "ROOF UTILITY", "FALSE CAFETERIA", "THE LATTICE",
+	"BRUISE MOOR", "MORVEIN FUNGAL GALLERY", "GLASSWOOD STATION", "ASH ASCENT",
+	"QUARRY OF FORMS", "DROWNED SUBURB", "AMBER WARREN", "MOUNTAIN RELAY",
 ]
 const LEVEL_ARCHETYPES := [
-	"service", "records", "laboratory", "industrial", "cold", "archive",
-	"observation", "machine", "flooded", "utility", "familiar_wrong", "lattice",
+	"industrial_plant", "service_tunnel", "records_archive", "wet_lab",
+	"generator_hall", "cold_storage", "observation_ward", "machine_floor",
+	"flooded_office", "roof_utility", "false_cafeteria", "lattice_vault",
+	"ruined_suburb", "fungal_cavern", "mountain_pass", "quarry",
+	"forest_service", "rail_yard", "drainage_network", "roadside_station",
 ]
 
 var world_plan: Dictionary = {}
@@ -91,14 +96,17 @@ func _build_region_one_slice() -> void:
 		var site_x := 2 + i * 2
 		var site_id := str(route_sites[i].get("id", ""))
 		slice_cells["%d:0" % site_x] = {"kind": "site", "site_id": site_id, "level_index": i}
-		for direction in [-1, 1]:
-			var branch_site_id := site_id + ".branch.%d" % direction
-			if branch_cursor < branch_sites.size():
-				branch_site_id = str(branch_sites[branch_cursor].get("id", branch_site_id))
-				branch_cursor += 1
-			slice_cells["%d:%d" % [site_x, direction]] = {
-				"kind": "branch", "site_id": branch_site_id, "level_index": i, "branch_dir": direction,
-			}
+		# Keep the original first twelve north/south witness chambers as a stable legacy spine.
+		# The eight added world levels are full walkable sites but do not need duplicate side chambers.
+		if i < 12:
+			for direction in [-1, 1]:
+				var branch_site_id := site_id + ".branch.%d" % direction
+				if branch_cursor < branch_sites.size():
+					branch_site_id = str(branch_sites[branch_cursor].get("id", branch_site_id))
+					branch_cursor += 1
+				slice_cells["%d:%d" % [site_x, direction]] = {
+					"kind": "branch", "site_id": branch_site_id, "level_index": i, "branch_dir": direction,
+				}
 		if i < route_sites.size() - 1:
 			slice_cells["%d:0" % (site_x + 1)] = {"kind": "transit", "site_id": site_id, "level_index": i}
 
@@ -181,8 +189,9 @@ func _build_neighbor_site(root: Node3D, definition: Dictionary) -> void:
 	beacon.omni_range = 12.0
 	beacon.shadow_enabled = false
 	root.add_child(beacon)
-	if level_index == LEVEL_TITLES.size() - 1:
-		# The route terminates in a physical completion terminal instead of an open void.
+	if level_index == 11 or level_index == LEVEL_TITLES.size() - 1:
+		# Preserve the original witness terminal at Level 12 while allowing the free-roam world to continue.
+		# A second terminal marks the far end of the expanded twenty-level route.
 		_add_static_box(root, "TerminalWall", Vector3(0.3, room_height, 6.0), Vector3(LOCAL_CELL_SIZE, room_height * 0.5, 0.0), wall_mat)
 		_build_completion_terminal(root, level_index, accent_mat)
 
@@ -522,6 +531,14 @@ func _echo_text(level_index: int, direction: int) -> String:
 		"Roof access paperwork lists weather from inside the building.",
 		"The cafeteria menu offers the same meal under twelve different names.",
 		"The final record contains no author, only your current save slot.",
+		"Bruise-purple grass bends away from a wind that never reaches your face.",
+		"Morvein's fungal shelves fruit from rejected paragraphs under the mud.",
+		"Glasswood trunks return a reflection that is one decision behind you.",
+		"The ash ridge carries tire tracks uphill where no road was built.",
+		"Quarry walls expose filing strata instead of sediment.",
+		"Flooded houses keep their office lights on below the waterline.",
+		"Amber chambers preserve bees, memos, and unfinished apologies.",
+		"The mountain relay transmits a route map whose roads change only when unobserved.",
 	]
 	var base := str(fragments[clampi(level_index, 0, fragments.size() - 1)])
 	var side_text := " The north copy ends with a wet fingerprint." if direction < 0 else " The south copy ends with a dry ring from a coffee cup."

@@ -4,16 +4,30 @@ extends RefCounted
 # Deterministic layered PCG planner for Hive-Lattice.
 # Generates data first; rendering/streaming consume the resulting plan.
 
-const SCHEMA := "hive_procgen_world_v1"
-const WORLD_SIZE := 4096.0
+const SCHEMA := "hive_procgen_world_v2"
+const WORLD_SIZE := 8192.0
 const CELL_SIZE := 256.0
-const REGION_COUNT := 6
+const REGION_COUNT := 10
 const MIN_SITES_PER_REGION := 6
 const MAX_SITES_PER_REGION := 10
 
 const ARCHETYPES := [
 	"industrial", "institutional", "maintenance", "storage",
 	"service_tunnel", "office", "anomalous", "transitional"
+]
+
+const BIOMES := [
+	"department_hell_industrial", "bruise_moor", "fungal_wetlands",
+	"glasswood_verge", "ash_highlands", "frozen_archive",
+	"dry_scripture_salt_flats", "drowned_suburb", "amber_hive", "deep_lattice"
+]
+
+const WORLD_LEVEL_TYPES := [
+	"industrial_plant", "service_tunnel", "records_archive", "wet_lab",
+	"generator_hall", "cold_storage", "observation_ward", "machine_floor",
+	"flooded_office", "roof_utility", "false_cafeteria", "lattice_vault",
+	"ruined_suburb", "fungal_cavern", "mountain_pass", "quarry",
+	"forest_service", "rail_yard", "drainage_network", "roadside_station"
 ]
 
 const ROOM_MODULES := [
@@ -56,7 +70,7 @@ func generate(seed_value: int, hive_state: Dictionary = {}, memory_catalog: Arra
 func _generate_regions() -> Array:
 	var rng := _rng("regions")
 	var regions: Array = []
-	var cols := 3
+	var cols := 5
 	var rows := 2
 	for i in REGION_COUNT:
 		var gx := i % cols
@@ -100,6 +114,10 @@ func _generate_sites(regions: Array) -> Array:
 				"memory_resonance": _memory_for_site(archetype, pos),
 				"generation_tier": 1,
 			})
+	# Guarantee all twenty explorable world-level archetypes exist at least once.
+	var guaranteed := mini(WORLD_LEVEL_TYPES.size(), maxi(0, sites.size() - 1))
+	for k in range(guaranteed):
+		sites[k + 1]["archetype"] = WORLD_LEVEL_TYPES[k]
 	# Region 00 site 00 is the authored bridge into the existing Breakroom.
 	if not sites.is_empty():
 		sites[0]["id"] = "site.breakroom"
@@ -265,12 +283,9 @@ func _build_director_state(regions: Array, sites: Array) -> Dictionary:
 	}
 
 
-func _pick_region_biome(pressure: float, contamination: float, index: int) -> String:
-	if index == 0: return "industrial_complex"
-	if contamination > 0.70: return "contaminated_service_zone"
-	if pressure > 0.68: return "hostile_institutional"
-	if pressure < 0.30: return "quiet_periphery"
-	return "mixed_infrastructure"
+func _pick_region_biome(_pressure: float, _contamination: float, index: int) -> String:
+	# Region identity is deterministic and exhaustive: every world contains all ten biomes.
+	return str(BIOMES[posmod(index, BIOMES.size())])
 
 
 func _pick_site_archetype(region: Dictionary, index: int, pos: Vector2) -> String:
@@ -384,6 +399,8 @@ func _build_receipt(plan: Dictionary) -> Dictionary:
 		"site_count": plan.get("sites", []).size(),
 		"scatter_count": plan.get("scatter", []).size(),
 		"streaming_cell_count": plan.get("streaming", {}).get("cells", {}).size(),
+		"biome_count": BIOMES.size(),
+		"level_type_count": WORLD_LEVEL_TYPES.size(),
 	}
 
 
