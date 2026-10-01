@@ -85,6 +85,13 @@ if ($LASTEXITCODE -ne 0) {
     Write-Error "Native playtest packaging failed."
 }
 
+# Deterministic export rewrites tracked JSON with normalized line endings on Windows.
+# Restore the committed source copies before exact-state provenance is measured.
+git restore -- game_godot/data/strawberry_omen
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Could not restore deterministic exported campaign data before receipt generation."
+}
+
 # Generate the exact-state release receipt only after both platform artifacts exist.
 python tools/write_release_receipt.py
 if ($LASTEXITCODE -ne 0) {
