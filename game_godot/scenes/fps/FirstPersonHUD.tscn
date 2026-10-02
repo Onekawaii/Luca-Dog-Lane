@@ -481,3 +481,62 @@ theme_override_styles/hover = SubResource("Style_interact")
 theme_override_styles/pressed = SubResource("Style_interact_pressed")
 theme_override_styles/disabled = SubResource("Style_interact_disabled")
 text = "INTERACT"
+
+[node name="FlyUpButton" type="Button" parent="Root/MobileControls"]
+visible = false
+custom_minimum_size = Vector2(86, 62)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -124.0
+offset_top = -196.0
+offset_right = -38.0
+offset_bottom = -134.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("Style_interact")
+theme_override_styles/hover = SubResource("Style_interact")
+theme_override_styles/pressed = SubResource("Style_interact_pressed")
+text = "▲"
+
+[node name="FlyDownButton" type="Button" parent="Root/MobileControls"]
+visible = false
+custom_minimum_size = Vector2(86, 62)
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -124.0
+offset_top = -124.0
+offset_right = -38.0
+offset_bottom = -62.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("Style_interact")
+theme_override_styles/hover = SubResource("Style_interact")
+theme_override_styles/pressed = SubResource("Style_interact_pressed")
+text = "▼"
+
+[node name="FlyButton" type="Button" parent="Root/MobileControls"]
+custom_minimum_size = Vector2(120, 48)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -145.0
+offset_top = 136.0
+offset_right = -20.0
+offset_bottom = 184.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(0.72, 0.95, 1, 1)
+theme_override_styles/normal = SubResource("Style_interact")
+theme_override_styles/hover = SubResource("Style_interact")
+theme_override_styles/pressed = SubResource("Style_interact_pressed")
+text = "FLY"

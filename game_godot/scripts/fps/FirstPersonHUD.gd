@@ -26,6 +26,9 @@ extends CanvasLayer
 @onready var hint_label: Label = $Root/PDAPanel/Margin/VBox/Hint
 @onready var mobile_controls: Control = $Root/MobileControls
 @onready var interact_button: Button = $Root/MobileControls/InteractButton
+@onready var fly_button: Button = $Root/MobileControls/FlyButton
+@onready var fly_up_button: Button = $Root/MobileControls/FlyUpButton
+@onready var fly_down_button: Button = $Root/MobileControls/FlyDownButton
 
 var dialogue_lines: Array = []
 var dialogue_index: int = 0
@@ -33,6 +36,7 @@ var current_objective: String = "Find Keith and get safe containment gear."
 var current_interaction_prompt: String = ""
 var pre_inspect_prompt: String = ""
 var gameplay_input_locked: bool = false
+var fly_enabled: bool = false
 var force_mobile_controls: bool = false
 
 const CROSSHAIR_IDLE := Color(0.82, 1.0, 0.83, 0.62)
@@ -64,6 +68,7 @@ func _ready() -> void:
 	EventBus.first_person_inspect_started.connect(_on_inspect_started)
 	EventBus.first_person_inspect_ended.connect(_on_inspect_ended)
 	EventBus.first_person_input_lock_changed.connect(_on_first_person_input_lock_changed)
+	EventBus.first_person_fly_state_changed.connect(_on_fly_state_changed)
 
 	continue_button.pressed.connect(_advance_dialogue)
 	pda_button.pressed.connect(_toggle_pda)
@@ -73,23 +78,31 @@ func _ready() -> void:
 	load_button.pressed.connect(func(): GameRuntime.load_slot(GameRuntime.current_save_slot()))
 	close_pda_button.pressed.connect(_toggle_pda)
 	interact_button.pressed.connect(_on_interact_pressed)
+	fly_button.pressed.connect(_on_fly_pressed)
+	fly_up_button.button_down.connect(func(): EventBus.first_person_fly_vertical_input.emit(1.0))
+	fly_up_button.button_up.connect(func(): EventBus.first_person_fly_vertical_input.emit(0.0))
+	fly_down_button.button_down.connect(func(): EventBus.first_person_fly_vertical_input.emit(-1.0))
+	fly_down_button.button_up.connect(func(): EventBus.first_person_fly_vertical_input.emit(0.0))
 
 	_refresh_pda()
 	_refresh_inventory_panel()
 	_update_interaction_feedback()
+	_update_fly_controls()
 
 
 func _apply_platform_labels() -> void:
 	if is_mobile():
 		pda_button.text = "PDA"
 		inventory_button.text = "INV"
+		fly_button.text = "LAND" if fly_enabled else "FLY"
 		if is_instance_valid(hint_label):
 			hint_label.text = "Touch: Left stick move • Drag to look • INTERACT button • Save/Load buttons"
 	else:
 		pda_button.text = "PDA [P]"
 		inventory_button.text = "INVENTORY [I]"
+		fly_button.text = "LAND [F]" if fly_enabled else "FLY [F]"
 		if is_instance_valid(hint_label):
-			hint_label.text = "Desktop: WASD move • Mouse look • E interact • Shift sprint • Space jump • R unstuck • F5/F9 save/load"
+			hint_label.text = "Desktop: WASD move • Mouse look • E interact • F fly/noclip • Space up • C down • Shift boost • R unstuck • F5/F9 save/load"
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -265,9 +278,36 @@ func _toggle_inventory() -> void:
 	_refresh_inventory_panel()
 
 
+func _on_fly_pressed() -> void:
+	if gameplay_input_locked or _modal_open():
+		return
+	EventBus.first_person_fly_toggle_requested.emit()
+
+
+func _on_fly_state_changed(enabled: bool) -> void:
+	fly_enabled = enabled
+	_apply_platform_labels()
+	_update_fly_controls()
+
+
+func _update_fly_controls() -> void:
+	var modal_open := _modal_open()
+	if is_instance_valid(fly_button):
+		fly_button.disabled = gameplay_input_locked or modal_open
+	if is_instance_valid(fly_up_button):
+		fly_up_button.visible = is_mobile() and fly_enabled
+		fly_up_button.disabled = gameplay_input_locked or modal_open or not fly_enabled
+	if is_instance_valid(fly_down_button):
+		fly_down_button.visible = is_mobile() and fly_enabled
+		fly_down_button.disabled = gameplay_input_locked or modal_open or not fly_enabled
+	if gameplay_input_locked or modal_open or not fly_enabled:
+		EventBus.first_person_fly_vertical_input.emit(0.0)
+
+
 func _on_first_person_input_lock_changed(locked: bool) -> void:
 	gameplay_input_locked = locked
 	_update_interaction_feedback()
+	_update_fly_controls()
 	if not locked or not is_instance_valid(mobile_controls):
 		return
 	var look_zone := mobile_controls.find_child("TouchLookZone", true, false)
@@ -283,6 +323,9 @@ func _set_mobile_gameplay_controls_enabled(enabled: bool) -> void:
 		return
 	mobile_controls.visible = is_mobile() and enabled
 	mobile_controls.process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
+	if not enabled:
+		EventBus.first_person_fly_vertical_input.emit(0.0)
+	_update_fly_controls()
 	if not enabled:
 		var look_zone := mobile_controls.find_child("TouchLookZone", true, false)
 		if is_instance_valid(look_zone) and look_zone.has_method("reset_touch"):
