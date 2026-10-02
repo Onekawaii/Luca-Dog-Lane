@@ -546,9 +546,8 @@ func _interact_wetberry() -> void:
 			EventBus.notification_posted.emit(str(outcome["error"]))
 		else:
 			AudioManager.play_bag_zip()
-			AtmosphereDirector.play_containment_drop()
 			_start_dialogue("Wetberry", [
-				"The zipper closes with a short plastic rasp. A moment later, two distant drops answer from inside the ceiling.",
+				"The zipper closes with a short plastic rasp. Wetberry goes still inside the clear bag.",
 				"Wetberry settles inside the clear bag. You can still see it through the plastic; it is no longer pulsing."
 			])
 		_refresh_world()
@@ -667,7 +666,6 @@ func _interact_world_exit() -> void:
 	tween.tween_property(gate, "position:y", gate.position.y + 3.2, 1.05)
 	state.room_memory()["exit_open"] = true
 	state.world_state["breakroom_exit_open"] = true
-	AtmosphereDirector.play_waterdrop(-11.0)
 	EventBus.notification_posted.emit("The service door drags upward. The roomtone follows you.")
 	EventBus.first_person_objective_changed.emit("Leave the breakroom. Follow the threshold lights into the Service Spine.")
 
@@ -690,7 +688,6 @@ func _interact_lattice_echo(data: Dictionary) -> void:
 		}
 		state.world_state["lattice_echoes"] = echoes
 		EventBus.notification_posted.emit("Witness echo recorded: %d / 24" % echoes.size())
-		AtmosphereDirector.play_waterdrop(-14.0)
 	var prefix := "Already recorded. " if already_recorded else "Recorded. "
 	_start_dialogue(str(data.get("speaker_name", "Witness Echo")), [prefix + description])
 
@@ -729,5 +726,4 @@ func _complete_campaign_and_show_ending() -> void:
 	EventBus.world_state_changed.emit({"campaign_complete": true})
 	var active_slot := str(state.world_state.get("active_save_slot", "slot_1"))
 	GameRuntime.save_slot(active_slot)
-	AtmosphereDirector.play_waterdrop(-8.0)
 	get_tree().change_scene_to_file("res://scenes/ui/EndingScreen.tscn")

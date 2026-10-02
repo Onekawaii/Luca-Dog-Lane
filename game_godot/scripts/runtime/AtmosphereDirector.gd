@@ -3,13 +3,9 @@ extends Node
 # Persistent sensory spine. It survives menu/game transitions so Hive-Lattice
 # never drops back to sterile silence between rooms or levels.
 const ROOMTONE_PATH := "res://assets/audio/hive_roomtone.wav"
-const WATERDROP_PATH := "res://assets/audio/hive_waterdrop.wav"
 
 var roomtone: AudioStreamPlayer
-var waterdrop: AudioStreamPlayer
 var overlay: ColorRect
-var rng := RandomNumberGenerator.new()
-var next_drop_msec: int = 0
 var current_level: int = -1
 var current_title: String = ""
 
@@ -25,10 +21,8 @@ const LEVEL_TINTS := [
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	rng.seed = 6060
 	_build_audio()
 	_build_overlay()
-	_schedule_next_drop()
 
 func _build_audio() -> void:
 	roomtone = AudioStreamPlayer.new()
@@ -38,12 +32,6 @@ func _build_audio() -> void:
 	roomtone.finished.connect(func(): roomtone.play())
 	add_child(roomtone)
 	roomtone.play()
-
-	waterdrop = AudioStreamPlayer.new()
-	waterdrop.name = "PersistentWaterdrop"
-	waterdrop.stream = ResourceLoader.load(WATERDROP_PATH) as AudioStream
-	waterdrop.volume_db = -17.0
-	add_child(waterdrop)
 
 
 func _build_overlay() -> void:
@@ -62,28 +50,6 @@ func _build_overlay() -> void:
 func _process(_delta: float) -> void:
 	if is_instance_valid(roomtone) and not roomtone.playing:
 		roomtone.play()
-	if Time.get_ticks_msec() >= next_drop_msec:
-		play_waterdrop(-19.0)
-		_schedule_next_drop()
-
-func _schedule_next_drop() -> void:
-	next_drop_msec = Time.get_ticks_msec() + rng.randi_range(4200, 9800)
-
-
-func play_waterdrop(volume_db: float = -14.0) -> void:
-	if not is_instance_valid(waterdrop):
-		return
-	waterdrop.volume_db = volume_db
-	waterdrop.pitch_scale = rng.randf_range(0.88, 1.14)
-	waterdrop.play()
-
-
-func play_containment_drop() -> void:
-	play_waterdrop(-20.0)
-	var tree := get_tree()
-	if tree != null:
-		tree.create_timer(0.42).timeout.connect(func(): play_waterdrop(-24.0))
-
 
 func set_level(level_index: int, title: String = "") -> void:
 	if level_index == current_level and title == current_title:

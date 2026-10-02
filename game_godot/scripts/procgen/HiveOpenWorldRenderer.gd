@@ -3,8 +3,12 @@ extends "res://scripts/procgen/HiveProcGenChunkRenderer.gd"
 
 const VehicleClass = preload("res://scripts/vehicles/HiveVehicle.gd")
 const LucaGuideClass = preload("res://scripts/actors/LucaGuide.gd")
+const TerrainShader = preload("res://shaders/luca_terrain.gdshader")
 const TERRAIN_RADIUS := 2
-const TERRAIN_GRID := 8
+const TERRAIN_GRID := 16
+const RIVER_HALF_WIDTH := 5.5
+const RIVER_BANK_WIDTH := 12.0
+const TERRAIN_TEXTURE_ROOT := "res://assets/terrain/"
 const WORLD_LEVEL_TYPES := [
 	"trailhead_camp", "creek_crossing", "meadow_homestead", "pine_watch",
 	"old_orchard", "stone_bridge", "ranger_shed", "lakeside_dock",
@@ -20,6 +24,8 @@ var _height_noise: FastNoiseLite
 var _detail_noise: FastNoiseLite
 var _starter_vehicle: HiveVehicle
 var _luca_guide: CharacterBody3D
+var _terrain_material_cache: Dictionary = {}
+var _river_material: StandardMaterial3D
 
 func configure(plan: Dictionary, player: Node3D, breakroom: Node3D) -> void:
 	_open_world_ready = false
@@ -94,6 +100,7 @@ func _load_terrain_cell(key: String) -> void:
 	add_child(root)
 	terrain_cells[key] = root
 	_build_terrain(root, coords)
+	_build_river_patch(root, coords)
 	_build_road_patch(root, coords)
 	for site in _sites_for_cell(coords):
 		_build_world_site(root, coords, site)
@@ -111,7 +118,9 @@ func _build_terrain(root: Node3D, coords: Vector2i) -> void:
 				float(coords.y) * LOCAL_CELL_SIZE + lz
 			)
 			var plan_pos := _world_origin_plan + world_local
+			var wetness := clampf(1.0 - (_river_distance(world_local) / RIVER_BANK_WIDTH), 0.0, 1.0)
 			st.set_uv(Vector2(float(x) / TERRAIN_GRID, float(z) / TERRAIN_GRID))
+			st.set_color(Color(wetness, 0.0, 0.0, 1.0))
 			st.add_vertex(Vector3(lx, _terrain_height(plan_pos, world_local), lz))
 	for z in range(TERRAIN_GRID):
 		for x in range(TERRAIN_GRID):
@@ -146,11 +155,28 @@ func _terrain_height(plan_pos: Vector2, local_pos: Vector2) -> float:
 		return 0.0
 	if local_pos.x >= 60.0 and local_pos.x <= 102.0 and local_pos.y >= 40.0 and local_pos.y <= 104.0:
 		return 0.0
+	var base_height := _raw_terrain_height(plan_pos)
+	var river_distance := _river_distance(local_pos)
+	if river_distance < RIVER_BANK_WIDTH:
+		var bank_factor := clampf(1.0 - river_distance / RIVER_BANK_WIDTH, 0.0, 1.0)
+		base_height -= bank_factor * bank_factor * 3.6
+	return snappedf(base_height, 0.02)
+
+
+func _raw_terrain_height(plan_pos: Vector2) -> float:
 	var biome := _biome_for_plan_position(plan_pos)
 	var amplitude := _amplitude_for_biome(biome)
 	var broad := _height_noise.get_noise_2d(plan_pos.x, plan_pos.y) * amplitude
 	var detail := _detail_noise.get_noise_2d(plan_pos.x, plan_pos.y) * amplitude * 0.18
-	return snappedf(broad + detail, 0.02)
+	return broad + detail
+
+
+func _river_center_z(local_x: float) -> float:
+	return 150.0 + sin(local_x * 0.0042) * 74.0 + sin(local_x * 0.0127 + 1.1) * 20.0
+
+
+func _river_distance(local_pos: Vector2) -> float:
+	return absf(local_pos.y - _river_center_z(local_pos.x))
 
 func _amplitude_for_biome(biome: String) -> float:
 	match biome:
@@ -194,22 +220,110 @@ func _position_dict_to_v2(raw: Variant) -> Vector2:
 	return Vector2.ZERO
 
 
-func _material_for_biome(biome: String) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.roughness = 0.92
-	match biome:
-		"sunmeadow_fields": material.albedo_color = Color(0.34, 0.49, 0.19)
-		"whisperpine_woods": material.albedo_color = Color(0.12, 0.27, 0.16)
-		"creekglass_wetlands": material.albedo_color = Color(0.18, 0.38, 0.34)
-		"golden_dune_ridge": material.albedo_color = Color(0.62, 0.48, 0.22)
-		"cloudstep_highlands": material.albedo_color = Color(0.31, 0.38, 0.30)
-		"moonfrost_basin": material.albedo_color = Color(0.58, 0.67, 0.69)
-		"redclay_badlands": material.albedo_color = Color(0.48, 0.23, 0.14)
-		"old_orchard_vale": material.albedo_color = Color(0.31, 0.36, 0.16)
-		"firefly_marsh": material.albedo_color = Color(0.16, 0.29, 0.22)
-		"starlight_range": material.albedo_color = Color(0.22, 0.26, 0.33)
-		_: material.albedo_color = Color(0.24, 0.34, 0.19)
+func _material_for_biome(biome: String) -> Material:
+	if _terrain_material_cache.has(biome):
+		return _terrain_material_cache[biome]
+	var profile := _biome_material_profile(biome)
+	var material := ShaderMaterial.new()
+	material.shader = TerrainShader
+	material.set_shader_parameter("ground_tex", load(TERRAIN_TEXTURE_ROOT + str(profile["ground"]) + ".png"))
+	material.set_shader_parameter("soil_tex", load(TERRAIN_TEXTURE_ROOT + str(profile["soil"]) + ".png"))
+	material.set_shader_parameter("rock_tex", load(TERRAIN_TEXTURE_ROOT + str(profile["rock"]) + ".png"))
+	material.set_shader_parameter("ground_tint", profile["ground_tint"])
+	material.set_shader_parameter("soil_tint", profile["soil_tint"])
+	material.set_shader_parameter("rock_tint", profile["rock_tint"])
+	material.set_shader_parameter("texture_scale", float(profile["texture_scale"]))
+	material.set_shader_parameter("rock_start", float(profile["rock_start"]))
+	material.set_shader_parameter("rock_full", float(profile["rock_full"]))
+	material.set_shader_parameter("soil_strength", float(profile["soil_strength"]))
+	_terrain_material_cache[biome] = material
 	return material
+
+
+func _biome_material_profile(biome: String) -> Dictionary:
+	var profile := {
+		"ground": "meadow_grass", "soil": "dry_dirt", "rock": "granite_rock",
+		"ground_tint": Vector3(1.0, 1.0, 1.0), "soil_tint": Vector3(1.0, 1.0, 1.0),
+		"rock_tint": Vector3(1.0, 1.0, 1.0), "texture_scale": 0.11,
+		"rock_start": 0.24, "rock_full": 0.62, "soil_strength": 0.34,
+	}
+	match biome:
+		"whisperpine_woods":
+			profile.merge({"ground": "forest_floor", "soil": "dry_dirt", "rock": "cold_stone", "soil_strength": 0.42}, true)
+		"creekglass_wetlands":
+			profile.merge({"ground": "meadow_grass", "soil": "river_mud", "rock": "granite_rock", "soil_strength": 0.58}, true)
+		"golden_dune_ridge":
+			profile.merge({"ground": "pale_sand", "soil": "dry_dirt", "rock": "granite_rock", "rock_start": 0.32}, true)
+		"cloudstep_highlands":
+			profile.merge({"ground": "meadow_grass", "soil": "cold_stone", "rock": "cold_stone", "rock_start": 0.15, "rock_full": 0.50}, true)
+		"moonfrost_basin":
+			profile.merge({"ground": "snow_grit", "soil": "cold_stone", "rock": "granite_rock", "soil_strength": 0.20}, true)
+		"redclay_badlands":
+			profile.merge({"ground": "red_clay", "soil": "dry_dirt", "rock": "granite_rock", "rock_start": 0.20}, true)
+		"old_orchard_vale":
+			profile.merge({"ground": "meadow_grass", "soil": "forest_floor", "rock": "granite_rock", "soil_strength": 0.46}, true)
+		"firefly_marsh":
+			profile.merge({"ground": "river_mud", "soil": "forest_floor", "rock": "granite_rock", "soil_strength": 0.62}, true)
+		"starlight_range":
+			profile.merge({"ground": "forest_floor", "soil": "cold_stone", "rock": "cold_stone", "rock_start": 0.18, "rock_full": 0.52}, true)
+	return profile
+
+
+func _build_river_patch(root: Node3D, coords: Vector2i) -> void:
+	var x0 := float(coords.x) * LOCAL_CELL_SIZE
+	var z0 := float(coords.y) * LOCAL_CELL_SIZE
+	var intersects := false
+	for probe in range(5):
+		var wx := x0 + float(probe) / 4.0 * LOCAL_CELL_SIZE
+		var center_z := _river_center_z(wx)
+		if center_z >= z0 - RIVER_HALF_WIDTH and center_z <= z0 + LOCAL_CELL_SIZE + RIVER_HALF_WIDTH:
+			intersects = true
+			break
+	if not intersects:
+		return
+
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_material(_get_river_material())
+	var samples := 12
+	for i in range(samples + 1):
+		var wx := x0 + float(i) / float(samples) * LOCAL_CELL_SIZE
+		var center_z := _river_center_z(wx)
+		var local_x := wx - x0
+		var local_z := center_z - z0
+		var plan_pos := _world_origin_plan + Vector2(wx, center_z)
+		var water_y := _raw_terrain_height(plan_pos) - 1.15
+		st.set_uv(Vector2(float(i) / float(samples), 0.0))
+		st.add_vertex(Vector3(local_x, water_y, local_z - RIVER_HALF_WIDTH))
+		st.set_uv(Vector2(float(i) / float(samples), 1.0))
+		st.add_vertex(Vector3(local_x, water_y, local_z + RIVER_HALF_WIDTH))
+	for i in range(samples):
+		var a := i * 2
+		var b := a + 1
+		var c := a + 2
+		var d := a + 3
+		st.add_index(a); st.add_index(c); st.add_index(b)
+		st.add_index(b); st.add_index(c); st.add_index(d)
+	var mesh := st.commit()
+	if mesh == null:
+		return
+	var river := MeshInstance3D.new()
+	river.name = "RiverWater"
+	river.mesh = mesh
+	root.add_child(river)
+
+
+func _get_river_material() -> StandardMaterial3D:
+	if is_instance_valid(_river_material):
+		return _river_material
+	_river_material = StandardMaterial3D.new()
+	_river_material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_river_material.albedo_color = Color(0.08, 0.27, 0.32, 0.72)
+	_river_material.roughness = 0.18
+	_river_material.metallic = 0.06
+	_river_material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _river_material
+
 
 func _sites_for_cell(coords: Vector2i) -> Array:
 	var result: Array = []
