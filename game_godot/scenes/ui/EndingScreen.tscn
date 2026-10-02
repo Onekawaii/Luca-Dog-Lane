@@ -76,7 +76,7 @@ text = "RETURN TO TITLE"
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "REENTER THE LATTICE"
+text = "RETURN TO THE TRAIL"
 
 [node name="QuitButton" type="Button" parent="Center/VBox"]
 custom_minimum_size = Vector2(0, 46)
@@ -86,6 +86,6 @@ text = "QUIT"
 [node name="Footnote" type="Label" parent="Center/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.38, 0.46, 0.40, 1)
-text = "The optional witness echoes remain in the side chambers if you go back."
+text = "The open road, side paths and unexplored biomes remain available if you go back."
 horizontal_alignment = 1
 autowrap_mode = 2

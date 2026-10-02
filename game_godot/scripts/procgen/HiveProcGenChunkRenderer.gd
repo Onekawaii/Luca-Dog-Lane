@@ -9,18 +9,18 @@ const ACTIVE_RADIUS := 1
 const WARM_RADIUS := 2
 const FirstPersonInteractableClass = preload("res://scripts/fps/FirstPersonInteractable.gd")
 const LEVEL_TITLES := [
-	"SERVICE SPINE", "RECORDS ANNEX", "WET LAB", "GENERATOR HALL",
-	"COLD STORAGE", "ARCHIVE SHAFT", "OBSERVATION WARD", "MACHINE FLOOR",
-	"FLOODED OFFICES", "ROOF UTILITY", "FALSE CAFETERIA", "THE LATTICE",
-	"BRUISE MOOR", "MORVEIN FUNGAL GALLERY", "GLASSWOOD STATION", "ASH ASCENT",
-	"QUARRY OF FORMS", "DROWNED SUBURB", "AMBER WARREN", "MOUNTAIN RELAY",
+	"TRAILHEAD CAMP", "CREEK CROSSING", "MEADOW HOMESTEAD", "PINE WATCH",
+	"OLD ORCHARD", "STONE BRIDGE", "RANGER SHED", "LAKESIDE DOCK",
+	"HILL FARM", "FIREFLY MARSH", "HOLLOW BARN", "WINDMILL FIELD",
+	"QUARRY PATH", "MOUNTAIN PASS", "SUMMIT OVERLOOK", "FOREST CABIN",
+	"RAIL TRAIL", "STORM SHELTER", "ROADSIDE GARAGE", "LUCA'S REST",
 ]
 const LEVEL_ARCHETYPES := [
-	"industrial_plant", "service_tunnel", "records_archive", "wet_lab",
-	"generator_hall", "cold_storage", "observation_ward", "machine_floor",
-	"flooded_office", "roof_utility", "false_cafeteria", "lattice_vault",
-	"ruined_suburb", "fungal_cavern", "mountain_pass", "quarry",
-	"forest_service", "rail_yard", "drainage_network", "roadside_station",
+	"trailhead_camp", "creek_crossing", "meadow_homestead", "pine_watch",
+	"old_orchard", "stone_bridge", "ranger_shed", "lakeside_dock",
+	"hill_farm", "firefly_marsh", "hollow_barn", "windmill_field",
+	"quarry_path", "mountain_pass", "summit_overlook", "forest_cabin",
+	"rail_trail", "storm_shelter", "roadside_garage", "luca_rest",
 ]
 
 var world_plan: Dictionary = {}

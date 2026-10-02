@@ -2,14 +2,15 @@ class_name HiveOpenWorldRenderer
 extends "res://scripts/procgen/HiveProcGenChunkRenderer.gd"
 
 const VehicleClass = preload("res://scripts/vehicles/HiveVehicle.gd")
+const LucaGuideClass = preload("res://scripts/actors/LucaGuide.gd")
 const TERRAIN_RADIUS := 2
 const TERRAIN_GRID := 8
 const WORLD_LEVEL_TYPES := [
-	"industrial_plant", "service_tunnel", "records_archive", "wet_lab",
-	"generator_hall", "cold_storage", "observation_ward", "machine_floor",
-	"flooded_office", "roof_utility", "false_cafeteria", "lattice_vault",
-	"ruined_suburb", "fungal_cavern", "mountain_pass", "quarry",
-	"forest_service", "rail_yard", "drainage_network", "roadside_station",
+	"trailhead_camp", "creek_crossing", "meadow_homestead", "pine_watch",
+	"old_orchard", "stone_bridge", "ranger_shed", "lakeside_dock",
+	"hill_farm", "firefly_marsh", "hollow_barn", "windmill_field",
+	"quarry_path", "mountain_pass", "summit_overlook", "forest_cabin",
+	"rail_trail", "storm_shelter", "roadside_garage", "luca_rest",
 ]
 
 var terrain_cells: Dictionary = {}
@@ -18,6 +19,7 @@ var _world_origin_plan := Vector2.ZERO
 var _height_noise: FastNoiseLite
 var _detail_noise: FastNoiseLite
 var _starter_vehicle: HiveVehicle
+var _luca_guide: CharacterBody3D
 
 func configure(plan: Dictionary, player: Node3D, breakroom: Node3D) -> void:
 	_open_world_ready = false
@@ -36,6 +38,7 @@ func configure(plan: Dictionary, player: Node3D, breakroom: Node3D) -> void:
 	_open_world_ready = true
 	update_streaming(true)
 	_spawn_starter_vehicle()
+	_spawn_luca_guide()
 
 func update_streaming(force: bool = false) -> void:
 	super.update_streaming(force)
@@ -151,16 +154,16 @@ func _terrain_height(plan_pos: Vector2, local_pos: Vector2) -> float:
 
 func _amplitude_for_biome(biome: String) -> float:
 	match biome:
-		"department_hell_industrial": return 5.0
-		"bruise_moor": return 11.0
-		"fungal_wetlands": return 7.0
-		"glasswood_verge": return 14.0
-		"ash_highlands": return 46.0
-		"frozen_archive": return 20.0
-		"dry_scripture_salt_flats": return 3.0
-		"drowned_suburb": return 4.0
-		"amber_hive": return 13.0
-		"deep_lattice": return 30.0
+		"sunmeadow_fields": return 5.0
+		"whisperpine_woods": return 12.0
+		"creekglass_wetlands": return 4.0
+		"golden_dune_ridge": return 18.0
+		"cloudstep_highlands": return 48.0
+		"moonfrost_basin": return 22.0
+		"redclay_badlands": return 28.0
+		"old_orchard_vale": return 9.0
+		"firefly_marsh": return 3.0
+		"starlight_range": return 42.0
 	return 8.0
 
 func _biome_for_cell(coords: Vector2i) -> String:
@@ -171,7 +174,7 @@ func _biome_for_cell(coords: Vector2i) -> String:
 	return _biome_for_plan_position(_world_origin_plan + center)
 
 func _biome_for_plan_position(plan_pos: Vector2) -> String:
-	var nearest := "department_hell_industrial"
+	var nearest := "sunmeadow_fields"
 	var best := INF
 	for raw in world_plan.get("regions", []):
 		if not raw is Dictionary:
@@ -195,17 +198,17 @@ func _material_for_biome(biome: String) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.roughness = 0.92
 	match biome:
-		"department_hell_industrial": material.albedo_color = Color(0.19, 0.17, 0.16)
-		"bruise_moor": material.albedo_color = Color(0.24, 0.13, 0.25)
-		"fungal_wetlands": material.albedo_color = Color(0.18, 0.24, 0.13)
-		"glasswood_verge": material.albedo_color = Color(0.12, 0.24, 0.25)
-		"ash_highlands": material.albedo_color = Color(0.23, 0.20, 0.21)
-		"frozen_archive": material.albedo_color = Color(0.35, 0.43, 0.48)
-		"dry_scripture_salt_flats": material.albedo_color = Color(0.52, 0.48, 0.39)
-		"drowned_suburb": material.albedo_color = Color(0.12, 0.21, 0.22)
-		"amber_hive": material.albedo_color = Color(0.34, 0.24, 0.08)
-		"deep_lattice": material.albedo_color = Color(0.10, 0.08, 0.12)
-		_: material.albedo_color = Color(0.20, 0.22, 0.19)
+		"sunmeadow_fields": material.albedo_color = Color(0.34, 0.49, 0.19)
+		"whisperpine_woods": material.albedo_color = Color(0.12, 0.27, 0.16)
+		"creekglass_wetlands": material.albedo_color = Color(0.18, 0.38, 0.34)
+		"golden_dune_ridge": material.albedo_color = Color(0.62, 0.48, 0.22)
+		"cloudstep_highlands": material.albedo_color = Color(0.31, 0.38, 0.30)
+		"moonfrost_basin": material.albedo_color = Color(0.58, 0.67, 0.69)
+		"redclay_badlands": material.albedo_color = Color(0.48, 0.23, 0.14)
+		"old_orchard_vale": material.albedo_color = Color(0.31, 0.36, 0.16)
+		"firefly_marsh": material.albedo_color = Color(0.16, 0.29, 0.22)
+		"starlight_range": material.albedo_color = Color(0.22, 0.26, 0.33)
+		_: material.albedo_color = Color(0.24, 0.34, 0.19)
 	return material
 
 func _sites_for_cell(coords: Vector2i) -> Array:
@@ -301,7 +304,7 @@ func _open_roam_portal_if_loaded() -> void:
 		_add_static_box(branch, "OpenWorldRoadLink", Vector3(5.5, 0.20, 20.0), Vector3(16.0, -0.10, 22.0), road)
 		var sign := Label3D.new()
 		sign.name = "FreeRoamSign"
-		sign.text = "FREE ROAM // MOTOR POOL // TEN BIOMES"
+		sign.text = "LUCA DOG WORLD // OPEN ROAD // TEN BIOMES"
 		sign.position = Vector3(16.0, 2.3, 20.0)
 		sign.font_size = 30
 		sign.modulate = Color(0.78, 0.62, 0.92)
@@ -311,8 +314,17 @@ func _spawn_starter_vehicle() -> void:
 	if is_instance_valid(_starter_vehicle):
 		return
 	_starter_vehicle = VehicleClass.new()
-	_starter_vehicle.name = "StarterFieldCar"
-	_starter_vehicle.vehicle_id = "vehicle.field_car.starter"
+	_starter_vehicle.name = "StarterTrailCar"
+	_starter_vehicle.vehicle_id = "vehicle.trail_car.starter"
 	_starter_vehicle.position = Vector3(80.0, 1.05, 76.0)
 	_starter_vehicle.rotation.y = -PI * 0.5
 	add_child(_starter_vehicle)
+
+func _spawn_luca_guide() -> void:
+	if is_instance_valid(_luca_guide):
+		return
+	_luca_guide = LucaGuideClass.new()
+	_luca_guide.name = "Luca"
+	_luca_guide.position = Vector3(72.0, 0.8, 72.0)
+	_luca_guide.set_target(_player)
+	add_child(_luca_guide)

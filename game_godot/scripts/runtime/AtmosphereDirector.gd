@@ -98,7 +98,7 @@ func set_level(level_index: int, title: String = "") -> void:
 
 
 func enter_menu() -> void:
-	set_level(0, "THE LATTICE")
+	set_level(0, "LUCA DOG WORLD")
 	if is_instance_valid(roomtone):
 		roomtone.volume_db = -27.0
 

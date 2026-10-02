@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-RECEIPT = DIST / "RELEASE_RECEIPT_v0.9.1.json"
+RECEIPT = DIST / "RELEASE_RECEIPT_v0.10.0.json"
 
 
 def sha256(path: Path) -> str:
@@ -97,7 +97,7 @@ def main() -> int:
     receipt = {
         "schema": "hive_lattice_release_receipt_v1",
         "generated_utc": datetime.now(timezone.utc).isoformat(),
-        "version": "0.9.1",
+        "version": "0.10.0",
         "branch": git("branch", "--show-current"),
         "head": git("rev-parse", "HEAD"),
         "tracked_worktree_clean": tracked_clean(),

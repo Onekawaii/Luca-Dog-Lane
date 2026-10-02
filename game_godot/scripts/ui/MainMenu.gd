@@ -43,7 +43,7 @@ func _refresh_slots() -> void:
 			slot_buttons[i].disabled = true
 	continue_button.disabled = newest_slot == ""
 	continue_button.set_meta("newest_slot", newest_slot)
-	status_label.text = "The building remembers you." if newest_slot != "" else "No prior witness record found."
+	status_label.text = "Luca remembers the trail." if newest_slot != "" else "No previous journey found."
 
 
 func _short_stamp(value: String) -> String:
@@ -68,7 +68,7 @@ func _continue_latest() -> void:
 func _start_new(slot: String) -> void:
 	GameRuntime.new_game()
 	GameRuntime.world_state.world_state["active_save_slot"] = slot
-	status_label.text = "Starting a new witness record..."
+	status_label.text = "Starting a new journey with Luca..."
 	_enter_game()
 
 

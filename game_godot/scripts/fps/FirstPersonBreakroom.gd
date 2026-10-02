@@ -244,7 +244,7 @@ func _on_interaction_requested(data: Dictionary) -> void:
 			_interact_world_exit()
 		"lattice_echo":
 			_interact_lattice_echo(data)
-		"lattice_terminal":
+		"lattice_terminal", "trail_terminal":
 			_interact_lattice_terminal()
 		"central_table":
 			_start_inspect(central_table, "Central Table", 2.2, 0.4)
@@ -579,7 +579,8 @@ func _on_dialogue_closed() -> void:
 			return
 		if not state.has_item("item.evidence_bag_not_my_business"):
 			GameRuntime.execute_choice("ask_for_evidence_bag")
-			AudioManager.play_item_pickup()
+			# Keith's evidence-bag handoff is intentionally silent. The generic
+			# pickup chime read as a loud bell attached to Keith.
 		GameRuntime.action_resolver.enter_scene(state, "scene.act1.first_sighting", false)
 		EventBus.world_state_changed.emit({})
 		EventBus.first_person_objective_changed.emit("Return to Wetberry at the central table and contain it.")

@@ -17,7 +17,7 @@ func _ready() -> void:
 	_restore_state()
 
 func get_interaction_prompt() -> String:
-	return "EXIT VEHICLE" if is_instance_valid(_driver) else "DRIVE FIELD CAR"
+	return "EXIT VEHICLE" if is_instance_valid(_driver) else "DRIVE TRAIL CAR"
 
 func interact(player: Node) -> void:
 	if is_instance_valid(_driver):
@@ -27,7 +27,7 @@ func interact(player: Node) -> void:
 	_driver = player
 	if player.has_method("enter_vehicle"):
 		player.call("enter_vehicle", self)
-		EventBus.notification_posted.emit("FIELD CAR // ignition accepted")
+		EventBus.notification_posted.emit("TRAIL CAR // ready for the road")
 
 func request_exit(player: Node) -> void:
 	if player != _driver:
@@ -38,7 +38,7 @@ func request_exit(player: Node) -> void:
 	_driver = null
 	_speed = 0.0
 	_persist_state()
-	EventBus.notification_posted.emit("FIELD CAR // driver released")
+	EventBus.notification_posted.emit("TRAIL CAR // parked")
 
 func _physics_process(delta: float) -> void:
 	var gravity := float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
@@ -129,7 +129,7 @@ func _build_visual_body() -> void:
 		add_child(wheel)
 	var tag := Label3D.new()
 	tag.name = "VehicleTag"
-	tag.text = "FIELD CAR // HELL DEPT MOTOR POOL"
+	tag.text = "LUCA WORLD // TRAIL CAR"
 	tag.position = Vector3(0.0, 1.15, 1.93)
 	tag.font_size = 28
 	tag.modulate = Color(0.78, 0.62, 0.92)

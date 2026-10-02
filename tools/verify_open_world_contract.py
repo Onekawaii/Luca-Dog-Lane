@@ -54,10 +54,11 @@ def main() -> int:
 
     require("SurfaceTool.new()" in renderer, "free-roam terrain mesh generator missing", failures)
     require("create_trimesh_shape()" in renderer, "terrain collision generation missing", failures)
-    require('"ash_highlands": return 46.0' in renderer, "mountain elevation contract missing", failures)
+    require('"cloudstep_highlands": return 48.0' in renderer, "mountain elevation contract missing", failures)
     require("TERRAIN_RADIUS := 2" in renderer, "bounded terrain streaming radius missing", failures)
     require('preload("res://scripts/vehicles/HiveVehicle.gd")' in renderer, "vehicle is not wired into world renderer", failures)
-    require("StarterFieldCar" in renderer, "starter car spawn missing", failures)
+    require("StarterTrailCar" in renderer, "starter trail car spawn missing", failures)
+    require("LucaGuideClass" in renderer and "_spawn_luca_guide" in renderer, "Luca companion is not wired into open world", failures)
 
     require("extends CharacterBody3D" in vehicle, "vehicle is not a physical CharacterBody3D", failures)
     require("move_and_slide()" in vehicle, "vehicle collision-aware movement missing", failures)

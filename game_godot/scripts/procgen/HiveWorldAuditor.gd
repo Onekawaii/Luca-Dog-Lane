@@ -8,11 +8,11 @@ const EXPECTED_SCHEMA := "hive_procgen_world_v2"
 const EXPECTED_BIOMES := 10
 const EXPECTED_LEVEL_TYPES := 20
 const REQUIRED_LEVEL_TYPES := [
-	"industrial_plant", "service_tunnel", "records_archive", "wet_lab",
-	"generator_hall", "cold_storage", "observation_ward", "machine_floor",
-	"flooded_office", "roof_utility", "false_cafeteria", "lattice_vault",
-	"ruined_suburb", "fungal_cavern", "mountain_pass", "quarry",
-	"forest_service", "rail_yard", "drainage_network", "roadside_station",
+	"trailhead_camp", "creek_crossing", "meadow_homestead", "pine_watch",
+	"old_orchard", "stone_bridge", "ranger_shed", "lakeside_dock",
+	"hill_farm", "firefly_marsh", "hollow_barn", "windmill_field",
+	"quarry_path", "mountain_pass", "summit_overlook", "forest_cabin",
+	"rail_trail", "storm_shelter", "roadside_garage", "luca_rest",
 ]
 
 

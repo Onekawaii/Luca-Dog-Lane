@@ -9,6 +9,7 @@ const MEMORY_CATALOG_PATH := "res://data/procgen/memory_catalog.json"
 const FALL_RECOVERY_Y := -6.0
 const SAFE_FLOOR_Y := -1.0
 const BREAKROOM_AUDIO_EXIT_X := 8.5
+const LUCA_WORLD_START := Vector3(70.0, 2.0, 72.0)
 
 @export var simulate_streaming := true
 @export var streaming_interval := 0.35
@@ -69,7 +70,7 @@ func _initialize() -> void:
 	AtmosphereDirector.enter_gameplay()
 	_update_level_state(true)
 	EventBus.procgen_world_ready.emit(world_plan.get("receipt", {}))
-	EventBus.notification_posted.emit("PCO WORLD AUDIT // " + str(world_audit.get("summary", "UNKNOWN")))
+	EventBus.notification_posted.emit("LUCA WORLD // " + str(world_audit.get("summary", "READY")))
 
 
 func regenerate_for_hive_state(hive_state: Dictionary) -> void:
@@ -141,6 +142,8 @@ func _restore_player_position() -> void:
 	var runtime: Dictionary = GameRuntime.world_state.world_state.get("runtime", {})
 	var saved: Dictionary = runtime.get("player_position", {})
 	if saved.is_empty():
+		_player.global_position = LUCA_WORLD_START
+		_player.rotation.y = -PI * 0.5
 		return
 	var saved_y := float(saved.get("y", 1.0))
 	# Never restore a save made after the player had already left supported space.
@@ -163,7 +166,7 @@ func _update_level_state(force: bool = false) -> void:
 		if force or biome != _last_biome:
 			_last_biome = biome
 			EventBus.notification_posted.emit("BIOME // " + biome.replace("_", " ").to_upper())
-			EventBus.first_person_objective_changed.emit("FREE ROAM // Explore, drive, climb and locate Arkheopantheochive sites.")
+			EventBus.first_person_objective_changed.emit("FREE ROAM // Follow Luca, drive the roads, climb the highlands and explore every biome.")
 		return
 	_last_biome = ""
 	var cell_x := int(floor(_player.global_position.x / chunk_renderer.LOCAL_CELL_SIZE))
@@ -175,7 +178,7 @@ func _update_level_state(force: bool = false) -> void:
 	AtmosphereDirector.set_level(maxi(level_index, 0), title)
 	if level_index >= 0:
 		EventBus.notification_posted.emit("LEVEL %02d // %s" % [level_index + 1, title])
-		EventBus.first_person_objective_changed.emit("Traverse %s. Follow the threshold lights deeper into the Lattice." % title)
+		EventBus.first_person_objective_changed.emit("Explore %s. Follow the trail and see where Luca leads." % title)
 
 
 func _update_audio_boundary() -> void:
@@ -212,7 +215,7 @@ func _update_fall_recovery() -> void:
 	_player.global_transform = recovery
 	if body != null:
 		body.velocity = Vector3.ZERO
-	EventBus.notification_posted.emit("The Lattice caught you and returned you to stable ground.")
+	EventBus.notification_posted.emit("The trail returned you to stable ground.")
 	if GameRuntime.world_state != null:
 		var runtime: Dictionary = GameRuntime.world_state.world_state.get("runtime", {})
 		runtime["player_position"] = {

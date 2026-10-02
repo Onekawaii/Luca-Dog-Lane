@@ -51,7 +51,7 @@ offset_bottom = 54.0
 grow_horizontal = 0
 theme_override_colors/font_color = Color(0.38, 0.82, 0.56, 0.8)
 theme_override_font_sizes/font_size = 13
-text = "WITNESS NETWORK // LOCAL // 06:06"
+text = "LUCA WORLD // LOCAL SAVE // FREE ROAM"
 horizontal_alignment = 2
 
 [node name="Center" type="CenterContainer" parent="."]
@@ -71,14 +71,14 @@ theme_override_constants/separation = 12
 layout_mode = 2
 theme_override_colors/font_color = Color(0.62, 1, 0.73, 1)
 theme_override_font_sizes/font_size = 58
-text = "HIVE-LATTICE"
+text = "LUCA DOG WORLD"
 horizontal_alignment = 1
 
 [node name="Subtitle" type="Label" parent="Center/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.55, 0.68, 0.60, 1)
 theme_override_font_sizes/font_size = 16
-text = "THE STRAWBERRY OMEN // THE BUILDING REMEMBERS"
+text = "FOLLOW THE TRAIL // THE WORLD REMEMBERS WHERE YOU HAVE BEEN"
 horizontal_alignment = 1
 
 [node name="Spacer" type="Control" parent="Center/VBox"]
@@ -89,19 +89,19 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "CONTINUE LAST WITNESS"
+text = "CONTINUE JOURNEY"
 
 [node name="NewGameButton" type="Button" parent="Center/VBox"]
 custom_minimum_size = Vector2(0, 54)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
-text = "NEW WITNESS"
+text = "NEW JOURNEY"
 
 [node name="SlotsLabel" type="Label" parent="Center/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.30, 0.82, 0.48, 1)
 theme_override_font_sizes/font_size = 13
-text = "WITNESS RECORDS"
+text = "JOURNEY SAVES"
 
 [node name="Slots" type="VBoxContainer" parent="Center/VBox"]
 layout_mode = 2
@@ -125,14 +125,14 @@ text = "SLOT_3 • EMPTY"
 [node name="QuitButton" type="Button" parent="Center/VBox"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-text = "LEAVE THE LATTICE"
+text = "LEAVE LUCA WORLD"
 
 [node name="StatusLabel" type="Label" parent="Center/VBox"]
 custom_minimum_size = Vector2(0, 34)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.56, 0.66, 0.60, 1)
 theme_override_font_sizes/font_size = 13
-text = "No prior witness record found."
+text = "No previous journey found."
 horizontal_alignment = 1
 
 [node name="Footer" type="Label" parent="."]
@@ -147,5 +147,5 @@ grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(0.28, 0.46, 0.36, 1)
 theme_override_font_sizes/font_size = 12
-text = "LOCAL SAVE // PROCEDURAL MULTIPLEX // DO NOT TRUST THE FLOOR PLAN"
+text = "LOCAL SAVE // TEN BIOMES // TWENTY EXPLORABLE PLACES // OPEN ROAD"
 horizontal_alignment = 1

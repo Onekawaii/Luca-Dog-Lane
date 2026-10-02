@@ -17,17 +17,17 @@ const ARCHETYPES := [
 ]
 
 const BIOMES := [
-	"department_hell_industrial", "bruise_moor", "fungal_wetlands",
-	"glasswood_verge", "ash_highlands", "frozen_archive",
-	"dry_scripture_salt_flats", "drowned_suburb", "amber_hive", "deep_lattice"
+	"sunmeadow_fields", "whisperpine_woods", "creekglass_wetlands",
+	"golden_dune_ridge", "cloudstep_highlands", "moonfrost_basin",
+	"redclay_badlands", "old_orchard_vale", "firefly_marsh", "starlight_range"
 ]
 
 const WORLD_LEVEL_TYPES := [
-	"industrial_plant", "service_tunnel", "records_archive", "wet_lab",
-	"generator_hall", "cold_storage", "observation_ward", "machine_floor",
-	"flooded_office", "roof_utility", "false_cafeteria", "lattice_vault",
-	"ruined_suburb", "fungal_cavern", "mountain_pass", "quarry",
-	"forest_service", "rail_yard", "drainage_network", "roadside_station"
+	"trailhead_camp", "creek_crossing", "meadow_homestead", "pine_watch",
+	"old_orchard", "stone_bridge", "ranger_shed", "lakeside_dock",
+	"hill_farm", "firefly_marsh", "hollow_barn", "windmill_field",
+	"quarry_path", "mountain_pass", "summit_overlook", "forest_cabin",
+	"rail_trail", "storm_shelter", "roadside_garage", "luca_rest"
 ]
 
 const ROOM_MODULES := [
