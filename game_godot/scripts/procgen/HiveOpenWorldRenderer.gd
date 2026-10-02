@@ -26,6 +26,8 @@ var _starter_vehicle: HiveVehicle
 var _luca_guide: CharacterBody3D
 var _terrain_material_cache: Dictionary = {}
 var _river_material: StandardMaterial3D
+var _world_sun: DirectionalLight3D
+var _environment: Environment
 
 func configure(plan: Dictionary, player: Node3D, breakroom: Node3D) -> void:
 	_open_world_ready = false
@@ -42,9 +44,47 @@ func configure(plan: Dictionary, player: Node3D, breakroom: Node3D) -> void:
 	_detail_noise.seed = int(plan.get("seed", 6060)) + 22021
 	_detail_noise.frequency = 0.006
 	_open_world_ready = true
+	_configure_world_lighting()
 	update_streaming(true)
 	_spawn_starter_vehicle()
 	_spawn_luca_guide()
+
+
+func _configure_world_lighting() -> void:
+	_environment = Environment.new()
+	var world_environment := _breakroom.get_node_or_null("WorldEnvironment") as WorldEnvironment if is_instance_valid(_breakroom) else null
+	if world_environment != null:
+		if world_environment.environment != null:
+			_environment = world_environment.environment
+		else:
+			world_environment.environment = _environment
+	_environment.background_mode = Environment.BG_COLOR
+	_environment.background_color = Color(0.37, 0.47, 0.56, 1.0)
+	_environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	_environment.ambient_light_color = Color(0.55, 0.61, 0.56, 1.0)
+	_environment.ambient_light_energy = 0.92
+	_environment.fog_enabled = true
+	_environment.fog_light_color = Color(0.58, 0.64, 0.66, 1.0)
+	_environment.fog_light_energy = 0.72
+	_environment.fog_density = 0.0035
+	_world_sun = DirectionalLight3D.new()
+	_world_sun.name = "LucaWorldSun"
+	_world_sun.rotation_degrees = Vector3(-48.0, -32.0, 0.0)
+	_world_sun.light_color = Color(1.0, 0.91, 0.74, 1.0)
+	_world_sun.light_energy = 1.35
+	_world_sun.shadow_enabled = true
+	add_child(_world_sun)
+
+
+func set_outdoor_lighting(active: bool) -> void:
+	if is_instance_valid(_world_sun):
+		_world_sun.visible = active
+	if _environment == null:
+		return
+	_environment.background_color = Color(0.37, 0.47, 0.56, 1.0) if active else Color(0.015, 0.02, 0.022, 1.0)
+	_environment.ambient_light_energy = 0.92 if active else 0.55
+	_environment.fog_enabled = active
+
 
 func update_streaming(force: bool = false) -> void:
 	super.update_streaming(force)
@@ -78,6 +118,11 @@ func terrain_loaded_count() -> int:
 
 func biome_at_local_position(local_pos: Vector2) -> String:
 	return _biome_for_plan_position(_world_origin_plan + local_pos)
+
+
+func surface_height_at_local(local_pos: Vector2) -> float:
+	return _terrain_height(_world_origin_plan + local_pos, local_pos)
+
 
 func open_world_level_type_count() -> int:
 	return WORLD_LEVEL_TYPES.size()
@@ -151,16 +196,29 @@ func _build_terrain(root: Node3D, coords: Vector2i) -> void:
 	body.add_child(collision)
 
 func _terrain_height(plan_pos: Vector2, local_pos: Vector2) -> float:
-	if local_pos.x >= -16.0 and local_pos.x <= 1400.0 and absf(local_pos.y) <= 28.0:
-		return 0.0
-	if local_pos.x >= 60.0 and local_pos.x <= 102.0 and local_pos.y >= 40.0 and local_pos.y <= 104.0:
-		return 0.0
 	var base_height := _raw_terrain_height(plan_pos)
+	# Never cut hard rectangular pits into the world. Blend the authored route
+	# and starter meadow into procedural terrain over a wide shoulder so the
+	# player can walk out naturally instead of hitting a vertical terrain seam.
+	var flatten_weight := maxf(
+		_flat_rect_weight(local_pos, Vector2(-16.0, -18.0), Vector2(1400.0, 18.0), 34.0),
+		_flat_rect_weight(local_pos, Vector2(56.0, 34.0), Vector2(112.0, 112.0), 38.0)
+	)
+	base_height = lerpf(base_height, 0.0, flatten_weight)
 	var river_distance := _river_distance(local_pos)
 	if river_distance < RIVER_BANK_WIDTH:
 		var bank_factor := clampf(1.0 - river_distance / RIVER_BANK_WIDTH, 0.0, 1.0)
 		base_height -= bank_factor * bank_factor * 3.6
 	return snappedf(base_height, 0.02)
+
+
+func _flat_rect_weight(point: Vector2, rect_min: Vector2, rect_max: Vector2, feather: float) -> float:
+	var dx := maxf(maxf(rect_min.x - point.x, 0.0), point.x - rect_max.x)
+	var dz := maxf(maxf(rect_min.y - point.y, 0.0), point.y - rect_max.y)
+	var outside_distance := Vector2(dx, dz).length()
+	if outside_distance <= 0.001:
+		return 1.0
+	return 1.0 - smoothstep(0.0, feather, outside_distance)
 
 
 func _raw_terrain_height(plan_pos: Vector2) -> float:

@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 @export var walk_speed: float = 4.5
 @export var sprint_speed: float = 7.0
+@export var jump_velocity: float = 5.4
 @export var mouse_sensitivity: float = 0.0022
 @export var touch_look_sensitivity: float = 0.0032
 @export var interaction_distance: float = 3.2
@@ -44,6 +45,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		var key := event as InputEventKey
 		if key.keycode == KEY_E and not input_locked:
 			_try_interact()
+		elif key.keycode == KEY_R and not input_locked:
+			var runtime := get_tree().root.find_child("HiveProcGenRuntime", true, false)
+			if runtime != null and runtime.has_method("recover_player_now"):
+				runtime.call("recover_player_now")
 		elif key.keycode == KEY_ESCAPE:
 			if input_locked:
 				return
@@ -63,6 +68,8 @@ func _physics_process(delta: float) -> void:
 	var gravity := float(ProjectSettings.get_setting("physics/3d/default_gravity", 9.8))
 	if not is_on_floor():
 		velocity.y -= gravity * delta
+	elif not input_locked and Input.is_key_pressed(KEY_SPACE):
+		velocity.y = jump_velocity
 
 	if input_locked:
 		velocity.x = move_toward(velocity.x, 0.0, walk_speed)

@@ -89,7 +89,7 @@ func _apply_platform_labels() -> void:
 		pda_button.text = "PDA [P]"
 		inventory_button.text = "INVENTORY [I]"
 		if is_instance_valid(hint_label):
-			hint_label.text = "Desktop: WASD move • Mouse look • E interact • Shift sprint • F5/F9 save/load"
+			hint_label.text = "Desktop: WASD move • Mouse look • E interact • Shift sprint • Space jump • R unstuck • F5/F9 save/load"
 
 
 func _unhandled_input(event: InputEvent) -> void:

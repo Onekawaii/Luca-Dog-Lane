@@ -1045,6 +1045,13 @@ func test_open_world_free_roam() -> void:
 	var river_probe_x := 256.0
 	var river_probe := Vector2(river_probe_x, renderer._river_center_z(river_probe_x))
 	assert_true(renderer._river_distance(river_probe) < 0.01, "Deterministic river centerline is continuous")
+	assert_true(renderer.find_child("LucaWorldSun", true, false) != null, "Open world has dedicated daylight")
+	assert_true(renderer._flat_rect_weight(Vector2(84.0, 72.0), Vector2(56.0, 34.0), Vector2(112.0, 112.0), 38.0) > 0.99, "Starter meadow is safely flattened")
+	var feather_weight := renderer._flat_rect_weight(Vector2(132.0, 72.0), Vector2(56.0, 34.0), Vector2(112.0, 112.0), 38.0)
+	assert_true(feather_weight > 0.0 and feather_weight < 1.0, "Starter meadow blends into terrain instead of making a cliff seam")
+	var player_script_text := FileAccess.get_file_as_string("res://scripts/fps/FirstPersonPlayer.gd")
+	assert_true(player_script_text.contains("KEY_SPACE"), "Desktop player has jump traversal")
+	assert_true(player_script_text.contains("recover_player_now"), "Desktop player exposes manual unstuck recovery")
 	var raw_river_height := renderer._raw_terrain_height(renderer._world_origin_plan + river_probe)
 	var carved_river_height := renderer._terrain_height(renderer._world_origin_plan + river_probe, river_probe)
 	assert_true(carved_river_height < raw_river_height - 2.5, "River physically carves a channel into terrain")

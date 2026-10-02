@@ -161,6 +161,8 @@ func _update_level_state(force: bool = false) -> void:
 	if not is_instance_valid(_player) or not is_instance_valid(chunk_renderer):
 		return
 	var free_roam := absf(_player.global_position.z) > 40.0 and chunk_renderer.has_method("biome_at_local_position")
+	if chunk_renderer.has_method("set_outdoor_lighting"):
+		chunk_renderer.call("set_outdoor_lighting", free_roam)
 	if free_roam:
 		var biome := str(chunk_renderer.call("biome_at_local_position", Vector2(_player.global_position.x, _player.global_position.z)))
 		if force or biome != _last_biome:
@@ -199,6 +201,21 @@ func _set_breakroom_audio_active(active: bool) -> void:
 		AudioManager.set_breakroom_ambience_active(false)
 
 
+func recover_player_now() -> void:
+	if not is_instance_valid(_player):
+		return
+	var recovery := _last_safe_transform if _has_safe_transform else Transform3D(Basis.IDENTITY, LUCA_WORLD_START)
+	if not _has_safe_transform and is_instance_valid(chunk_renderer) and chunk_renderer.has_method("surface_height_at_local"):
+		var local := Vector2(LUCA_WORLD_START.x, LUCA_WORLD_START.z)
+		recovery.origin.y = float(chunk_renderer.call("surface_height_at_local", local)) + 1.25
+	recovery.origin.y += 0.45
+	_player.global_transform = recovery
+	var body := _player as CharacterBody3D
+	if body != null:
+		body.velocity = Vector3.ZERO
+	EventBus.notification_posted.emit("UNSTUCK // returned to safe ground")
+
+
 func _update_fall_recovery() -> void:
 	if not is_instance_valid(_player):
 		return
@@ -209,7 +226,10 @@ func _update_fall_recovery() -> void:
 		return
 	if _player.global_position.y >= FALL_RECOVERY_Y:
 		return
-	var recovery := _last_safe_transform if _has_safe_transform else Transform3D(Basis.IDENTITY, Vector3(0.0, 1.0, 0.0))
+	var recovery := _last_safe_transform if _has_safe_transform else Transform3D(Basis.IDENTITY, LUCA_WORLD_START)
+	if not _has_safe_transform and is_instance_valid(chunk_renderer) and chunk_renderer.has_method("surface_height_at_local"):
+		var local := Vector2(LUCA_WORLD_START.x, LUCA_WORLD_START.z)
+		recovery.origin.y = float(chunk_renderer.call("surface_height_at_local", local)) + 1.25
 	# Lift slightly so the character capsule resolves cleanly onto the recovered floor.
 	recovery.origin.y += 0.35
 	_player.global_transform = recovery
