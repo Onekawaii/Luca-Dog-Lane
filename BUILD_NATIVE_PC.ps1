@@ -77,7 +77,7 @@ python tools/build_android_apk.py
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Android APK build failed. Native suite is not complete."
 }
-Write-Host "  [OK] dist\Hive-Lattice-native-android-playtest.apk created successfully." -ForegroundColor Green
+Write-Host "  [OK] dist\Luca-Dog-World-v0.11.0-android.apk created successfully." -ForegroundColor Green
 
 # Package release zip and sidecars. Missing deliverables are fatal.
 python tools/package_native_playtest.py
