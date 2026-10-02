@@ -1,6 +1,8 @@
 class_name LucaGuide
 extends CharacterBody3D
 
+const BrainClass = preload("res://scripts/luca/LucaCompanionBrain.gd")
+
 @export var follow_speed := 3.8
 @export var follow_distance := 5.0
 @export var catchup_distance := 16.0
@@ -8,6 +10,8 @@ extends CharacterBody3D
 var _target: Node3D
 var _sigh_index := 0
 var _tail: MeshInstance3D
+var _brain = BrainClass.new()
+var _investigate_until_msec := 0
 var _sigh_lines := [
 	"Luca gives a long dramatic sigh and looks toward the trail.",
 	"Luca leans into the scratch, then checks the road ahead.",
@@ -24,7 +28,12 @@ func get_interaction_prompt() -> String:
 func interact(_player: Node = null) -> void:
 	EventBus.notification_posted.emit(_sigh_lines[_sigh_index % _sigh_lines.size()])
 	_sigh_index += 1
+	_investigate_until_msec = Time.get_ticks_msec() + 1800
 	_record_bond()
+
+func companion_state_name() -> String:
+	return _brain.state_name()
+
 func _ready() -> void:
 	_build_body()
 
@@ -35,18 +44,23 @@ func _physics_process(delta: float) -> void:
 	else:
 		velocity.y = minf(velocity.y, 0.0)
 	if not is_instance_valid(_target):
+		_brain.choose_state(0.0, false, false, false)
 		velocity.x = move_toward(velocity.x, 0.0, 8.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, 8.0 * delta)
 		move_and_slide()
 		return
+
 	var flat_delta := _target.global_position - global_position
 	flat_delta.y = 0.0
 	var distance := flat_delta.length()
-	if distance > catchup_distance:
+	var interest_nearby := Time.get_ticks_msec() < _investigate_until_msec
+	var state: int = int(_brain.choose_state(distance, true, interest_nearby, false))
+
+	if state == BrainClass.State.RECOVER:
 		global_position = _target.global_position - _target.global_transform.basis.z.normalized() * 4.0 + Vector3(0.0, 0.4, 0.0)
 		velocity = Vector3.ZERO
 		return
-	if distance > follow_distance:
+	if state == BrainClass.State.FOLLOW:
 		var direction := flat_delta.normalized()
 		velocity.x = direction.x * follow_speed
 		velocity.z = direction.z * follow_speed
@@ -56,7 +70,8 @@ func _physics_process(delta: float) -> void:
 		velocity.z = move_toward(velocity.z, 0.0, 7.0 * delta)
 	move_and_slide()
 	if is_instance_valid(_tail):
-		_tail.rotation.z = sin(Time.get_ticks_msec() * 0.0065) * 0.32
+		var wag_scale := 1.7 if state == BrainClass.State.INVESTIGATE else 1.0
+		_tail.rotation.z = sin(Time.get_ticks_msec() * 0.0065) * 0.32 * wag_scale
 
 func _record_bond() -> void:
 	if GameRuntime.world_state == null:
