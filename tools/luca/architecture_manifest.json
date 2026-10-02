@@ -1,0 +1,68 @@
+{
+  "schema": "luca_architecture_manifest_v1",
+  "product": {
+    "name": "Luca Dog World",
+    "version": "0.11.0",
+    "engine": "Godot 4.3",
+    "android_package": "com.onekawaii.lucadogworld"
+  },
+  "world": {
+    "generator_version": "luca-world-v1",
+    "chunk_size_m": 128,
+    "subcell_size_m": 32,
+    "generation_passes": [
+      "seed", "region", "biome", "terrain",
+      "hydrology", "sites", "ecology", "objects"
+    ],
+    "biome_count": 10,
+    "minimum_location_types": 20
+  },
+  "streaming": {
+    "preload_grid": 7,
+    "render_grid": 5,
+    "physics_grid": 3,
+    "hysteresis_cells": 2,
+    "frame_budget": 2,
+    "flight_suspend_height_m": 220
+  },
+  "persistence": {
+    "immutable_chunk_descriptions": true,
+    "delta_only": true,
+    "delta_categories": ["removed", "moved", "collected", "spawned"]
+  },
+  "companion": {
+    "name": "Luca",
+    "states": ["IDLE", "FOLLOW", "INVESTIGATE", "WAIT", "RECOVER", "REST"]
+  },
+  "tools": {
+    "modes": ["object_tether", "builder", "remover", "inspector"],
+    "object_tether": "safe carry/reposition/release for RigidBody3D props"
+  },
+  "mods": {
+    "extension": ".lucamod",
+    "allowed_permissions": ["spawn", "decorate", "dialogue", "recipes"],
+    "denied_permissions": ["filesystem", "shell", "network", "native_code", "process"],
+    "program_ops": ["emit_text", "set_tag", "spawn_request", "objective"],
+    "deterministic_modset_hash": true
+  },
+  "milestones": {
+    "A": "standalone Luca product identity",
+    "B": "deterministic world generator",
+    "C": "128m chunk database",
+    "D": "7x7/5x5/3x3 streaming rings",
+    "E": "chunk renderer contract",
+    "F": "delta-only persistence",
+    "G": "six-state Luca companion FSM",
+    "H": "player object-tool framework",
+    "I": "entity registry and safe mod VM",
+    "J": "lucamod importer and runtime wiring",
+    "K": "architecture manifest and build-context validator",
+    "L": "LucaBench and demolition stress agent"
+  },
+  "demolition": {
+    "boundary_crossings": 500,
+    "corner_teleports": 128,
+    "persistence_mutations": 300,
+    "flight_distance_m": 5000
+  }
+}
