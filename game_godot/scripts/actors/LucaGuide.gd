@@ -7,6 +7,7 @@ extends CharacterBody3D
 
 var _target: Node3D
 var _sigh_index := 0
+var _tail: MeshInstance3D
 var _sigh_lines := [
 	"Luca gives a long dramatic sigh and looks toward the trail.",
 	"Luca leans into the scratch, then checks the road ahead.",
@@ -54,6 +55,9 @@ func _physics_process(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, 0.0, 7.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, 7.0 * delta)
 	move_and_slide()
+	if is_instance_valid(_tail):
+		_tail.rotation.z = sin(Time.get_ticks_msec() * 0.0065) * 0.32
+
 func _record_bond() -> void:
 	if GameRuntime.world_state == null:
 		return
@@ -64,65 +68,56 @@ func _record_bond() -> void:
 
 func _build_body() -> void:
 	var fur := StandardMaterial3D.new()
-	fur.albedo_color = Color(0.82, 0.67, 0.38)
-	fur.roughness = 0.92
+	fur.albedo_color = Color(0.80, 0.62, 0.28)
+	fur.roughness = 0.96
+	var light_fur := StandardMaterial3D.new()
+	light_fur.albedo_color = Color(0.91, 0.78, 0.48)
+	light_fur.roughness = 0.97
 	var dark := StandardMaterial3D.new()
-	dark.albedo_color = Color(0.12, 0.09, 0.055)
-	dark.roughness = 0.84
-	var cream := StandardMaterial3D.new()
-	cream.albedo_color = Color(0.93, 0.82, 0.58)
-	cream.roughness = 0.95
+	dark.albedo_color = Color(0.055, 0.043, 0.028)
+	dark.roughness = 0.82
+	var collar := StandardMaterial3D.new()
+	collar.albedo_color = Color(0.08, 0.28, 0.46)
+	collar.metallic = 0.12
+	collar.roughness = 0.58
 
-	_add_box("Torso", Vector3(0.78, 0.72, 1.35), Vector3(0.0, 0.78, 0.0), fur)
-	_add_box("Chest", Vector3(0.64, 0.74, 0.62), Vector3(0.0, 0.86, -0.62), cream)
-	_add_sphere("Head", 0.46, Vector3(0.0, 1.34, -0.78), fur)
-	_add_box("Muzzle", Vector3(0.44, 0.30, 0.46), Vector3(0.0, 1.22, -1.12), cream)
-	_add_sphere("Nose", 0.11, Vector3(0.0, 1.28, -1.36), dark)
+	_add_ellipsoid("Torso", 0.62, Vector3(0.0, 0.86, 0.02), fur, Vector3(0.86, 0.78, 1.55))
+	_add_ellipsoid("Chest", 0.46, Vector3(0.0, 0.94, -0.60), light_fur, Vector3(0.86, 1.05, 0.82))
+	_add_ellipsoid("Head", 0.44, Vector3(0.0, 1.43, -0.83), fur, Vector3(0.93, 1.02, 0.88))
+	_add_ellipsoid("Muzzle", 0.28, Vector3(0.0, 1.29, -1.16), light_fur, Vector3(1.10, 0.72, 1.18))
+	_add_ellipsoid("Nose", 0.105, Vector3(0.0, 1.32, -1.40), dark, Vector3(1.08, 0.82, 0.92))
+	_add_capsule("Collar", 0.37, 0.16, Vector3(0.0, 1.15, -0.66), collar, Vector3(deg_to_rad(90.0), 0.0, 0.0))
 	for side in [-1.0, 1.0]:
-		_add_box("Ear", Vector3(0.19, 0.48, 0.18), Vector3(0.31 * side, 1.40, -0.76), dark, Vector3(0.0, 0.0, deg_to_rad(12.0 * side)))
-		_add_box("FrontLeg", Vector3(0.20, 0.68, 0.22), Vector3(0.28 * side, 0.38, -0.48), fur)
-		_add_box("BackLeg", Vector3(0.22, 0.68, 0.24), Vector3(0.30 * side, 0.38, 0.47), fur)
-		_add_sphere("Eye", 0.055, Vector3(0.18 * side, 1.45, -1.14), dark)
-	var tail := MeshInstance3D.new()
-	tail.name = "Tail"
+		_add_ellipsoid("Ear", 0.24, Vector3(0.32 * side, 1.43, -0.78), fur, Vector3(0.52, 1.30, 0.38), Vector3(0.0, 0.0, deg_to_rad(18.0 * side)))
+		_add_capsule("FrontLeg", 0.11, 0.72, Vector3(0.25 * side, 0.43, -0.48), fur)
+		_add_capsule("BackLeg", 0.13, 0.76, Vector3(0.30 * side, 0.43, 0.50), fur)
+		_add_ellipsoid("Paw", 0.14, Vector3(0.25 * side, 0.08, -0.51), light_fur, Vector3(1.08, 0.58, 1.35))
+		_add_ellipsoid("RearPaw", 0.15, Vector3(0.30 * side, 0.08, 0.53), light_fur, Vector3(1.10, 0.58, 1.28))
+		_add_ellipsoid("Eye", 0.052, Vector3(0.17 * side, 1.52, -1.15), dark, Vector3(1.0, 1.0, 0.72))
+
+	_tail = MeshInstance3D.new()
+	_tail.name = "Tail"
 	var tail_mesh := CylinderMesh.new()
-	tail_mesh.top_radius = 0.08
-	tail_mesh.bottom_radius = 0.13
-	tail_mesh.height = 0.82
-	tail.mesh = tail_mesh
-	tail.position = Vector3(0.0, 0.95, 0.94)
-	tail.rotation_degrees.x = 58.0
-	tail.material_override = fur
-	add_child(tail)
+	tail_mesh.top_radius = 0.045
+	tail_mesh.bottom_radius = 0.12
+	tail_mesh.height = 0.95
+	_tail.mesh = tail_mesh
+	_tail.position = Vector3(0.0, 0.94, 0.98)
+	_tail.rotation_degrees.x = 68.0
+	_tail.material_override = fur
+	add_child(_tail)
 
 	var collision := CollisionShape3D.new()
 	collision.name = "Collision"
 	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.48
-	capsule.height = 1.25
+	capsule.radius = 0.44
+	capsule.height = 1.24
 	collision.shape = capsule
-	collision.position = Vector3(0.0, 0.68, 0.0)
+	collision.position = Vector3(0.0, 0.66, 0.0)
 	add_child(collision)
-	var tag := Label3D.new()
-	tag.name = "LucaTag"
-	tag.text = "LUCA"
-	tag.position = Vector3(0.0, 1.95, 0.0)
-	tag.font_size = 28
-	tag.modulate = Color(1.0, 0.90, 0.62)
-	add_child(tag)
 
-func _add_box(node_name: String, size: Vector3, pos: Vector3, material: StandardMaterial3D, rotation_radians: Vector3 = Vector3.ZERO) -> void:
-	var mesh := MeshInstance3D.new()
-	mesh.name = node_name
-	var box := BoxMesh.new()
-	box.size = size
-	mesh.mesh = box
-	mesh.position = pos
-	mesh.rotation = rotation_radians
-	mesh.material_override = material
-	add_child(mesh)
 
-func _add_sphere(node_name: String, radius: float, pos: Vector3, material: StandardMaterial3D) -> void:
+func _add_ellipsoid(node_name: String, radius: float, pos: Vector3, material: Material, scale_value: Vector3 = Vector3.ONE, rot: Vector3 = Vector3.ZERO) -> void:
 	var mesh := MeshInstance3D.new()
 	mesh.name = node_name
 	var sphere := SphereMesh.new()
@@ -130,5 +125,20 @@ func _add_sphere(node_name: String, radius: float, pos: Vector3, material: Stand
 	sphere.height = radius * 2.0
 	mesh.mesh = sphere
 	mesh.position = pos
+	mesh.scale = scale_value
+	mesh.rotation = rot
+	mesh.material_override = material
+	add_child(mesh)
+
+
+func _add_capsule(node_name: String, radius: float, height: float, pos: Vector3, material: Material, rot: Vector3 = Vector3.ZERO) -> void:
+	var mesh := MeshInstance3D.new()
+	mesh.name = node_name
+	var capsule := CapsuleMesh.new()
+	capsule.radius = radius
+	capsule.height = height
+	mesh.mesh = capsule
+	mesh.position = pos
+	mesh.rotation = rot
 	mesh.material_override = material
 	add_child(mesh)

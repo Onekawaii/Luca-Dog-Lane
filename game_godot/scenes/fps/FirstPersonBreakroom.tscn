@@ -1129,6 +1129,7 @@ position = Vector3(0, 0.62, 0)
 [node name="Camera3D" type="Camera3D" parent="Player/Head"]
 current = true
 fov = 78.0
+far = 12000.0
 
 [node name="HeldSlot" type="Node3D" parent="Player/Head"]
 position = Vector3(0.4, -0.2, -0.6)

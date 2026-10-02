@@ -22,8 +22,8 @@ var _saved_collision_mask: int = 1
 
 func _ready() -> void:
 	interaction_ray.target_position = Vector3(0.0, 0.0, -interaction_distance)
-	floor_max_angle = deg_to_rad(55.0)
-	floor_snap_length = 0.45
+	floor_max_angle = deg_to_rad(70.0)
+	floor_snap_length = 0.75
 	EventBus.virtual_move_input.connect(_on_virtual_move_input)
 	EventBus.virtual_look_input.connect(_on_virtual_look_input)
 	EventBus.first_person_interact_pressed.connect(_try_interact)

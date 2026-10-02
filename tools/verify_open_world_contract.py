@@ -14,6 +14,9 @@ AUDITOR = ROOT / "game_godot/scripts/procgen/HiveWorldAuditor.gd"
 VEHICLE = ROOT / "game_godot/scripts/vehicles/HiveVehicle.gd"
 PLAYER = ROOT / "game_godot/scripts/fps/FirstPersonPlayer.gd"
 RUNTIME = ROOT / "game_godot/scripts/procgen/HiveProcGenRuntime.gd"
+WEATHER = ROOT / "game_godot/scripts/runtime/LucaWeatherSystem.gd"
+NPC = ROOT / "game_godot/scripts/actors/LucaWorldNPC.gd"
+RIVER_SHADER = ROOT / "game_godot/shaders/luca_river.gdshader"
 SCHEMAS = ROOT / "SCHEMA_VERSIONS.md"
 
 def read(path: Path) -> str:
@@ -54,24 +57,28 @@ def main() -> int:
 
     require("SurfaceTool.new()" in renderer, "free-roam terrain mesh generator missing", failures)
     require("create_trimesh_shape()" in renderer, "terrain collision generation missing", failures)
-    require('"cloudstep_highlands": return 48.0' in renderer, "mountain elevation contract missing", failures)
+    require("CLOUDSTEP_PEAK_METERS := 3218.0" in renderer and "STARLIGHT_PEAK_METERS := 4023.0" in renderer, "multi-mile mountain elevation contract missing", failures)
     require("TERRAIN_RADIUS := 2" in renderer, "bounded terrain streaming radius missing", failures)
     require('preload("res://scripts/vehicles/HiveVehicle.gd")' in renderer, "vehicle is not wired into world renderer", failures)
     require("StarterTrailCar" in renderer, "starter trail car spawn missing", failures)
     require("LucaGuideClass" in renderer and "_spawn_luca_guide" in renderer, "Luca companion is not wired into open world", failures)
+    require("LucaWorldNPCClass" in renderer and "_spawn_npcs_for_cell" in renderer, "streamed NPC population missing", failures)
+    require("WeatherClass" in renderer and "_spawn_weather_system" in renderer, "dynamic weather system missing", failures)
+    require("RiverShader" in renderer and "luca_river.gdshader" in renderer, "dynamic river shader missing", failures)
 
     require("extends CharacterBody3D" in vehicle, "vehicle is not a physical CharacterBody3D", failures)
     require("move_and_slide()" in vehicle, "vehicle collision-aware movement missing", failures)
     require("request_exit" in vehicle and "interact(player" in vehicle, "vehicle enter/exit interaction missing", failures)
+    require("max_health" in vehicle and "_apply_impact_damage" in vehicle and '"health": health' in vehicle, "persistent vehicle damage contract missing", failures)
     require("enter_vehicle" in player and "exit_vehicle" in player, "player vehicle state integration missing", failures)
-    require("floor_max_angle = deg_to_rad(55.0)" in player, "climbable slope contract missing", failures)
+    require("floor_max_angle = deg_to_rad(70.0)" in player and "jump_velocity" in player, "mountain traversal contract missing", failures)
 
     require("WorldAuditorClass" in runtime, "world auditor is not wired into runtime", failures)
     require("OPEN WORLD AUDIT BLOCKED RUNTIME" in runtime, "auditor is not fail-closed", failures)
     require("bullshit_score" in auditor and "LOGISTICS:" in auditor and "CONGRUENCY:" in auditor, "PCO deterministic bullshit/logistics checks missing", failures)
     require("room_schema_v1" in schemas and "Status**: LOCKED" in schemas, "legacy room schema freeze was mutated", failures)
 
-    paths = [ENGINE, RENDERER, AUDITOR, VEHICLE, PLAYER, RUNTIME]
+    paths = [ENGINE, RENDERER, AUDITOR, VEHICLE, PLAYER, RUNTIME, WEATHER, NPC, RIVER_SHADER]
     digest = hashlib.sha256()
     for path in paths:
         digest.update(path.relative_to(ROOT).as_posix().encode())
@@ -83,7 +90,10 @@ def main() -> int:
     print(f"walkable_level_titles={len(route_titles)}")
     print("terrain_streaming=bounded")
     print("mountains=climbable_contract")
-    print("vehicles=enabled")
+    print("vehicles=damage_enabled")
+    print("weather=dynamic")
+    print("rivers=animated")
+    print("npcs=streamed_dialogue")
     print(f"sha256={digest.hexdigest()}")
     if failures:
         print(f"status=BLOCKED ({len(failures)} issue(s))")
