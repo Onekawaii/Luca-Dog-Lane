@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write an exact-state release receipt for the native Hive-Lattice playtest."""
+"""Write an exact-state release receipt for Luca Dog World v0.11.0."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-RECEIPT = DIST / "RELEASE_RECEIPT_v0.10.0.json"
+RECEIPT = DIST / "RELEASE_RECEIPT_LUCA_DOG_WORLD_v0.11.0.json"
 
 
 def sha256(path: Path) -> str:
@@ -86,18 +86,18 @@ def tracked_clean() -> bool:
 
 def main() -> int:
     artifacts = {
-        "windows_exe": artifact_record(DIST / "windows" / "Hive-Lattice.exe"),
-        "windows_zip": artifact_record(DIST / "Hive-Lattice-native-windows-playtest.zip"),
-        "android_apk": artifact_record(DIST / "Hive-Lattice-native-android-playtest.apk"),
-        "source_zip": artifact_record(DIST / "Hive-Lattice-native-playtest-source.zip"),
+        "windows_exe": artifact_record(DIST / "windows" / "Luca-Dog-World.exe"),
+        "windows_zip": artifact_record(DIST / "Luca-Dog-World-v0.11.0-windows.zip"),
+        "android_apk": artifact_record(DIST / "Luca-Dog-World-v0.11.0-android.apk"),
+        "source_zip": artifact_record(DIST / "Luca-Dog-World-v0.11.0-source.zip"),
     }
-    apk_path = DIST / "Hive-Lattice-native-android-playtest.apk"
+    apk_path = DIST / "Luca-Dog-World-v0.11.0-android.apk"
     artifacts["android_apk"]["signature_verification"] = verify_apk(apk_path)
 
     receipt = {
-        "schema": "hive_lattice_release_receipt_v1",
+        "schema": "luca_dog_world_release_receipt_v1",
         "generated_utc": datetime.now(timezone.utc).isoformat(),
-        "version": "0.10.0",
+        "version": "0.11.0",
         "branch": git("branch", "--show-current"),
         "head": git("rev-parse", "HEAD"),
         "tracked_worktree_clean": tracked_clean(),

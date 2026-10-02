@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Package Hive-Lattice Native Playtest artifacts and generate SHA-256 sidecars.
+"""Package Luca Dog World native artifacts and generate SHA-256 sidecars.
 
 Creates:
-- dist/Hive-Lattice-native-playtest-source.zip
-- dist/Hive-Lattice-native-windows-playtest.zip
-- dist/Hive-Lattice-native-android-playtest.apk (if exported)
+- dist/Luca-Dog-World-v0.11.0-source.zip
+- dist/Luca-Dog-World-v0.11.0-windows.zip
+- dist/Luca-Dog-World-v0.11.0-android.apk (if exported)
 - .sha256 checksum sidecars for all deliverables
 """
 
@@ -103,7 +103,7 @@ def package_source_zip(dest_zip: Path, root_dir: Path | None = None) -> None:
 
 
 def package_windows_zip(windows_dir: Path, dest_zip: Path) -> None:
-    exe_path = windows_dir / "Hive-Lattice.exe"
+    exe_path = windows_dir / "Luca-Dog-World.exe"
     if not exe_path.exists():
         raise RuntimeError(f"Windows executable not found at {exe_path}")
 
@@ -130,25 +130,21 @@ def main() -> int:
     dist_dir.mkdir(parents=True, exist_ok=True)
 
     print("============================================================")
-    print("PACKAGING HIVE-LATTICE NATIVE PLAYTEST ARTIFACTS")
+    print("PACKAGING LUCA DOG WORLD v0.11.0 NATIVE ARTIFACTS")
     print("============================================================\n")
 
     # 1. Source zip
-    source_zip = dist_dir / "Hive-Lattice-native-playtest-source.zip"
+    source_zip = dist_dir / "Luca-Dog-World-v0.11.0-source.zip"
     package_source_zip(source_zip)
 
     # 2. Windows playtest zip
-    windows_zip = dist_dir / "Hive-Lattice-native-windows-playtest.zip"
+    windows_zip = dist_dir / "Luca-Dog-World-v0.11.0-windows.zip"
     package_windows_zip(dist_dir / "windows", windows_zip)
 
-    # 3. Android playtest
-    android_apk = dist_dir / "Hive-Lattice-native-android-playtest.apk"
+    # 3. Android release
+    android_apk = dist_dir / "Luca-Dog-World-v0.11.0-android.apk"
     if not android_apk.exists():
-        android_apk = dist_dir / "android" / "Hive-Lattice-native-android-playtest.apk"
-    if not android_apk.exists():
-        android_apk = dist_dir / "android" / "Hive-Lattice-native-playtest.apk"
-    if not android_apk.exists():
-        android_apk = dist_dir / "Hive-Lattice-native-playtest.apk"
+        android_apk = dist_dir / "android" / "Luca-Dog-World-v0.11.0-android.apk"
     package_android(android_apk)
 
     print("\n[OK] Packaging completed successfully.")

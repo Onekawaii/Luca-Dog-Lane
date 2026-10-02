@@ -1,11 +1,11 @@
-# BUILD_NATIVE_PC.ps1 - Autonomous Native Build for Windows Desktop & Android
+# BUILD_NATIVE_PC.ps1 - Autonomous Luca Dog World Build for Windows Desktop & Android
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 Set-Location $PSScriptRoot
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host "HIVE-LATTICE // NATIVE BUILD SCRIPT" -ForegroundColor Cyan
+Write-Host "LUCA DOG WORLD // NATIVE BUILD SCRIPT" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
 # 1. Export campaign data
@@ -57,7 +57,7 @@ if ($GodotExit -ne 0) {
 # 6. Build Windows Desktop Release. Clean stale Godot safe-save files first.
 Write-Host "`n[3/4] Exporting Windows Desktop executable..." -ForegroundColor Yellow
 $WindowsDir = Join-Path $PSScriptRoot "dist\windows"
-$WindowsExe = Join-Path $WindowsDir "Hive-Lattice.exe"
+$WindowsExe = Join-Path $WindowsDir "Luca-Dog-World.exe"
 New-Item -ItemType Directory -Force -Path $WindowsDir | Out-Null
 Get-ChildItem $WindowsDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 $GodotExit = Invoke-GodotSafe @("--headless", "--path", (Join-Path $PSScriptRoot "game_godot"), "--export-release", "Windows Desktop", $WindowsExe)

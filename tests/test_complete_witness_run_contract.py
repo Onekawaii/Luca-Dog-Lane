@@ -27,13 +27,14 @@ class CompleteWitnessRunContractTests(unittest.TestCase):
         self.assertTrue(ENDING.exists())
         self.assertTrue(ENDING_SCRIPT.exists())
 
-    def test_release_metadata_matches_v091(self):
+    def test_release_metadata_matches_v011(self):
         project = (GODOT / "project.godot").read_text(encoding="utf-8")
         exports = EXPORTS.read_text(encoding="utf-8")
-        self.assertIn('config/version="0.9.1"', project)
-        self.assertIn('application/product_version="0.9.1"', exports)
-        self.assertIn('version/name="0.9.1"', exports)
-        self.assertIn("version/code=10", exports)
+        self.assertIn('config/version="0.11.0"', project)
+        self.assertIn('application/file_version="0.11.0"', exports)
+        self.assertIn('application/product_version="0.11.0"', exports)
+        self.assertIn('version/name="0.11.0"', exports)
+        self.assertIn("version/code=11", exports)
 
     def test_ending_has_return_and_revisit_actions(self):
         scene = ENDING.read_text(encoding="utf-8")
@@ -41,7 +42,7 @@ class CompleteWitnessRunContractTests(unittest.TestCase):
         self.assertIn('name="ReturnButton"', scene)
         self.assertIn('name="RevisitButton"', scene)
         self.assertIn("_return_to_title", script)
-        self.assertIn("_revisit_lattice", script)
+        self.assertIn("_revisit_world", script)
 
 
 if __name__ == "__main__":

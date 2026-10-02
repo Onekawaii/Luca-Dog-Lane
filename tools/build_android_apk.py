@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build, sign, and verify native Android APK for Hive-Lattice using official Godot 4.3 Android export."""
+"""Build, sign, and verify Luca Dog World for Android with the official Godot 4.3 exporter."""
 
 from __future__ import annotations
 
@@ -298,9 +298,15 @@ def inspect_apk_contents(apk_path: Path, sdk_path: Path) -> dict[str, any]:
     if aapt and aapt.exists():
         badge_res = subprocess.run([str(aapt), "dump", "badging", str(apk_path)], capture_output=True, text=True)
         if badge_res.returncode == 0:
+            expected_package = "com.onekawaii.lucadogworld"
+            package_verified = False
             for line in badge_res.stdout.splitlines():
                 if line.startswith("package:") or line.startswith("launchable-activity:") or line.startswith("native-code:"):
                     print(f"[AAPT] {line}")
+                if line.startswith("package:") and f"name='{expected_package}'" in line:
+                    package_verified = True
+            if not package_verified:
+                raise RuntimeError(f"APK package id is not {expected_package}")
 
     return {
         "size": apk_path.stat().st_size,
@@ -320,7 +326,7 @@ def write_sha256(file_path: Path) -> str:
 
 def main() -> int:
     print("============================================================")
-    print("HIVE-LATTICE // OFFICIAL GODOT ANDROID EXPORT PIPELINE")
+    print("LUCA DOG WORLD // OFFICIAL GODOT ANDROID EXPORT PIPELINE")
     print("============================================================\n")
 
     # 1. Locate and verify Godot
@@ -347,7 +353,7 @@ def main() -> int:
     dist_root = Path("dist")
     dist_root.mkdir(parents=True, exist_ok=True)
 
-    output_apk = dist_android / "Hive-Lattice-native-android-playtest.apk"
+    output_apk = dist_android / "Luca-Dog-World-v0.11.0-android.apk"
     if output_apk.exists():
         output_apk.unlink()
     cleanup_godot_temp_apks()
@@ -385,7 +391,7 @@ def main() -> int:
     metadata = inspect_apk_contents(output_apk, sdk_path)
 
     # 9. Copy to root dist/ and write SHA-256 sidecars
-    root_apk = dist_root / "Hive-Lattice-native-android-playtest.apk"
+    root_apk = dist_root / "Luca-Dog-World-v0.11.0-android.apk"
     shutil.copy2(output_apk, root_apk)
 
     write_sha256(output_apk)
