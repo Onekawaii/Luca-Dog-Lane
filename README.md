@@ -1,148 +1,277 @@
-# Hive-Lattice Next — v0.6.0 Lattice Alive
+<div align="center">
 
-Hive-Lattice is a Python campaign/game engine with JSON-driven content, save/load,
-a phone-first local Flask/PWA player, strict validators, and an optional image
-renderer. **Strawberry Omen is playable through Act V — Department of
-Adjudication.**
+<img src="game_godot/assets/ui/luca_dog_world_mark.png" width="180" alt="Luca Dog World paw and mountain mark">
 
-`v0.6.0-lattice-alive` freezes the accepted `v0.5.2-mobile-playtest` phone UX
-and makes the campaign materially reactive. Choices can now be hidden or locked
-by prior behavior, stats, items, conditions and relationships. Rooms remember,
-NPCs remember, inventory contains contextual actions, temporary conditions
-persist across turns, deterministic event tables can fire, and the Act V verdict
-is derived from the player's record rather than from a cosmetic verdict menu.
+# LUCA DOG WORLD 🐕🌲
 
-## What actually became systemic
+**A strange open-world dog adventure built on deterministic systems, persistent consequences, and an unreasonable amount of verification.**
 
-- **Conditional choices** — requirements can depend on flags, inventory, stats,
-  conditions, current scene, NPC memory or persistent room state.
-- **Hidden routes** — qualifying actions appear only when earned (for example
-  Form 9-A or the feral seal-biting route at Vendrick).
-- **Active inventory** — Gear & Archives exposes contextual Use actions. The
-  Evidence Bag can actually contain Wetberry; the Damp Napkin can alter fridge
-  state; the Evidence Ledger can be submitted at the hearing.
-- **Persistent room memory** — visited rooms retain state such as contained
-  Wetberry, sampled stains and altered fridge seams.
-- **NPC memory** — Keith, Darla, Moldric, Vendrick, the Condiment Guardian,
-  Pell, Gorrum, Orla and others can accumulate relationship values.
-- **Conditions** — short-lived or persistent consequences survive scene changes
-  and save/load.
-- **Deterministic events** — seeded weighted tables produce reproducible reactive
-  aftershocks rather than uncontrolled randomness.
-- **Stat routes** — Bureaucracy and Ape Chaos now reveal alternate mechanical
-  solutions instead of functioning only as colored meters.
-- **Record-driven adjudication** — evidence, testimony quality, previous insults,
-  NPC memory and stats feed the Department's verdict rules.
-- **Save schema v2** — reactive state is persisted; existing v1 Strawberry saves
-  remain loadable.
+`small knife. sharp edge. big world.`
 
-The frozen Bard `room_schema_v1` / character / item / consequence schemas were
-**not changed**. Reactive mechanics live in the campaign-local
-`strawberry_interactions_v1` layer at
-`campaigns/strawberry_omen/game/interactions.json`.
+</div>
 
-## Frozen mobile UX baseline
+---
 
-The accepted `v0.5.2-mobile-playtest` behavior remains the UI contract:
+## 🌎 What this is
 
-- ordinary mobile Chrome; Desktop Site not required;
-- one full-width choice per row in portrait;
-- large touch targets;
-- safe-area-aware bottom controls;
-- vertical mobile scrolling and readable landscape reflow;
-- canonical Act I–V header/protocol display;
-- deterministic stage-layer visibility;
-- accessible browser zoom.
+**Luca Dog World** is an experimental first-person open-world game built in **Godot 4.3**.
 
-v0.6.0 adds systems underneath that shell rather than redesigning it.
+The goal is not to make another giant empty procedural map.
 
-## Dependencies
+The goal is to build a world that can keep expanding while still remembering what happened inside it:
 
-Core gameplay + local web player:
+- terrain and locations generated deterministically from world state;
+- authored places living beside procedural wilderness;
+- weather, rivers, mountains, vehicles and streamed NPCs;
+- persistent changes stored as deltas instead of rewriting the world;
+- a dog companion who is part of the simulation rather than a decorative follower;
+- tools and mods that can change the world without gaining unrestricted access to the machine.
 
-```bash
-python -m pip install -r requirements.txt
-```
+And, most importantly:
 
-Optional hearing-arena tensor renderer:
+> **If the game says something happened, the architecture should be able to prove why.**
 
-```bash
-python -m pip install -r requirements-renderer.txt
-```
+---
 
-PyTorch remains optional. Core gameplay, saves and web play work without it.
+## 🐕 Luca is not a waypoint
 
-## Termux / Android
+Luca has a six-state companion brain:
 
-```bash
-cd ~/storage/downloads
-unzip -o Hive-Lattice-Next-v0.6.0-lattice-alive.zip
-cd Hive-Lattice-Next-v0.6.0-lattice-alive
-pkg install python -y
-python -m pip install --break-system-packages -r requirements.txt
-python -m hive_lattice.cli web strawberry_omen
-```
+`IDLE → FOLLOW → INVESTIGATE → WAIT → RECOVER → REST`
 
-Open `http://127.0.0.1:8000` in normal mobile Chrome.
+He can follow the player across the world, recover when separated, react to nearby points of interest, and be interacted with through the same first-person interaction systems used by the rest of the game.
 
-CLI play:
+The long-term goal is for Luca to feel less like an NPC attached to the player and more like another creature actually inhabiting the world.
 
-```bash
-python play_strawberry.py
-```
+---
 
-## Windows
+## 🗺️ The world machine
+
+The current standalone world contract is intentionally explicit.
+
+| System | Current contract |
+|---|---|
+| Engine | Godot 4.3 |
+| World generator | `luca-world-v1` |
+| Chunk size | 128 m |
+| Subcell size | 32 m |
+| Biomes | 10 |
+| Minimum location types | 20 |
+| Generation passes | seed → region → biome → terrain → hydrology → sites → ecology → objects |
+| Preload ring | 7×7 chunks |
+| Render ring | 5×5 chunks |
+| Physics ring | 3×3 chunks |
+| Streaming hysteresis | 2 cells |
+| Persistence | immutable descriptors + delta-only mutations |
+
+The generator is deterministic: the same world seed, chunk coordinates and generator version are intended to reproduce the same chunk description.
+
+Persistent gameplay changes are recorded separately as:
+
+`removed · moved · collected · spawned`
+
+That separation is deliberate. The generated world remains reproducible while the player's history remains real.
+
+---
+
+## 🌲 Current terrain
+
+The open-world layer currently carries ten biome families:
+
+- Sunmeadow Fields
+- Whisperpine Woods
+- Creekglass Wetlands
+- Redclay Badlands
+- Mirror Lakes
+- Cloudstep Highlands
+- Starlight Range
+- Old Orchard Country
+- Firefly Marsh
+- Riverstone Valley
+
+The accepted open-world contract also includes streamed terrain, climbable mountain-scale elevation, animated rivers, dynamic weather, independent NPCs, driveable vehicles, and authored spaces connected into the larger world.
+
+This is still an evolving game. The point of the contract is not to pretend the world is finished; it is to stop future work from quietly shrinking it back into a room demo.
+
+---
+
+## 🧰 World tools
+
+The player-tool framework currently exposes:
+
+- **Object Tether** — hold, carry, reposition and release physics props.
+- **Builder** — framework hook for controlled construction.
+- **Remover** — framework hook for removing supported world entities.
+- **Inspector** — framework hook for examining world/entity state.
+
+An earlier design used direct force/impulse manipulation. The rebuilt standalone runtime intentionally uses the safer object-tether implementation instead.
+
+That difference is recorded rather than hidden.
+
+---
+
+## 📦 `.lucamod`
+
+Luca Dog World includes an intentionally constrained mod surface.
+
+Supported mod permissions:
+
+`spawn · decorate · dialogue · recipes`
+
+Explicitly denied capabilities:
+
+`filesystem · shell · network · native_code · process`
+
+The mod VM currently accepts a small deterministic operation set:
+
+`emit_text · set_tag · spawn_request · objective`
+
+Mods are loaded from `.lucamod` archives, validated before execution, checked for unsafe archive paths, and incorporated into a deterministic mod-set hash.
+
+The objective is moddability without turning a game archive into arbitrary machine access.
+
+---
+
+## 🧠 Why this repository exists
+
+Luca Dog World grew out of a much larger experimental codebase.
+
+For a while, the Luca game existed as a lane inside **Hive-Lattice** while its open-world systems, first-person controls, terrain, weather, vehicles and companion behavior were being developed.
+
+That became confusing.
+
+This repository is now the **canonical home of Luca Dog World**.
+
+The earlier history is intentionally preserved because those commits are part of how the game became what it is. From this point forward, Luca-specific development belongs here.
+
+The verified standalone rebuild entered this repository from recovery commit:
+
+`3a7df99987db5d820dab8d1ecdf4b162e8b18377`
+
+---
+
+## 🧪 Verification before vibes
+
+This project follows the same rule as the rest of the workshop:
+
+> **No receipt, no banana.**
+
+The v0.11 standalone rebuild was accepted with:
+
+| Gate | Result |
+|---|---:|
+| Python test suite | **481 passed / 1 skipped** |
+| Native Godot acceptance | **395 / 395 passed** |
+| LucaBench | **11 / 11 suites · 29 assertions** |
+| Demolition scenarios | **4 / 4 passed** |
+| Godot script parse | **72 scripts parsed** |
+| Open-world PCO | **PASS · bullshit_score=0** |
+
+The demolition pass includes:
+
+- 500 chunk-boundary crossings;
+- 128 corner teleports;
+- 300 persistence mutations while preserving immutable baseline descriptors;
+- a 5,000 m streaming/flight torture route.
+
+Headless Godot can still emit known dummy-renderer cleanup noise during acceptance. The verification gate records that output instead of silently suppressing it.
+
+---
+
+## 🔬 Run the receipts
+
+Tested development environment:
+
+- Windows
+- Python 3.11
+- Godot 4.3
+
+From the repository root:
 
 ```powershell
-cd $HOME\Downloads\Hive-Lattice-Next-v0.6.0-lattice-alive
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python -m hive_lattice.cli web strawberry_omen
+python tools\luca\run_lucabench.py
+python tools\luca\demolition_agent.py
+python tools\verify_native_contract.py
 ```
 
-## Validation
+The smaller architecture suite can also be run directly:
 
-```bash
-python tools/lattice_alive_gate.py
+```powershell
+python -m unittest tests.test_luca_world_architecture -v
 ```
 
-Or individually:
+---
 
-```bash
-python -m tools.content_lint
-python -m tools.validate_campaign_module
-python -m tools.validate_visual_assets
-python -m hive_lattice.cli validate strawberry_omen
-python tests/test_act3_smoke.py
-python tests/test_act5_smoke.py
-python -m unittest tests.test_lattice_alive_runtime tests.test_lattice_alive_contract
-python -m unittest discover -s tests
+## 🏗️ Build it
+
+The native build script produces the Windows build and, when the Android toolchain is available, the Android APK:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\BUILD_NATIVE_PC.ps1
 ```
 
-This source defines **370 unittest cases**: 305 non-Flask cases executable in the
-artifact-build sandbox and 65 Flask-dependent web cases. The build sandbox has
-no Flask package and cannot reach a package index, so the 305 non-Flask cases
-are the independently executed automated receipt here. The web/PWA path is
-included for real-device acceptance in the same Android environment that
-accepted v0.5.2.
-
-## Project layout
+Current product identity:
 
 ```text
-engine/module_runtime.py                 Reactive campaign runtime
-engine/module_save_system.py             Save v2 + v1 compatibility
-campaigns/strawberry_omen/game/
-  encounters.json                        Existing authored scenes
-  interactions.json                      v0.6 reactive overlay (authoritative)
-  items.json / npcs.json / quests.json   Campaign content
-hive_lattice/web_app/                    Phone-first local web player
-tools/lattice_alive_gate.py              Complete v0.6 release gate
-tests/test_lattice_alive_*.py            Reactive-system acceptance
+Name:       Luca Dog World
+Version:    0.11.0
+Android ID: com.onekawaii.lucadogworld
 ```
 
-## Scope
+The verified v0.11 rebuild produced Windows and Android artifacts with SHA-256 sidecars plus an exact-state release receipt.
 
-Acts I–V remain the authored campaign. v0.6.0 deepens their behavior; it does
-not add Act VI. Placeholder-tier generated art also remains deliberately out of
-scope for this systems release.
+---
+
+## 🧬 Architecture trail
+
+The standalone Luca layer lives primarily under:
+
+```text
+game_godot/scripts/luca/
+├── LucaWorldConfig.gd
+├── LucaWorldGenerator.gd
+├── LucaChunkDatabase.gd
+├── LucaWorldStreamer.gd
+├── LucaChunkRenderer.gd
+├── LucaWorldPersistence.gd
+├── LucaCompanionBrain.gd
+├── LucaWorldRoot.gd
+├── LucaEntityRegistry.gd
+├── LucaObjectTether.gd
+├── LucaToolSystem.gd
+├── LucaModManager.gd
+├── LucaModVM.gd
+└── LucaAddonImporter.gd
+```
+
+The verification machinery lives under:
+
+```text
+tools/luca/
+├── architecture_manifest.json
+├── luca_build_context.py
+├── run_lucabench.py
+└── demolition_agent.py
+```
+
+The architecture manifest is meant to be readable by both humans and automation. If the game's promises change, the contract should change with them.
+
+---
+
+## 🚧 What I am not pretending
+
+This is not a finished commercial open-world game.
+
+Some systems are mature enough to have hard contracts. Others are framework hooks waiting for deeper gameplay.
+
+There is inherited machinery from the project's Hive-Lattice ancestry that still needs continued separation and cleanup.
+
+The interesting part is that the project is now in a state where those changes can be made **without losing the evidence trail**.
+
+---
+
+## 🦍 Operating principle
+
+> **Build the world. Break the world. Reproduce the failure. Fix the model. Keep the receipt. Pet the dog.**
+
+**AWK AWK. 🐕🍌**
