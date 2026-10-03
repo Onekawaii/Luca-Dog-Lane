@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/icon.svg" width="160" alt="Luca Dog World paw mark">
+<img src="assets/icon.png" width="160" alt="Luca Dog World paw mark">
 
 # LUCA DOG WORLD 🐕🌲
 
@@ -131,6 +131,11 @@ The verifier checks:
 
 ## Build
 
+### 📱 Android release
+
+[**Download Luca Dog World v0.12.0 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.12.0/Luca-Dog-World-v0.12.0-android.apk)
+
+The release also includes a SHA-256 checksum and exact-state build receipt.
 Tested build engine: **Godot 4.3 stable**.
 
 ```powershell
