@@ -74,6 +74,11 @@ class CleanRoomContractTests(unittest.TestCase):
         for mode in ("GRAB", "REMOVE", "DUPLICATE", "INSPECT"):
             self.assertIn(mode, text)
 
+    def test_exports_exclude_repo_only_artifacts(self):
+        text = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
+        rule = 'exclude_filter="dist/*,tests/*,tools/*,README.md,BUILD_RELEASE.ps1"'
+        self.assertEqual(text.count(rule), 2)
+
     def test_old_runtime_names_absent_from_runtime(self):
         runtime_text = "\n".join(
             path.read_text(encoding="utf-8", errors="ignore").lower()
