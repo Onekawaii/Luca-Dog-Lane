@@ -1,4 +1,0 @@
-# Optional: only needed for the Act V hearing-arena image renderer.
-# Core gameplay, saves, validators, and the web UI all work without this.
-# Install with: pip install -r requirements-renderer.txt
-torch>=2.0.0
