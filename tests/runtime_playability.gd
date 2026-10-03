@@ -128,6 +128,93 @@ func _run() -> void:
 	else:
 		_fail("spawn menu did not create three props")
 
+	# Companion smoothing: nearby follow motion must never teleport or snap-turn.
+	var last_luca_pos := luca.global_position
+	var last_luca_yaw := luca.rotation.y
+	var max_luca_step := 0.0
+	var max_luca_turn := 0.0
+	player.global_position += Vector3(10.0, 0.0, 0.0)
+	for i in range(40):
+		await physics_frame
+		max_luca_step = maxf(max_luca_step, luca.global_position.distance_to(last_luca_pos))
+		max_luca_turn = maxf(max_luca_turn, absf(angle_difference(last_luca_yaw, luca.rotation.y)))
+		last_luca_pos = luca.global_position
+		last_luca_yaw = luca.rotation.y
+	if max_luca_step < 0.30 and max_luca_turn < 0.20:
+		_pass("Luca follow movement is acceleration/turn-rate bounded")
+	else:
+		_fail("Luca follow still snaps: step=%s turn=%s" % [max_luca_step, max_luca_turn])
+
+	# No permanent 3D name plates should hover over actors/vehicles.
+	var floating_labels := world.find_children("*", "Label3D", true, false)
+	if floating_labels.is_empty():
+		_pass("world contains no persistent floating Label3D text")
+	else:
+		_fail("persistent floating Label3D text remains: " + str(floating_labels.size()))
+
+	# Vehicle forward input must agree with the camera-facing -Z direction.
+	var buggy := world.get_node_or_null("SandboxBuggy") as CharacterBody3D
+	if buggy == null:
+		_fail("initial buggy missing")
+	else:
+		var start_pos := buggy.global_position
+		var expected_forward := -buggy.global_transform.basis.z
+		buggy.call("set_driver_active", true)
+		buggy.call("set_drive_input", Vector2(0.0, -1.0))
+		for i in range(30):
+			await physics_frame
+		buggy.call("set_drive_input", Vector2.ZERO)
+		var displacement := buggy.global_position - start_pos
+		displacement.y = 0.0
+		if displacement.dot(expected_forward) > 0.5:
+			_pass("buggy forward input moves toward visual/driver forward")
+		else:
+			_fail("buggy forward input is reversed")
+
+		var driver_cam := buggy.get_node_or_null("DriverCamera") as Camera3D
+		var overhead_cam := buggy.get_node_or_null("OverheadCamera") as Camera3D
+		if driver_cam != null and overhead_cam != null and driver_cam.current:
+			_pass("buggy driver camera activates")
+		else:
+			_fail("buggy driver camera missing or inactive")
+		var mode := str(buggy.call("cycle_camera"))
+		if mode == "OVERHEAD" and overhead_cam != null and overhead_cam.current:
+			_pass("buggy switches to overhead camera")
+		else:
+			_fail("buggy overhead camera switch failed")
+		buggy.call("set_driver_active", false)
+
+		# Full player/HUD integration: walking camera -> driver -> overhead -> walking.
+		var player_camera = player.get("camera") as Camera3D
+		player.call("enter_vehicle", buggy)
+		await process_frame
+		var view_button = hud.get("view_button") as Button
+		if player_camera != null and not player_camera.current and driver_cam.current and view_button.visible:
+			_pass("entering buggy activates driver camera and vehicle HUD")
+		else:
+			_fail("vehicle entry camera/HUD integration failed")
+		player.call("toggle_vehicle_view")
+		await process_frame
+		if overhead_cam.current and view_button.text == "VIEW: OVERHEAD":
+			_pass("vehicle VIEW control switches driver to overhead")
+		else:
+			_fail("vehicle VIEW control failed")
+		player.call("exit_vehicle")
+		await process_frame
+		if player_camera.current and not view_button.visible:
+			_pass("vehicle exit restores walking camera and HUD")
+		else:
+			_fail("vehicle exit did not restore walking camera/HUD")
+
+	# HUD notifications are toasts, not permanent hovering messages.
+	hud.call("flash", "toast regression", 0.08)
+	hud.call("_process", 0.40)
+	var status_label = hud.get("status_label") as Label
+	if status_label != null and not status_label.visible:
+		_pass("HUD toast expires instead of hovering forever")
+	else:
+		_fail("HUD toast still persists")
+
 	_finish()
 
 func _finish() -> void:

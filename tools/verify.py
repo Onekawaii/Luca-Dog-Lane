@@ -54,7 +54,7 @@ def check_project_contract() -> None:
         fail("main scene is not the clean sandbox scene")
     if "[autoload]" in project:
         fail("autoload section reintroduced")
-    if 'config/version="0.12.1"' not in project:
+    if 'config/version="0.12.2"' not in project:
         fail("unexpected product version")
     print("[PASS] project boots directly into standalone sandbox")
 

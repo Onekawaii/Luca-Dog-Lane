@@ -8,8 +8,8 @@ $Keystore = "$env:USERPROFILE\.android\debug.keystore"
 $Dist = Join-Path $Repo "dist"
 $WinDir = Join-Path $Dist "windows"
 $AndroidDir = Join-Path $Dist "android"
-$Win = Join-Path $WinDir "Luca-Dog-World-v0.12.1.exe"
-$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.12.1-android.apk"
+$Win = Join-Path $WinDir "Luca-Dog-World-v0.12.2.exe"
+$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.12.2-android.apk"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.3 console binary not found: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK not found: $Sdk" }
@@ -86,7 +86,7 @@ if ($Aapt) {
     if ($PackageLine -notmatch "name='com\.onekawaii\.lucadogworld'") {
         throw "Unexpected Android package ID"
     }
-    if ($PackageLine -notmatch "versionCode='13'") {
+    if ($PackageLine -notmatch "versionCode='14'") {
         throw "Unexpected Android versionCode"
     }
     if ($PackageLine -notmatch "versionName='0\.12\.1'") {
@@ -103,7 +103,7 @@ $ApkHash = (Get-FileHash $Apk -Algorithm SHA256).Hash.ToLower()
 $Head = (git -C $Repo rev-parse HEAD 2>$null)
 $Receipt = [ordered]@{
     product = "Luca Dog World"
-    version = "0.12.1"
+    version = "0.12.2"
     architecture = "clean-room-sandbox-v1"
     git_head = $Head
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
@@ -117,15 +117,15 @@ $Receipt = [ordered]@{
         bytes = (Get-Item $Apk).Length
         sha256 = $ApkHash
         package = "com.onekawaii.lucadogworld"
-        version_code = 13
+        version_code = 14
         signed = $true
     }
 }
 
-$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.12.1.json"
+$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.12.2.json"
 $Receipt | ConvertTo-Json -Depth 5 | Set-Content $ReceiptPath -Encoding utf8
 
 Write-Host "WINDOWS_SHA256=$WinHash"
 Write-Host "ANDROID_SHA256=$ApkHash"
 Write-Host "RECEIPT=$ReceiptPath"
-Write-Host "[DONE] Luca Dog World v0.12.1"
+Write-Host "[DONE] Luca Dog World v0.12.2"

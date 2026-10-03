@@ -91,15 +91,6 @@ func _build_person() -> void:
 	head.material_override = _skin_material()
 	add_child(head)
 
-	var label := Label3D.new()
-	label.text = display_name
-	label.position = Vector3(0, 2.25, 0)
-	label.font_size = 34
-	label.pixel_size = 0.007
-	label.outline_size = 7
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(0.92, 0.95, 0.94)
-	add_child(label)
 
 func _skin_material() -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

@@ -14,15 +14,15 @@
 
 ## This is a new game
 
-Luca Dog World v0.12.1 is a ground-up standalone Godot project.
+Luca Dog World v0.12.2 is a ground-up standalone Godot project.
 
 It does not boot through another campaign, room system, story engine, or inherited scene graph. The application starts directly in one open sandbox world.
 
 There is no mandatory first room and no required mission chain. You spawn outside and play.
 
-### v0.12.1 playability pass
+### v0.12.2 driving + companion pass
 
-This hotfix is based on real Android playtest failures. It moves camera drag input to the right half of the screen, adds a dedicated buffered JUMP control, removes nuisance collision curbs from flat roads/floors, hides the perimeter wall geometry while keeping its collision, gives Luca a larger follow radius and personal space, restores his eyes, billboards floating names, and separates repeated spawn positions.
+This pass is based on real Android playtest failures. It keeps the repaired right-side camera and jump controls, smooths Luca's movement with acceleration and turn-rate limits, removes persistent 3D name labels, converts HUD messages to short-lived toasts, aligns buggy forward motion with the driver's view, and adds two switchable vehicle cameras: DRIVER and OVERHEAD.
 
 Current sandbox loop:
 
@@ -138,7 +138,7 @@ The verifier checks:
 
 ### 📱 Android release
 
-[**Download Luca Dog World v0.12.1 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.12.1/Luca-Dog-World-v0.12.1-android.apk)
+[**Download Luca Dog World v0.12.2 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.12.2/Luca-Dog-World-v0.12.2-android.apk)
 
 The release also includes a SHA-256 checksum and exact-state build receipt.
 Tested build engine: **Godot 4.3 stable**.
@@ -150,9 +150,9 @@ powershell -ExecutionPolicy Bypass -File .\BUILD_RELEASE.ps1
 Expected artifacts:
 
 ```text
-dist/windows/Luca-Dog-World-v0.12.1.exe
-dist/android/Luca-Dog-World-v0.12.1-android.apk
-dist/RELEASE_RECEIPT_v0.12.1.json
+dist/windows/Luca-Dog-World-v0.12.2.exe
+dist/android/Luca-Dog-World-v0.12.2-android.apk
+dist/RELEASE_RECEIPT_v0.12.2.json
 ```
 
 Android package:

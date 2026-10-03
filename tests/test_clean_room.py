@@ -34,7 +34,7 @@ class CleanRoomContractTests(unittest.TestCase):
         text = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
         self.assertIn("position.x >= size.x * 0.5", text)
         self.assertNotIn("if position.x > 900", text)
-        self.assertIn("DRAG RIGHT SIDE TO LOOK", text)
+        self.assertIn("drag RIGHT side to look", text)
 
     def test_mobile_has_real_jump_button(self):
         text = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
@@ -55,11 +55,34 @@ class CleanRoomContractTests(unittest.TestCase):
         self.assertIn("eye_white", text)
         self.assertIn("pupil_mesh", text)
 
-    def test_billboard_labels_face_camera(self):
-        luca = (ROOT / "scripts" / "Luca.gd").read_text(encoding="utf-8")
-        npc = (ROOT / "scripts" / "NPC.gd").read_text(encoding="utf-8")
-        self.assertIn("BILLBOARD_ENABLED", luca)
-        self.assertIn("BILLBOARD_ENABLED", npc)
+    def test_no_persistent_3d_name_labels(self):
+        for name in ("Luca.gd", "NPC.gd", "Buggy.gd"):
+            text = (ROOT / "scripts" / name).read_text(encoding="utf-8")
+            self.assertNotIn("Label3D", text)
+
+    def test_luca_following_is_smoothed(self):
+        text = (ROOT / "scripts" / "Luca.gd").read_text(encoding="utf-8")
+        self.assertIn("ACCEL := 8.5", text)
+        self.assertIn("TURN_RESPONSE := 5.2", text)
+        self.assertIn("FOLLOW_START_RADIUS", text)
+        self.assertIn("FOLLOW_STOP_RADIUS", text)
+        self.assertIn("lerp_angle", text)
+
+    def test_buggy_has_two_cameras_and_view_control(self):
+        buggy = (ROOT / "scripts" / "Buggy.gd").read_text(encoding="utf-8")
+        player = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")
+        hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
+        self.assertIn('driver_camera.name = "DriverCamera"', buggy)
+        self.assertIn('overhead_camera.name = "OverheadCamera"', buggy)
+        self.assertIn("func cycle_camera()", buggy)
+        self.assertIn("func toggle_vehicle_view()", player)
+        self.assertIn('VIEW: DRIVER', hud)
+        self.assertIn("set_vehicle_mode", hud)
+
+    def test_hud_messages_are_transient_toasts(self):
+        text = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
+        self.assertIn("toast_time", text)
+        self.assertIn("status_label.visible = false", text)
 
     def test_spawn_menu_supports_world_objects_and_spacing(self):
         hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")

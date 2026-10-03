@@ -197,8 +197,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		cycle_tool()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_V:
 		toggle_noclip()
+	elif event is InputEventKey and event.pressed and event.keycode == KEY_R and riding != null:
+		toggle_vehicle_view()
 
 func add_look_delta(delta_pixels: Vector2) -> void:
+	if riding != null:
+		return
 	var sensitivity := 0.0032
 	yaw -= delta_pixels.x * sensitivity
 	pitch = clamp(pitch - delta_pixels.y * sensitivity, -1.48, 1.48)
@@ -319,10 +323,21 @@ func enter_vehicle(vehicle: CharacterBody3D) -> void:
 	_release_held()
 	riding = vehicle
 	body_collision.set_deferred("disabled", true)
+	camera.current = false
 	riding.call("set_driver_active", true)
+	var camera_name := str(riding.call("get_camera_mode_name"))
 
 	if hud != null:
-		hud.call("flash", "Driving // USE to exit")
+		hud.call("set_vehicle_mode", true, camera_name)
+		hud.call("flash", "Driving // VIEW switches camera", 1.8)
+
+func toggle_vehicle_view() -> void:
+	if riding == null or not is_instance_valid(riding):
+		return
+	var camera_name := str(riding.call("cycle_camera"))
+	if hud != null:
+		hud.call("set_vehicle_camera", camera_name)
+		hud.call("flash", camera_name + " camera", 1.0)
 
 func exit_vehicle() -> void:
 	if riding == null:
@@ -338,9 +353,11 @@ func exit_vehicle() -> void:
 
 	riding = null
 	body_collision.set_deferred("disabled", noclip)
+	camera.current = true
 
 	if hud != null:
-		hud.call("flash", "Exited buggy")
+		hud.call("set_vehicle_mode", false)
+		hud.call("flash", "Exited buggy", 1.2)
 
 func get_spawn_point() -> Vector3:
 	return camera.global_position - camera.global_transform.basis.z * 6.0 + Vector3.UP * 0.5

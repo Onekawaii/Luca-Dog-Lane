@@ -1,40 +1,46 @@
 extends CharacterBody3D
 
-const SPEED := 6.4
-const RETREAT_SPEED := 4.2
+const MAX_SPEED := 6.1
+const RETREAT_SPEED := 3.8
+const ACCEL := 8.5
+const TURN_RESPONSE := 5.2
 const GRAVITY := 18.0
 const FOLLOW_DISTANCE := 7.0
-const FOLLOW_SIDE_OFFSET := 1.8
+const FOLLOW_SIDE_OFFSET := 2.0
 const PERSONAL_SPACE := 4.5
-const RECOVER_DISTANCE := 48.0
+const PERSONAL_SPACE_RELEASE := 5.4
+const FOLLOW_START_RADIUS := 3.0
+const FOLLOW_STOP_RADIUS := 1.35
+const RECOVER_DISTANCE := 60.0
 
 var player: CharacterBody3D
 var world_half := 480.0
-var state := "FOLLOW"
+var state := "WAIT"
+var follow_engaged := false
+var giving_space := false
 
 func _ready() -> void:
 	add_to_group("luca")
-
-	# Luca collides with the world and props, but not with the player/NPC bodies.
 	collision_layer = 2
 	collision_mask = 1
 	floor_snap_length = 0.28
 	floor_max_angle = deg_to_rad(50.0)
-
 	_build_dog()
 
 func _physics_process(delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
 
-	var player_flat_offset := player.global_position - global_position
-	player_flat_offset.y = 0.0
-	var player_distance := player_flat_offset.length()
+	var player_offset := player.global_position - global_position
+	player_offset.y = 0.0
+	var player_distance := player_offset.length()
 
 	if player_distance > RECOVER_DISTANCE:
 		state = "RECOVER"
 		global_position = _preferred_follow_position() + Vector3.UP * 0.6
 		velocity = Vector3.ZERO
+		follow_engaged = false
+		giving_space = false
 		return
 
 	var preferred := _preferred_follow_position()
@@ -42,24 +48,35 @@ func _physics_process(delta: float) -> void:
 	target_offset.y = 0.0
 	var target_distance := target_offset.length()
 
-	# Personal-space rule wins over following. Luca backs off instead of
-	# shoving his face into the camera/player capsule.
-	if player_distance < PERSONAL_SPACE and player_distance > 0.05:
+	if giving_space:
+		giving_space = player_distance < PERSONAL_SPACE_RELEASE
+	elif player_distance < PERSONAL_SPACE:
+		giving_space = true
+
+	if follow_engaged:
+		follow_engaged = target_distance > FOLLOW_STOP_RADIUS
+	elif target_distance > FOLLOW_START_RADIUS:
+		follow_engaged = true
+
+	var desired := Vector3.ZERO
+	if giving_space and player_distance > 0.05:
 		state = "GIVE_SPACE"
-		var away := -player_flat_offset.normalized()
-		velocity.x = away.x * RETREAT_SPEED
-		velocity.z = away.z * RETREAT_SPEED
-		look_at(global_position + player_flat_offset.normalized(), Vector3.UP)
-	elif target_distance > 1.4:
+		desired = -player_offset.normalized() * RETREAT_SPEED
+	elif follow_engaged and target_distance > 0.05:
 		state = "FOLLOW"
-		var direction := target_offset.normalized()
-		velocity.x = direction.x * SPEED
-		velocity.z = direction.z * SPEED
-		look_at(global_position + direction, Vector3.UP)
+		var speed_scale := clampf(target_distance / 8.0, 0.45, 1.0)
+		desired = target_offset.normalized() * MAX_SPEED * speed_scale
 	else:
 		state = "WAIT"
-		velocity.x = move_toward(velocity.x, 0.0, 18.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, 18.0 * delta)
+
+	velocity.x = move_toward(velocity.x, desired.x, ACCEL * delta)
+	velocity.z = move_toward(velocity.z, desired.z, ACCEL * delta)
+
+	var planar_velocity := Vector3(velocity.x, 0.0, velocity.z)
+	if planar_velocity.length() > 0.28:
+		var direction := planar_velocity.normalized()
+		var target_yaw := atan2(-direction.x, -direction.z)
+		rotation.y = lerp_angle(rotation.y, target_yaw, minf(TURN_RESPONSE * delta, 1.0))
 
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
@@ -69,15 +86,16 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	if (
-		abs(global_position.x) > world_half - 4.0
-		or abs(global_position.z) > world_half - 4.0
+		absf(global_position.x) > world_half - 4.0
+		or absf(global_position.z) > world_half - 4.0
 		or global_position.y < -5.0
 	):
 		global_position = _preferred_follow_position() + Vector3.UP * 0.6
 		velocity = Vector3.ZERO
+		follow_engaged = false
+		giving_space = false
 
 func _preferred_follow_position() -> Vector3:
-	# +basis.z is behind the player because player forward is -Z.
 	return (
 		player.global_position
 		+ player.global_transform.basis.z * FOLLOW_DISTANCE
@@ -133,7 +151,6 @@ func _build_dog() -> void:
 	nose.material_override = dark
 	add_child(nose)
 
-	# Real visible eyes: white sclera + dark pupils on the front of the head.
 	for side in [-1.0, 1.0]:
 		var eye := MeshInstance3D.new()
 		var eye_mesh := SphereMesh.new()
@@ -187,16 +204,6 @@ func _build_dog() -> void:
 	tail.rotation_degrees.x = 58
 	tail.material_override = fur
 	add_child(tail)
-
-	var label := Label3D.new()
-	label.text = "LUCA"
-	label.position = Vector3(0, 2.05, 0)
-	label.font_size = 42
-	label.pixel_size = 0.008
-	label.outline_size = 8
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(0.86, 1.0, 0.88)
-	add_child(label)
 
 func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()

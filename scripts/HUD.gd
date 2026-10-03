@@ -13,8 +13,11 @@ var noclip_button: Button
 var use_button: Button
 var jump_button: Button
 var down_button: Button
+var view_button: Button
 var status_label: Label
-var look_hint: Label
+
+var toast_time := 0.0
+var vehicle_active := false
 
 var move_touch_id := -1
 var look_touch_id := -1
@@ -46,7 +49,7 @@ func _build_header() -> void:
 	title.name = "Title"
 	title.position = Vector2(28, 22)
 	title.size = Vector2(520, 42)
-	title.text = "LUCA SANDBOX  //  v0.12.1"
+	title.text = "LUCA SANDBOX  //  v0.12.2"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_size_override("font_size", 25)
 	title.add_theme_color_override("font_color", Color(0.75, 1.0, 0.80))
@@ -62,15 +65,6 @@ func _build_header() -> void:
 	hint.add_theme_color_override("font_color", Color(0.72, 0.76, 0.74))
 	root.add_child(hint)
 
-	look_hint = Label.new()
-	look_hint.name = "LookHint"
-	look_hint.size = Vector2(280, 30)
-	look_hint.text = "DRAG RIGHT SIDE TO LOOK"
-	look_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	look_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	look_hint.add_theme_font_size_override("font_size", 14)
-	look_hint.add_theme_color_override("font_color", Color(0.72, 0.82, 0.78, 0.66))
-	root.add_child(look_hint)
 
 	status_label = Label.new()
 	status_label.name = "Status"
@@ -130,6 +124,11 @@ func _build_action_buttons() -> void:
 	down_button.button_up.connect(func(): player.call("set_vertical_input", 0.0))
 	_register_interactive(down_button)
 	down_button.visible = false
+
+	view_button = _button("VIEW: DRIVER", Vector2.ZERO, Vector2(150, 60))
+	view_button.pressed.connect(func(): player.call("toggle_vehicle_view"))
+	_register_interactive(view_button)
+	view_button.visible = false
 
 func _build_spawn_menu() -> void:
 	spawn_panel = Panel.new()
@@ -198,11 +197,18 @@ func _layout_for_viewport() -> void:
 	use_button.position = Vector2(maxf(790.0, size.x - 230.0), maxf(500.0, size.y - 102.0))
 	jump_button.position = Vector2(maxf(680.0, size.x - 350.0), maxf(420.0, size.y - 178.0))
 	down_button.position = Vector2(maxf(680.0, size.x - 350.0), maxf(500.0, size.y - 102.0))
+	view_button.position = Vector2(maxf(680.0, size.x - 350.0), maxf(420.0, size.y - 178.0))
 
 	status_label.position = Vector2(size.x * 0.5 - 310.0, maxf(560.0, size.y - 56.0))
-	look_hint.position = Vector2(size.x * 0.73 - 140.0, maxf(300.0, size.y - 210.0))
 
 	spawn_panel.position = Vector2(maxf(500.0, size.x - 565.0), 112.0)
+
+func _process(delta: float) -> void:
+	if toast_time <= 0.0:
+		return
+	toast_time = maxf(0.0, toast_time - delta)
+	if toast_time <= 0.0 and status_label != null:
+		status_label.visible = false
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventScreenTouch:
@@ -286,11 +292,29 @@ func set_noclip(enabled: bool) -> void:
 	if jump_button != null:
 		jump_button.text = "UP" if enabled else "JUMP"
 	if down_button != null:
-		down_button.visible = enabled
+		down_button.visible = enabled and not vehicle_active
 
-func flash(message: String) -> void:
+func set_vehicle_mode(enabled: bool, camera_name := "DRIVER") -> void:
+	vehicle_active = enabled
+	spawn_button.visible = not enabled
+	tool_button.visible = not enabled
+	noclip_button.visible = not enabled
+	jump_button.visible = not enabled
+	down_button.visible = noclip_active and not enabled
+	view_button.visible = enabled
+	use_button.text = "EXIT" if enabled else "USE"
+	if enabled:
+		set_vehicle_camera(camera_name)
+
+func set_vehicle_camera(camera_name: String) -> void:
+	if view_button != null:
+		view_button.text = "VIEW: " + camera_name
+
+func flash(message: String, seconds := 1.6) -> void:
 	if status_label != null:
 		status_label.text = message
+		status_label.visible = true
+		toast_time = maxf(0.25, seconds)
 
 func _button(
 	text_value: String,
