@@ -11,6 +11,13 @@ var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
 	add_to_group("npc")
+
+	# NPCs should not body-block the player or each other.
+	collision_layer = 8
+	collision_mask = 1
+	floor_snap_length = 0.24
+	floor_max_angle = deg_to_rad(50.0)
+
 	rng.seed = hash(name)
 	_build_person()
 	_choose_direction()
@@ -22,19 +29,23 @@ func _physics_process(delta: float) -> void:
 
 	velocity.x = target_direction.x * SPEED
 	velocity.z = target_direction.z * SPEED
+
 	if target_direction.length() > 0.01:
 		look_at(global_position + target_direction, Vector3.UP)
+
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
-	else:
+	elif velocity.y < 0.0:
 		velocity.y = 0.0
+
 	move_and_slide()
 
 	if abs(global_position.x) > world_half - 12.0 or abs(global_position.z) > world_half - 12.0:
 		global_position.x = clamp(global_position.x, -world_half + 16.0, world_half - 16.0)
 		global_position.z = clamp(global_position.z, -world_half + 16.0, world_half - 16.0)
 		_choose_direction()
-	if global_position.y < -8.0:
+
+	if global_position.y < -5.0:
 		global_position.y = 2.0
 		velocity = Vector3.ZERO
 
@@ -86,6 +97,7 @@ func _build_person() -> void:
 	label.font_size = 34
 	label.pixel_size = 0.007
 	label.outline_size = 7
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.modulate = Color(0.92, 0.95, 0.94)
 	add_child(label)
 

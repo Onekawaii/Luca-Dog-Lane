@@ -54,7 +54,7 @@ def check_project_contract() -> None:
         fail("main scene is not the clean sandbox scene")
     if "[autoload]" in project:
         fail("autoload section reintroduced")
-    if 'config/version="0.12.0"' not in project:
+    if 'config/version="0.12.1"' not in project:
         fail("unexpected product version")
     print("[PASS] project boots directly into standalone sandbox")
 
@@ -104,12 +104,39 @@ def run_godot() -> None:
             fail("runtime did not reach sandbox-ready marker")
     print("[PASS] Godot parse and runtime smoke gates")
 
+def run_playability() -> None:
+    command = [
+        str(GODOT),
+        "--headless",
+        "--path",
+        str(ROOT),
+        "--script",
+        "tests/runtime_playability.gd",
+    ]
+    result = subprocess.run(command, text=True, capture_output=True, timeout=90)
+    combined = result.stdout + "\n" + result.stderr
+    bad = (
+        "SCRIPT ERROR",
+        "Parse Error",
+        "Failed to load script",
+        "Invalid call",
+        "Nonexistent function",
+        "Can't add child",
+    )
+    found = [needle for needle in bad if needle.lower() in combined.lower()]
+    if result.returncode != 0 or found or "[ALL PLAYABILITY GATES PASSED]" not in combined:
+        print(combined)
+        fail(f"playability regression gate failed: rc={result.returncode}, markers={found}")
+    print("[PASS] live playability regression gate")
+
+
 def main() -> int:
     check_clean_tree()
     check_project_contract()
     check_boundary_contract()
     check_sandbox_contract()
     run_godot()
+    run_playability()
     print("[ALL GATES PASSED] LUCA CLEAN-ROOM SANDBOX VERIFIED")
     return 0
 

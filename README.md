@@ -14,11 +14,15 @@
 
 ## This is a new game
 
-Luca Dog World v0.12 is a ground-up standalone Godot project.
+Luca Dog World v0.12.1 is a ground-up standalone Godot project.
 
 It does not boot through another campaign, room system, story engine, or inherited scene graph. The application starts directly in one open sandbox world.
 
 There is no mandatory first room and no required mission chain. You spawn outside and play.
+
+### v0.12.1 playability pass
+
+This hotfix is based on real Android playtest failures. It moves camera drag input to the right half of the screen, adds a dedicated buffered JUMP control, removes nuisance collision curbs from flat roads/floors, hides the perimeter wall geometry while keeping its collision, gives Luca a larger follow radius and personal space, restores his eyes, billboards floating names, and separates repeated spawn positions.
 
 Current sandbox loop:
 
@@ -39,11 +43,11 @@ The ground is no longer a decorative plane.
 
 The world uses one continuous **rendered + collidable slab** whose visual top and collision top both resolve to y=0.
 
-Four physical perimeter bodies close the map:
+Four invisible collision-only perimeter bodies close the map without drawing a giant wall on the horizon:
 
 `NorthBoundary · SouthBoundary · WestBoundary · EastBoundary`
 
-The player also has an independent recovery rule. Falling below the world or escaping past the collision perimeter returns the player to the safe spawn point.
+The player also has an independent recovery rule. Falling below the world returns the player to the last safe ground position; escaping past the collision perimeter returns the player to spawn.
 
 That means world containment does not depend on one collider behaving perfectly.
 
@@ -62,12 +66,13 @@ That means world containment does not depend on one collider behaving perfectly.
 The mobile HUD provides:
 
 - left movement stick;
-- drag-look on open screen space;
+- right-half drag-look, excluding actual buttons/panels;
+- dedicated JUMP button with jump buffering and coyote time;
 - SPAWN menu;
 - TOOL cycle;
 - NOCLIP;
 - USE;
-- ▲ / ▼ vertical controls.
+- UP / DOWN controls while noclip is active.
 
 The interface is built specifically for this game instead of inheriting an older HUD.
 
@@ -133,7 +138,7 @@ The verifier checks:
 
 ### 📱 Android release
 
-[**Download Luca Dog World v0.12.0 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.12.0/Luca-Dog-World-v0.12.0-android.apk)
+[**Download Luca Dog World v0.12.1 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.12.1/Luca-Dog-World-v0.12.1-android.apk)
 
 The release also includes a SHA-256 checksum and exact-state build receipt.
 Tested build engine: **Godot 4.3 stable**.
@@ -145,9 +150,9 @@ powershell -ExecutionPolicy Bypass -File .\BUILD_RELEASE.ps1
 Expected artifacts:
 
 ```text
-dist/windows/Luca-Dog-World-v0.12.0.exe
-dist/android/Luca-Dog-World-v0.12.0-android.apk
-dist/RELEASE_RECEIPT_v0.12.0.json
+dist/windows/Luca-Dog-World-v0.12.1.exe
+dist/android/Luca-Dog-World-v0.12.1-android.apk
+dist/RELEASE_RECEIPT_v0.12.1.json
 ```
 
 Android package:

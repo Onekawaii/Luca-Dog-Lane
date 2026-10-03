@@ -1,7 +1,12 @@
 extends CharacterBody3D
 
-const SPEED := 6.2
+const SPEED := 6.4
+const RETREAT_SPEED := 4.2
 const GRAVITY := 18.0
+const FOLLOW_DISTANCE := 7.0
+const FOLLOW_SIDE_OFFSET := 1.8
+const PERSONAL_SPACE := 4.5
+const RECOVER_DISTANCE := 48.0
 
 var player: CharacterBody3D
 var world_half := 480.0
@@ -9,22 +14,45 @@ var state := "FOLLOW"
 
 func _ready() -> void:
 	add_to_group("luca")
+
+	# Luca collides with the world and props, but not with the player/NPC bodies.
+	collision_layer = 2
+	collision_mask = 1
+	floor_snap_length = 0.28
+	floor_max_angle = deg_to_rad(50.0)
+
 	_build_dog()
 
 func _physics_process(delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
-	var offset := player.global_position - global_position
-	var flat := Vector3(offset.x, 0, offset.z)
-	var distance := flat.length()
 
-	if distance > 45.0:
+	var player_flat_offset := player.global_position - global_position
+	player_flat_offset.y = 0.0
+	var player_distance := player_flat_offset.length()
+
+	if player_distance > RECOVER_DISTANCE:
 		state = "RECOVER"
-		global_position = player.global_position + player.global_transform.basis.z * 3.0 + Vector3.UP * 0.4
+		global_position = _preferred_follow_position() + Vector3.UP * 0.6
 		velocity = Vector3.ZERO
-	elif distance > 4.5:
+		return
+
+	var preferred := _preferred_follow_position()
+	var target_offset := preferred - global_position
+	target_offset.y = 0.0
+	var target_distance := target_offset.length()
+
+	# Personal-space rule wins over following. Luca backs off instead of
+	# shoving his face into the camera/player capsule.
+	if player_distance < PERSONAL_SPACE and player_distance > 0.05:
+		state = "GIVE_SPACE"
+		var away := -player_flat_offset.normalized()
+		velocity.x = away.x * RETREAT_SPEED
+		velocity.z = away.z * RETREAT_SPEED
+		look_at(global_position + player_flat_offset.normalized(), Vector3.UP)
+	elif target_distance > 1.4:
 		state = "FOLLOW"
-		var direction := flat.normalized()
+		var direction := target_offset.normalized()
 		velocity.x = direction.x * SPEED
 		velocity.z = direction.z * SPEED
 		look_at(global_position + direction, Vector3.UP)
@@ -35,13 +63,26 @@ func _physics_process(delta: float) -> void:
 
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
-	else:
+	elif velocity.y < 0.0:
 		velocity.y = 0.0
+
 	move_and_slide()
 
-	if abs(global_position.x) > world_half - 4.0 or abs(global_position.z) > world_half - 4.0 or global_position.y < -10.0:
-		global_position = player.global_position + Vector3(3, 1, 3)
+	if (
+		abs(global_position.x) > world_half - 4.0
+		or abs(global_position.z) > world_half - 4.0
+		or global_position.y < -5.0
+	):
+		global_position = _preferred_follow_position() + Vector3.UP * 0.6
 		velocity = Vector3.ZERO
+
+func _preferred_follow_position() -> Vector3:
+	# +basis.z is behind the player because player forward is -Z.
+	return (
+		player.global_position
+		+ player.global_transform.basis.z * FOLLOW_DISTANCE
+		+ player.global_transform.basis.x * FOLLOW_SIDE_OFFSET
+	)
 
 func _build_dog() -> void:
 	var collision := CollisionShape3D.new()
@@ -53,7 +94,8 @@ func _build_dog() -> void:
 	add_child(collision)
 
 	var fur := _material(Color(0.86, 0.69, 0.35))
-	var dark := _material(Color(0.16, 0.12, 0.08))
+	var dark := _material(Color(0.10, 0.085, 0.065))
+	var eye_white := _material(Color(0.96, 0.95, 0.88))
 
 	var body := MeshInstance3D.new()
 	var body_mesh := BoxMesh.new()
@@ -91,7 +133,30 @@ func _build_dog() -> void:
 	nose.material_override = dark
 	add_child(nose)
 
+	# Real visible eyes: white sclera + dark pupils on the front of the head.
 	for side in [-1.0, 1.0]:
+		var eye := MeshInstance3D.new()
+		var eye_mesh := SphereMesh.new()
+		eye_mesh.radius = 0.105
+		eye_mesh.height = 0.21
+		eye.mesh = eye_mesh
+		eye.name = "EyeWhite_%s" % ("L" if side < 0.0 else "R")
+		eye.scale = Vector3(0.90, 1.12, 0.62)
+		eye.position = Vector3(0.21 * side, 1.46, -1.20)
+		eye.material_override = eye_white
+		add_child(eye)
+
+		var pupil := MeshInstance3D.new()
+		var pupil_mesh := SphereMesh.new()
+		pupil_mesh.radius = 0.055
+		pupil_mesh.height = 0.11
+		pupil.mesh = pupil_mesh
+		pupil.name = "Pupil_%s" % ("L" if side < 0.0 else "R")
+		pupil.scale = Vector3(0.85, 1.0, 0.55)
+		pupil.position = Vector3(0.21 * side, 1.46, -1.29)
+		pupil.material_override = dark
+		add_child(pupil)
+
 		var ear := MeshInstance3D.new()
 		var ear_mesh := BoxMesh.new()
 		ear_mesh.size = Vector3(0.20, 0.52, 0.30)
@@ -129,6 +194,7 @@ func _build_dog() -> void:
 	label.font_size = 42
 	label.pixel_size = 0.008
 	label.outline_size = 8
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	label.modulate = Color(0.86, 1.0, 0.88)
 	add_child(label)
 

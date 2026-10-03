@@ -8,6 +8,8 @@ var player: CharacterBody3D
 var hud: CanvasLayer
 var luca: CharacterBody3D
 var prop_serial := 0
+var spawn_menu_serial := 0
+var spawned_npc_serial := 0
 var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -61,33 +63,36 @@ func _build_ground_and_boundaries() -> void:
 		Vector3(WORLD_HALF * 2.0, GROUND_THICKNESS, WORLD_HALF * 2.0),
 		Color(0.14, 0.27, 0.16)
 	)
-	var wall_color := Color(0.25, 0.38, 0.30)
-	_create_static_box("NorthBoundary", Vector3(0, 3, -WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2), wall_color)
-	_create_static_box("SouthBoundary", Vector3(0, 3, WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2), wall_color)
-	_create_static_box("WestBoundary", Vector3(-WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0), wall_color)
-	_create_static_box("EastBoundary", Vector3(WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0), wall_color)
+	# Collision-only outer walls. The old visible wall created the dark horizon/lip.
+	_create_boundary_wall("NorthBoundary", Vector3(0, 3, -WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
+	_create_boundary_wall("SouthBoundary", Vector3(0, 3, WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
+	_create_boundary_wall("WestBoundary", Vector3(-WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0))
+	_create_boundary_wall("EastBoundary", Vector3(WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0))
 
 func _build_roads() -> void:
+	# Roads are visual skins over the one continuous collidable ground.
+	# They must not create tiny vertical curbs that CharacterBody3D cannot step over.
 	var road := Color(0.28, 0.30, 0.31)
-	_create_static_box("MainRoadNS", Vector3(0, 0.08, 0), Vector3(16, 0.16, 760), road)
-	_create_static_box("MainRoadEW", Vector3(0, 0.09, 0), Vector3(760, 0.18, 16), road)
-	_create_static_box("ForestRoad", Vector3(-180, 0.10, -120), Vector3(220, 0.20, 10), road, Vector3(0, -18, 0))
-	_create_static_box("QuarryRoad", Vector3(185, 0.10, 145), Vector3(250, 0.20, 11), road, Vector3(0, 30, 0))
+	_create_surface_box("MainRoadNS", Vector3(0, 0.025, 0), Vector3(16, 0.05, 760), road)
+	_create_surface_box("MainRoadEW", Vector3(0, 0.030, 0), Vector3(760, 0.06, 16), road)
+	_create_surface_box("ForestRoad", Vector3(-180, 0.025, -120), Vector3(220, 0.05, 10), road, Vector3(0, -18, 0))
+	_create_surface_box("QuarryRoad", Vector3(185, 0.025, 145), Vector3(250, 0.05, 11), road, Vector3(0, 30, 0))
 	for marker_z in range(-330, 331, 30):
-		_create_visual_box(Vector3(0, 0.19, marker_z), Vector3(0.22, 0.03, 7.0), Color(0.88, 0.80, 0.36))
+		_create_visual_box(Vector3(0, 0.065, marker_z), Vector3(0.22, 0.02, 7.0), Color(0.88, 0.80, 0.36))
 
 func _build_landmarks() -> void:
-	# Central sandbox pad.
-	_create_static_box("SandboxPad", Vector3(55, 0.15, 55), Vector3(80, 0.30, 70), Color(0.42, 0.43, 0.39))
+	# Central sandbox pad is a visual ground treatment, not a blocking curb.
+	_create_surface_box("SandboxPad", Vector3(55, 0.03, 55), Vector3(80, 0.06, 70), Color(0.42, 0.43, 0.39))
 	_create_static_box("WorkshopBack", Vector3(88, 4, 70), Vector3(2, 8, 38), Color(0.35, 0.22, 0.16))
 	_create_static_box("WorkshopRoof", Vector3(68, 8, 70), Vector3(42, 1, 38), Color(0.48, 0.29, 0.18))
 	_create_static_box("WorkshopSideA", Vector3(68, 4, 51), Vector3(42, 8, 2), Color(0.35, 0.22, 0.16))
 	_create_static_box("WorkshopSideB", Vector3(68, 4, 89), Vector3(42, 8, 2), Color(0.35, 0.22, 0.16))
 
-	# Skate / physics test area.
-	_create_static_box("SkateFloor", Vector3(-95, 0.12, 72), Vector3(100, 0.24, 82), Color(0.46, 0.48, 0.48))
-	_create_static_box("RampA", Vector3(-122, 3.0, 68), Vector3(22, 1.4, 14), Color(0.68, 0.47, 0.24), Vector3(0, 0, -17))
-	_create_static_box("RampB", Vector3(-70, 3.0, 68), Vector3(22, 1.4, 14), Color(0.68, 0.47, 0.24), Vector3(0, 0, 17))
+	# Skate / physics test area. Floor is visual-only; ramps deliberately sink
+	# their low edge below y=0 so there is no impassable entry lip.
+	_create_surface_box("SkateFloor", Vector3(-95, 0.03, 72), Vector3(100, 0.06, 82), Color(0.46, 0.48, 0.48))
+	_create_static_box("RampA", Vector3(-122, 2.10, 68), Vector3(22, 1.4, 14), Color(0.68, 0.47, 0.24), Vector3(0, 0, -10))
+	_create_static_box("RampB", Vector3(-70, 2.10, 68), Vector3(22, 1.4, 14), Color(0.68, 0.47, 0.24), Vector3(0, 0, 10))
 	_create_static_box("LongPlatform", Vector3(-95, 4.0, 96), Vector3(55, 1.2, 12), Color(0.58, 0.38, 0.20))
 
 	# Quarry terraces: real collision, not decorative mountains.
@@ -103,9 +108,9 @@ func _build_landmarks() -> void:
 		)
 	_create_static_box("QuarryClimbRamp", Vector3(190, 9, -180), Vector3(75, 1.5, 16), Color(0.45, 0.39, 0.31), Vector3(0, 0, -14))
 
-	# A low island-like plaza without holes under it.
-	_create_static_cylinder("RoundPlaza", Vector3(-235, 0.45, -205), 42.0, 0.9, Color(0.44, 0.50, 0.47))
-	_create_static_box("PlazaBridge", Vector3(-190, 0.35, -205), Vector3(70, 0.7, 10), Color(0.47, 0.40, 0.30))
+	# Plaza is painted onto the continuous ground instead of sitting above it.
+	_create_surface_cylinder("RoundPlaza", Vector3(-235, 0.04, -205), 42.0, 0.08, Color(0.44, 0.50, 0.47))
+	_create_surface_box("PlazaBridge", Vector3(-190, 0.04, -205), Vector3(70, 0.08, 10), Color(0.47, 0.40, 0.30))
 
 func _build_wilderness() -> void:
 	for i in range(72):
@@ -138,7 +143,8 @@ func _spawn_luca() -> void:
 	var node := CharacterBody3D.new()
 	node.name = "Luca"
 	node.set_script(load("res://scripts/Luca.gd"))
-	node.position = PLAYER_START + Vector3(4, 0, 3)
+	# Spawn Luca well behind/right of the player instead of in camera space.
+	node.position = PLAYER_START + Vector3(7.5, 0.0, 9.0)
 	node.set("player", player)
 	node.set("world_half", WORLD_HALF)
 	add_child(node)
@@ -174,12 +180,31 @@ func _spawn_hud() -> void:
 	player.set("hud", hud)
 
 func spawn_from_menu(kind: String) -> void:
+	spawn_menu_serial += 1
+	var at := _menu_spawn_point(player.call("get_spawn_point"), kind)
 	if kind == "npc":
-		_spawn_npc(player.call("get_spawn_point"), "Spawned Wanderer")
+		spawned_npc_serial += 1
+		_spawn_npc(at, "Spawned Wanderer %02d" % spawned_npc_serial)
 	elif kind == "buggy":
-		_spawn_buggy(player.call("get_spawn_point"))
+		_spawn_buggy(at)
 	else:
-		spawn_prop(kind, player.call("get_spawn_point"))
+		spawn_prop(kind, at)
+
+func _menu_spawn_point(base: Vector3, kind: String) -> Vector3:
+	# Golden-angle spiral keeps repeated spawns from occupying the same physics
+	# coordinates and exploding into a tower/pile.
+	var angle := float(spawn_menu_serial) * 2.399963
+	var spacing := 1.9
+	if kind == "npc":
+		spacing = 2.8
+	elif kind == "buggy":
+		spacing = 4.2
+	var radius := spacing * sqrt(float(max(spawn_menu_serial - 1, 0)))
+	var point := base + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius)
+	point.x = clamp(point.x, -450.0, 450.0)
+	point.z = clamp(point.z, -450.0, 450.0)
+	point.y = max(point.y, 1.2)
+	return point
 
 func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 	prop_serial += 1
@@ -272,6 +297,56 @@ func _spawn_buggy(at: Vector3) -> void:
 	buggy.position = Vector3(clamp(at.x, -440.0, 440.0), max(at.y, 1.1), clamp(at.z, -440.0, 440.0))
 	buggy.set("world_half", WORLD_HALF)
 	add_child(buggy)
+
+func _create_boundary_wall(label: String, at: Vector3, size: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.name = label
+	body.position = at
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = size
+	collision.shape = shape
+	body.add_child(collision)
+	add_child(body)
+	return body
+
+func _create_surface_box(
+	label: String,
+	at: Vector3,
+	size: Vector3,
+	color: Color,
+	rot := Vector3.ZERO
+) -> MeshInstance3D:
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = label
+	var mesh := BoxMesh.new()
+	mesh.size = size
+	mesh_instance.mesh = mesh
+	mesh_instance.position = at
+	mesh_instance.rotation_degrees = rot
+	mesh_instance.material_override = _material(color)
+	add_child(mesh_instance)
+	return mesh_instance
+
+func _create_surface_cylinder(
+	label: String,
+	at: Vector3,
+	radius: float,
+	height: float,
+	color: Color
+) -> MeshInstance3D:
+	var mesh_instance := MeshInstance3D.new()
+	mesh_instance.name = label
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = height
+	mesh.radial_segments = 48
+	mesh_instance.mesh = mesh
+	mesh_instance.position = at
+	mesh_instance.material_override = _material(color)
+	add_child(mesh_instance)
+	return mesh_instance
 
 func _create_static_box(label: String, at: Vector3, size: Vector3, color: Color, rot := Vector3.ZERO) -> StaticBody3D:
 	var body := StaticBody3D.new()
