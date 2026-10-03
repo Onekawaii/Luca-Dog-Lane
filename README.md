@@ -218,6 +218,13 @@ Version:    0.11.0
 Android ID: com.onekawaii.lucadogworld
 ```
 
+### 📱 Download Android
+
+[**Download Luca Dog World v0.11.0 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.11.0/Luca-Dog-World-v0.11.0-android.apk)
+
+SHA-256: `bf8b6da0a81daa72fbd99bee13b5272cb74060c37dc52a3c4cd1767c650eb9e5`
+
+[Release notes + checksum file](https://github.com/Onekawaii/Luca-Dog-Lane/releases/tag/v0.11.0)
 The verified v0.11 rebuild produced Windows and Android artifacts with SHA-256 sidecars plus an exact-state release receipt.
 
 ---
