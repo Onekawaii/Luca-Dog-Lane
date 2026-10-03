@@ -89,7 +89,7 @@ if ($Aapt) {
     if ($PackageLine -notmatch "versionCode='14'") {
         throw "Unexpected Android versionCode"
     }
-    if ($PackageLine -notmatch "versionName='0\.12\.1'") {
+    if ($PackageLine -notmatch "versionName='0\.12\.2'") {
         throw "Unexpected Android versionName"
     }
 }
