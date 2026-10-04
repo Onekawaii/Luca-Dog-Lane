@@ -7,6 +7,7 @@ const PLAYER_START := Vector3(0.0, 2.5, 24.0)
 var player: CharacterBody3D
 var hud: CanvasLayer
 var luca: CharacterBody3D
+var terrain_slice: Node3D
 var prop_serial := 0
 var spawn_menu_serial := 0
 var spawned_npc_serial := 0
@@ -24,6 +25,7 @@ func _ready() -> void:
 	_build_landmarks()
 	_build_wilderness()
 	_spawn_player()
+	_spawn_terrain_slice()
 	_spawn_luca()
 	_spawn_people()
 	_spawn_buggy(Vector3(13.0, 1.2, 10.0))
@@ -149,12 +151,16 @@ func _build_wilderness() -> void:
 			continue
 		if Vector2(x - 55.0, z - 55.0).length() < 70.0:
 			continue
+		if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
+			continue
 		_create_tree(Vector3(x, 0, z), rng.randf_range(0.8, 1.45))
 
 	for i in range(36):
 		var x := rng.randf_range(-430.0, 430.0)
 		var z := rng.randf_range(-430.0, 430.0)
 		if abs(x) < 18.0 or abs(z) < 18.0:
+			continue
+		if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
 			continue
 		var size := rng.randf_range(0.7, 2.1)
 		_create_static_rock(Vector3(x, size * 0.4, z), size)
@@ -167,6 +173,14 @@ func _spawn_player() -> void:
 	node.set("game", self)
 	add_child(node)
 	player = node
+
+func _spawn_terrain_slice() -> void:
+	var node := Node3D.new()
+	node.name = "V013TerrainSlice"
+	node.set_script(load("res://scripts/world/TerrainSlice.gd"))
+	node.set("player", player)
+	add_child(node)
+	terrain_slice = node
 
 func _spawn_luca() -> void:
 	var node := CharacterBody3D.new()
@@ -207,6 +221,28 @@ func _spawn_hud() -> void:
 	add_child(layer)
 	hud = layer
 	player.set("hud", hud)
+	if terrain_slice != null:
+		terrain_slice.call("set_hud", hud)
+
+func terrain_mine(origin: Vector3, direction: Vector3) -> String:
+	if terrain_slice == null:
+		return "Terrain slice unavailable"
+	return str(terrain_slice.call("mine_from_ray", origin, direction))
+
+func terrain_place(origin: Vector3, direction: Vector3) -> String:
+	if terrain_slice == null:
+		return "Terrain slice unavailable"
+	return str(terrain_slice.call("place_from_ray", origin, direction))
+
+func terrain_craft() -> String:
+	if terrain_slice == null:
+		return "Terrain slice unavailable"
+	return str(terrain_slice.call("craft_stone_brick"))
+
+func terrain_inventory_summary() -> String:
+	if terrain_slice == null:
+		return "STONE 0  //  BRICK 0"
+	return str(terrain_slice.call("inventory_summary"))
 
 func spawn_from_menu(kind: String) -> void:
 	spawn_menu_serial += 1

@@ -9,7 +9,7 @@ const SAFE_MARGIN := 16.0
 const JUMP_BUFFER_TIME := 0.22
 const COYOTE_TIME := 0.14
 const FALL_RECOVERY_Y := -5.0
-const TOOL_MODES := ["GRAB", "REMOVE", "DUPLICATE", "INSPECT"]
+const TOOL_MODES := ["GRAB", "REMOVE", "DUPLICATE", "INSPECT", "MINE", "PLACE", "CRAFT"]
 
 var game: Node
 var hud: CanvasLayer
@@ -248,7 +248,23 @@ func use_tool() -> void:
 		exit_vehicle()
 		return
 
-	if TOOL_MODES[tool_index] == "GRAB" and held_body != null:
+	var mode: String = TOOL_MODES[tool_index]
+	if mode == "CRAFT":
+		if hud != null:
+			hud.call("flash", str(game.call("terrain_craft")), 1.8)
+		return
+	if mode == "MINE" or mode == "PLACE":
+		var direction := -camera.global_transform.basis.z
+		var result := ""
+		if mode == "MINE":
+			result = str(game.call("terrain_mine", camera.global_position, direction))
+		else:
+			result = str(game.call("terrain_place", camera.global_position, direction))
+		if hud != null:
+			hud.call("flash", result, 1.8)
+		return
+
+	if mode == "GRAB" and held_body != null:
 		_release_held()
 		if hud != null:
 			hud.call("flash", "Released prop")
@@ -278,7 +294,7 @@ func use_tool() -> void:
 			hud.call("flash", str(target.call("describe")))
 		return
 
-	match TOOL_MODES[tool_index]:
+	match mode:
 		"GRAB":
 			if target is RigidBody3D and target.is_in_group("sandbox_prop"):
 				held_body = target

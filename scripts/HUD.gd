@@ -15,6 +15,7 @@ var jump_button: Button
 var down_button: Button
 var view_button: Button
 var status_label: Label
+var inventory_label: Label
 
 var toast_time := 0.0
 var vehicle_active := false
@@ -65,6 +66,15 @@ func _build_header() -> void:
 	hint.add_theme_color_override("font_color", Color(0.72, 0.76, 0.74))
 	root.add_child(hint)
 
+	inventory_label = Label.new()
+	inventory_label.name = "InventoryStatus"
+	inventory_label.position = Vector2(30, 87)
+	inventory_label.size = Vector2(650, 30)
+	inventory_label.text = "STONE 0  //  BRICK 0"
+	inventory_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	inventory_label.add_theme_font_size_override("font_size", 16)
+	inventory_label.add_theme_color_override("font_color", Color(0.82, 0.86, 0.83))
+	root.add_child(inventory_label)
 
 	status_label = Label.new()
 	status_label.name = "Status"
@@ -284,6 +294,10 @@ func _spawn_pressed(kind: String) -> void:
 func set_tool_mode(mode: String) -> void:
 	if tool_button != null:
 		tool_button.text = "TOOL: " + mode
+
+func set_inventory_status(summary: String) -> void:
+	if inventory_label != null:
+		inventory_label.text = summary
 
 func set_noclip(enabled: bool) -> void:
 	noclip_active = enabled

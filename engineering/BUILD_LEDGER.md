@@ -89,23 +89,23 @@ Every entry must contain:
 
 ---
 
-## ENG-003 — Godot 4.7.2 export qualification
+## ENG-003 — Godot 4.7.2 shipping substrate + v0.13 terrain vertical slice
 
-- **Date:** 2026-10-03
-- **Branch / HEAD:** `feat/v0.13-world-foundation`
-- **Goal:** Prove the 4.7.2 + Voxel Tools substrate exports and runs on Windows and Android before any main-world migration.
-- **Observed evidence:** Editor/runtime and voxel mutation pass locally; Voxel Tools package contains Windows release x86_64 and Android release arm64/x86_64 binaries.
-- **Invariant:** No v0.13 world code is promoted until exported native artifacts contain and load the extension.
-- **Hypothesis:** Official Godot 4.7.2 export templates can package Voxel Tools 1.7 GDExtension for both targets without changing core game behavior.
-- **Falsifier:** Missing export templates; missing extension library in package; Windows runtime load failure; Android package/signature failure; physical Android load failure.
-- **Design decision:** Keep this as a separate qualification gate so local editor success cannot certify delivery success.
-- **Files changed:** pending.
-- **Commands executed:** pending.
-- **Results:** pending.
-- **Demolition:** pending.
-- **Performance:** pending.
-- **Artifacts:** pending.
-- **Known limitations:** Godot 4.7.2 export templates have not yet been installed in this session.
+- **Date:** 2026-10-04 (resumed from 2026-10-03)
+- **Branch / HEAD:** `feat/v0.13-voxel-terrain-slice`, candidate based on exact qualified export commit `46fc1621ce7c793526d6026896e4bf3ea4cce071`.
+- **Goal:** First preserve the proven Godot 4.7.2 + Voxel Tools native export substrate, then prove one bounded streamed voxel terrain slice end-to-end before scaling world generation.
+- **Observed evidence:** The parent commit has an exact native qualification receipt: Windows runtime loads Voxel Tools; Android APK is v2/v3 signed and contains arm64 + x86_64 voxel libraries. The resumed slice now streams a deterministic mountain with a through-cave/overhang, supports authoritative mine/place edits, collision remeshing, physical stone pickup, a data-driven 3-stone -> 1-stone-brick recipe, final-state edit persistence, inventory persistence, and real Player/HUD routing. A real no-noclip physics ascent moved the player from approximately `(310,2.81,329)` to `(310,19.40,299.96)`.
+- **Invariant:** Existing v0.12.2 playability remains green. Generated terrain is reconstructible; only edit deltas and inventory are saved. Mining/placement never rebuild the whole terrain node. Mobile uses the same TOOL/USE path as desktop. No frozen Hive-Lattice campaign schema is mutated.
+- **Hypothesis:** A small Voxel Tools blocky terrain region can provide caves, traversal, mutable collision, gathering, crafting, and restart-safe edits on the qualified shipping substrate without regressing the existing sandbox.
+- **Falsifier:** Any of: no solid overhead above cave air; real player cannot climb the slope with noclip off; mine/place does not alter authoritative voxel data; collision does not remesh; mining rebuilds the terrain node; resource never enters inventory; recipe is hardcoded outside data; placement succeeds without material or inside the player; saved edit/inventory disappears after terrain reconstruction; legacy migration/playability or extension smoke regresses.
+- **Design decision:** Use a bounded southeast slice `AABB((256,-2,228),(112,54,108))` with deterministic authored generator grammar; keep generator, live terrain controller, persistence, inventory, pickup, and player-facing routing separate; store final-state voxel deltas keyed by coordinate; defer visual material polish and full-world generation until mechanics are qualified.
+- **Files changed:** `scripts/world/TerrainSliceGenerator.gd`, `scripts/world/TerrainSlice.gd`, `scripts/systems/SlicePersistence.gd`, `scripts/systems/SandboxInventory.gd`, `scripts/systems/ResourcePickup.gd`, `data/recipes_v013.json`, `scripts/Game.gd`, `scripts/Player.gd`, `scripts/HUD.gd`, `tests/terrain_slice_acceptance.gd`, `tests/terrain_player_flow.gd`, `tests/terrain_climb_acceptance.gd`, `tests/test_clean_room.py`, `tools/verify_v013_terrain_slice.py`, `tools/build_v013_qualification.ps1`, plus generated project-owned GDScript UID sidecars.
+- **Commands executed:** locked Godot 4.7.2 parser/import; integrated headless runtime; terrain/collision/persistence acceptance; real Player -> Game -> Terrain flow; real movement/jump mountain ascent; 18-test Python contract suite; engineering contract checker; migration baseline verifier; Voxel Tools extension smoke; streamed voxel edit smoke; non-headless visual capture on GTX 1650; PowerShell qualification-script parse.
+- **Results:** Current candidate mechanics PASS. 18/18 Python tests PASS. Engineering contract PASS. Migration baseline PASS. Extension smoke PASS. Voxel edit smoke PASS. Terrain acceptance PASS with zero Godot error markers. Real player flow PASS. Real climb PASS with noclip=false. Visual inspection confirms a mountain silhouette plus a true cave mouth/overhang.
+- **Demolition:** Rejected and repaired wrong generator-side `VoxelBuffer.set_voxel` signature; rejected a false cave-roof sample that landed inside the carved chamber; rejected a nominal green run containing a lifecycle error from setting pickup global transform before tree entry; killed a stale scratch Godot process that locked the staged voxel DLL; proved no-material placement is rejected; proved player-overlap placement is rejected without consuming the brick; preserved the real 8 m tool reach after a test incorrectly aimed from 12 m; fixed the player-flow test to move the real VoxelViewer into the slice before waiting for streamed chunks.
+- **Performance:** Slice viewer distance 76, terrain max view 96; one bounded `112 x 54 x 108` region only. Non-headless visual verification rendered on NVIDIA GTX 1650. Dedicated Android frame/memory/remesh budget remains unmeasured pending physical-device acceptance.
+- **Artifacts:** Parent exact native receipt at `dist/v013-qualification/QUALIFICATION_RECEIPT_v013.json`; temporary visual evidence `eng003_visual_overview.png` and `eng003_visual_cave.png` inspected locally then removed before checkpoint; updated native qualification pipeline now runs the terrain verifier before Windows/APK export.
+- **Known limitations:** Visual block materials are intentionally raw/near-white; this is one controlled terrain slice, not the full deterministic world architecture. Physical Android launch, terrain interaction, remesh performance, and persistence remain PENDING and cannot be claimed from package inspection alone.
 - **Status:** IN_PROGRESS
 
 ---

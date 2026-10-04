@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "recipes": {
+    "stone_brick": {
+      "label": "Stone brick",
+      "ingredients": {
+        "stone": 3
+      },
+      "outputs": {
+        "stone_brick": 1
+      }
+    }
+  }
+}

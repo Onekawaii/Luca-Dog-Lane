@@ -97,6 +97,24 @@ class CleanRoomContractTests(unittest.TestCase):
         for mode in ("GRAB", "REMOVE", "DUPLICATE", "INSPECT"):
             self.assertIn(mode, text)
 
+    def test_v013_terrain_tools_are_player_reachable(self):
+        player = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")
+        game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
+        hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
+        for mode in ("MINE", "PLACE", "CRAFT"):
+            self.assertIn(mode, player)
+        for method in ("terrain_mine", "terrain_place", "terrain_craft"):
+            self.assertIn(f"func {method}", game)
+        self.assertIn('set_inventory_status', hud)
+        self.assertIn('res://scripts/world/TerrainSlice.gd', game)
+
+    def test_v013_recipe_is_data_driven(self):
+        import json
+        recipes = json.loads((ROOT / "data" / "recipes_v013.json").read_text(encoding="utf-8"))
+        recipe = recipes["recipes"]["stone_brick"]
+        self.assertEqual(recipe["ingredients"], {"stone": 3})
+        self.assertEqual(recipe["outputs"], {"stone_brick": 1})
+
     def test_exports_exclude_repo_only_artifacts(self):
         text = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
         rule = 'exclude_filter="dist/*,tests/*,tools/*,engineering/*,addons/zylann.voxel/editor/*,README.md,AGENTS.md,BUILD_RELEASE.ps1,.gitattributes,.gitignore"'
