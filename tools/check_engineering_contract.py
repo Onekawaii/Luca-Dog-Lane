@@ -79,13 +79,16 @@ def validate_lock() -> None:
     if data.get("schema_version") != 1:
         fail("unsupported toolchain lock schema")
     engine = data.get("engine", {})
+    templates = data.get("export_templates", {})
     voxel = data.get("voxel_tools", {})
     rollback = data.get("rollback", {})
     if engine.get("version") != "4.7.2-stable":
         fail("Godot migration target is not pinned to 4.7.2-stable")
+    if templates.get("version") != "4.7.2-stable":
+        fail("Godot export templates are not pinned to 4.7.2-stable")
     if voxel.get("tag") != "v1.7x":
         fail("Voxel Tools tag is not pinned to v1.7x")
-    for name, item in (("engine", engine), ("voxel_tools", voxel)):
+    for name, item in (("engine", engine), ("export_templates", templates), ("voxel_tools", voxel)):
         digest = item.get("sha256", "")
         if not re.fullmatch(r"[0-9a-f]{64}", digest):
             fail(f"{name} SHA-256 is malformed")

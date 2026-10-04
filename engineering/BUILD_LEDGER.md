@@ -149,3 +149,24 @@ Every entry must contain:
 - **Artifacts:** terminal receipt only; temporary logs deleted.
 - **Known limitations:** This gate protects script sidecars under `scripts/` and `tests/`; additional source roots must be added if introduced later.
 - **Status:** PASS
+
+---
+
+## ENG-006 — ENG-003 precommit native export qualification
+
+- **Date:** 2026-10-03
+- **Branch / HEAD:** `feat/v0.13-world-foundation`, base HEAD `c163f9bd978a3ab026225cf05d18fd40ce6ca55f`, dirty candidate state.
+- **Goal:** Prove the pinned Godot 4.7.2 + Voxel Tools 1.7 substrate can produce native Windows and Android artifacts before any terrain migration.
+- **Observed evidence:** Matching 4.7.2 export templates were absent initially. Windows export later produced the executable plus native voxel DLL. Android export initially failed because Godot 4.7 requires `export/android/java_sdk_path` in Editor Settings. After toolchain configuration, Android export signed successfully and carried voxel native libraries for both requested ABIs.
+- **Invariant:** A local editor/runtime PASS cannot qualify v0.13 delivery. Native exported artifacts must carry, load, and verify the extension independently.
+- **Hypothesis:** Pinned Godot 4.7.2 export templates and Voxel Tools 1.7 GDExtension can produce working Windows x86_64 and Android arm64/x86_64 packages while preserving v0.12.2 gameplay.
+- **Falsifier:** Any of: wrong/missing export templates; exported Windows DLL absent; exported runtime cannot instantiate `VoxelTerrain`; Android export failure; APK signature failure; missing arm64/x86_64 voxel libraries; repo/test/editor files leak into artifacts.
+- **Design decision:** Pin export templates in `TOOLCHAIN_LOCK.json`; install them reproducibly; configure 4.7 Android JDK/SDK/keystore reproducibly; keep native addon binaries generated/ignored; use an environment-gated runtime probe in the real game bootstrap; independently inspect exported artifacts.
+- **Files changed:** `engineering/TOOLCHAIN_LOCK.json`, `export_presets.cfg`, `scripts/Game.gd`, `tests/test_clean_room.py`, `tools/check_engineering_contract.py`, `tools/bootstrap_v013_export_templates.ps1`, `tools/configure_v013_android_toolchain.ps1`, `tools/build_v013_qualification.ps1`, `tools/verify_v013_exports.py`, this ledger.
+- **Commands executed:** unit suite; engineering contract; diff check; export-template bootstrap; Android toolchain configurator; substrate verifier; Godot 4.7.2 Windows debug export; exported Windows runtime probe; exported normal-runtime smoke; Godot 4.7.2 Android debug export; `apksigner verify`; `aapt dump badging`; APK ZIP payload inspection; aggregate `build_v013_qualification.ps1 -AllowDirty`.
+- **Results:** Precommit aggregate gate PASS. Windows exported runtime printed `[ALL EXPORTED VOXEL RUNTIME GATES PASSED]` and normal boot printed `LUCA_SANDBOX_READY`. APK package `com.onekawaii.lucadogworld`, versionCode 14, versionName 0.12.2, v2/v3 signatures PASS, voxel arm64 and x86_64 libraries present, no repo/test/editor leakage.
+- **Demolition:** First Android export failed because 4.7 Editor Settings had an empty Java SDK path; fixed via reproducible configurator. First configurator failed because Windows PowerShell treats `java -version` stderr as a terminating native-command error under `ErrorActionPreference=Stop`; replaced with deterministic JDK `release` metadata parsing. First exported-runtime probe attempted `--script`; exported Godot ignored it and booted the configured main scene, so that test was rejected and replaced with an environment-gated real-bootstrap probe. Export logs exposed engineering/editor resource leakage; export filters were tightened and requalified.
+- **Performance:** Precommit Windows EXE 103,242,280 bytes; voxel Windows DLL 11,337,216 bytes. Android APK 75,278,311 bytes; voxel arm64 library 9,031,288 bytes; voxel x86_64 library 9,177,136 bytes.
+- **Artifacts:** `dist/v013-qualification/QUALIFICATION_RECEIPT_v013.json` marked `PRECOMMIT_ONLY`; local export-template and Android-toolchain receipts under `%USERPROFILE%\.luca_toolchain`.
+- **Known limitations:** Physical Android launch/voxel runtime is still PENDING. Precommit artifact hashes are not final because the candidate state is not yet committed.
+- **Status:** PASS

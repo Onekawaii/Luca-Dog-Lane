@@ -13,6 +13,10 @@ var spawned_npc_serial := 0
 var rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
+	if OS.get_environment("LUCA_V013_EXPORT_PROBE") == "1":
+		_run_v013_export_probe()
+		return
+
 	rng.seed = 731991
 	_setup_environment()
 	_build_ground_and_boundaries()
@@ -26,6 +30,31 @@ func _ready() -> void:
 	_spawn_starter_props()
 	_spawn_hud()
 	print("LUCA_SANDBOX_READY world_half=", WORLD_HALF)
+
+func _run_v013_export_probe() -> void:
+	var required := [
+		"VoxelTerrain",
+		"VoxelViewer",
+		"VoxelMesherBlocky",
+		"VoxelBlockyLibrary",
+		"VoxelBlockyModelCube",
+		"VoxelTool",
+		"VoxelBuffer",
+	]
+	for type_name in required:
+		if not ClassDB.class_exists(type_name):
+			print("[FAIL] exported runtime class missing: ", type_name)
+			get_tree().quit(1)
+			return
+
+	var terrain = ClassDB.instantiate("VoxelTerrain")
+	if terrain == null:
+		print("[FAIL] exported runtime could not instantiate VoxelTerrain")
+		get_tree().quit(1)
+		return
+	terrain.free()
+	print("[ALL EXPORTED VOXEL RUNTIME GATES PASSED]")
+	get_tree().quit(0)
 
 func _setup_environment() -> void:
 	var world_environment := WorldEnvironment.new()
