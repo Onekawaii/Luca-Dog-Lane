@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "project": "Luca Dog World",
+  "migration_target": "v0.13",
+  "engine": {
+    "name": "Godot",
+    "version": "4.7.2-stable",
+    "platform": "windows-x86_64",
+    "asset": "Godot_v4.7.2-stable_win64.exe.zip",
+    "url": "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_win64.exe.zip",
+    "sha256": "731980f9608d61333e5baf54a2ef17210acc7a538446c0cb9969f002aca1e953",
+    "size_bytes": 86013866,
+    "source": "https://github.com/godotengine/godot/releases/tag/4.7.2-stable"
+  },
+  "voxel_tools": {
+    "name": "Voxel Tools GDExtension",
+    "version": "1.7",
+    "tag": "v1.7x",
+    "asset": "GodotVoxelExtension.zip",
+    "url": "https://github.com/Zylann/godot_voxel/releases/download/v1.7x/GodotVoxelExtension.zip",
+    "sha256": "600737572a5e25541ba6f503e842a3717ba19afafa5474510a6ceff995a1d2d8",
+    "size_bytes": 54457774,
+    "source": "https://github.com/Zylann/godot_voxel/releases/tag/v1.7x",
+    "license": "MIT",
+    "risk": "GDExtension edition is documented by upstream as newer and less tested than module builds."
+  },
+  "rollback": {
+    "release": "v0.12.2",
+    "commit": "76f9659321824ea61460256a0bdbc8619b34035a",
+    "engine": "4.3-stable"
+  }
+}
