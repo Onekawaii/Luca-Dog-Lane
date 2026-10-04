@@ -8,6 +8,7 @@ var player: CharacterBody3D
 var hud: CanvasLayer
 var luca: CharacterBody3D
 var terrain_slice: Node3D
+var quarry_expedition: Node3D
 var prop_serial := 0
 var spawn_menu_serial := 0
 var spawned_npc_serial := 0
@@ -26,6 +27,7 @@ func _ready() -> void:
 	_build_wilderness()
 	_spawn_player()
 	_spawn_terrain_slice()
+	_spawn_quarry_expedition()
 	_spawn_luca()
 	_spawn_people()
 	_spawn_buggy(Vector3(13.0, 1.2, 10.0))
@@ -182,6 +184,14 @@ func _spawn_terrain_slice() -> void:
 	add_child(node)
 	terrain_slice = node
 
+func _spawn_quarry_expedition() -> void:
+	var node := Node3D.new()
+	node.name = "QuarryExpedition"
+	node.set_script(load("res://scripts/world/QuarryExpedition.gd"))
+	node.set("player", player)
+	add_child(node)
+	quarry_expedition = node
+
 func _spawn_luca() -> void:
 	var node := CharacterBody3D.new()
 	node.name = "Luca"
@@ -223,6 +233,8 @@ func _spawn_hud() -> void:
 	player.set("hud", hud)
 	if terrain_slice != null:
 		terrain_slice.call("set_hud", hud)
+	if quarry_expedition != null:
+		quarry_expedition.call("set_hud", hud)
 
 func terrain_mine(origin: Vector3, direction: Vector3) -> String:
 	if terrain_slice == null:

@@ -170,3 +170,24 @@ Every entry must contain:
 - **Artifacts:** `dist/v013-qualification/QUALIFICATION_RECEIPT_v013.json` marked `PRECOMMIT_ONLY`; local export-template and Android-toolchain receipts under `%USERPROFILE%\.luca_toolchain`.
 - **Known limitations:** Physical Android launch/voxel runtime is still PENDING. Precommit artifact hashes are not final because the candidate state is not yet committed.
 - **Status:** PASS
+
+---
+
+## ENG-007 — Quarry Ridge player-facing expedition
+
+- **Date:** 2026-10-04
+- **Branch / HEAD:** `feat/v0.14-quarry-expedition`, candidate based on protected checkpoint `5768956aa51ab57937247f99c74e0197012b2cb4`.
+- **Goal:** Turn the proven v0.13 voxel mountain into an optional, discoverable normal-play destination with a complete enter -> mine/collect/craft/place -> leave loop, without introducing a mandatory quest framework.
+- **Observed evidence:** At `5768956` the voxel terrain mechanics were qualified, but the slice was still primarily an engineering target. The new route adds in-world quarry signs/posts and a physical discovery volume while retaining the existing terrain, inventory, crafting, persistence, player movement, and HUD systems.
+- **Invariant:** `5768956` remains an untouched rollback point; no save/schema change; no alternate movement or teleport requirement; noclip remains unnecessary; voxel terrain remains authoritative; old v0.13 terrain acceptance must stay green.
+- **Hypothesis:** A separate lightweight QuarryExpedition presentation/controller node can make the voxel site legible and purposeful in normal play without coupling site discovery to terrain generation or game-state persistence.
+- **Falsifier:** The acceptance test was written first and initially failed because the real game had no Quarry Expedition controller. The repaired candidate must let the real player enter and leave the site using normal collision movement with noclip false, show the site cue, and preserve every existing v0.13 terrain gate.
+- **Design decision:** Keep quarry route/discovery presentation in `scripts/world/QuarryExpedition.gd`; use two route signs, an entry sign, six lightweight trail posts, and one Area3D monitoring player layer 4. Game.gd owns/spawns the controller; HUD only receives transient discovery/exit toasts.
+- **Files changed:** `scripts/Game.gd`; `scripts/world/QuarryExpedition.gd` + UID; `tests/quarry_expedition_acceptance.gd` + UID; `tools/verify_v014_quarry_expedition.py`; `README.md`; this ledger.
+- **Commands executed:** first-fail Quarry acceptance; repaired Quarry acceptance; Godot 4.7.2 UID import; `python tools/check_engineering_contract.py`; 18-test Python suite; v0.13 terrain generation/edit/collision/persistence acceptance; real Player->Game->Terrain flow; real no-noclip climb; non-headless visual viewport capture on GTX 1650; aggregate `python tools/verify_v014_quarry_expedition.py`; clean Windows debug export; exported Voxel Tools runtime probe; exported normal-runtime smoke.
+- **Results:** Initial falsifier failed as expected. Repaired Quarry acceptance passes all 13 player-facing gates. Python regression remains 18/18. Existing terrain, player-flow, and climb gates pass, including climb end approximately `(310,19.396,299.963)` with `NOCLIP=false`. Aggregate verifier prints `[ALL V0.14 QUARRY EXPEDITION GATES PASSED]`. Clean Windows export loads Voxel Tools and prints `[ALL EXPORTED VOXEL RUNTIME GATES PASSED]`; normal exported boot prints both `V013_TERRAIN_SLICE_READY` and `LUCA_SANDBOX_READY` and exits 0.
+- **Demolition:** The first Windows export was explicitly rejected because the temporary visual PNG at repository root was imported into the package. Temporary probe/image/import/log files were removed, the export directory was rebuilt from scratch, and the package was rerun. Entry/exit testing also proves the site does not rely on noclip or teleportation.
+- **Performance:** New site presentation cost is bounded to three Label3D signs, six simple post/cap marker pairs, and one Area3D. Visual evidence rendered on NVIDIA GTX 1650. Android frame/remesh performance was not remeasured in this milestone.
+- **Artifacts:** Candidate Windows executable `dist/v014-quarry-candidate/Luca-Dog-World-v014-quarry.exe`, 103,266,280 bytes, SHA-256 `03ef50582e95255dcc611ec6596d649418794248c4ab08628406de1bdfe1431d`; adjacent Voxel Tools Windows DLL present. Temporary visual evidence was inspected and removed before the accepted export.
+- **Known limitations:** No physical Android v0.14 playtest is claimed. Quarry visuals remain intentionally lightweight; this is one optional expedition site, not yet the full deterministic seeded world/site generator.
+- **Status:** PASS

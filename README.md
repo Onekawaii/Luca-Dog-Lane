@@ -35,6 +35,12 @@ Current sandbox loop:
 - drive the sandbox buggy;
 - explore roads, woods, a workshop, physics/skate space, quarry terraces, and a round plaza.
 
+### v0.14 Quarry Expedition milestone
+
+The proven voxel mountain is now a discoverable optional site instead of an isolated engineering slice. In-world quarry signs and trail posts lead toward Quarry Ridge. Crossing into the site through normal collision movement gives a short HUD cue for the existing **MINE → collect → CRAFT → PLACE** loop; leaving the site returns cleanly to the open sandbox with collected materials intact.
+
+This milestone does not add a mandatory quest, minimap icon carpet, new save schema, or alternate movement rules. The quarry remains part of the same continuous sandbox and uses the same authoritative voxel terrain, collision, inventory, crafting, and persistence systems introduced in v0.13.
+
 ---
 
 ## The boundary fix
