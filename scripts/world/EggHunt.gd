@@ -20,6 +20,18 @@ const EGG_MESSAGES := [
 	"RIDGE EGG // WIND CHILLED",
 	"THE DOG DID NOT HIDE THIS",
 	"LAST EGG // PROBABLY",
+	"BREAKFAST OF THE NORTH",
+	"SCRAMBLED SIGNAL",
+	"EGG OF UNAUTHORIZED ALTITUDE",
+	"THE RIDGE OWES YOU NOTHING",
+	"ROAD SHOULDER OMELET",
+	"UNDER EASY SKY",
+	"THE SHELL KNOWS 6060",
+	"WESTERN YOLK INCIDENT",
+	"NO FORK PROVIDED",
+	"SECOND-TO-LAST EGG // MAYBE",
+	"LUCA SNIFFED THIS ONE",
+	"TWENTY FOURTH BREAKFAST",
 ]
 
 func _ready() -> void:
@@ -46,6 +58,18 @@ func _spawn_all() -> void:
 		_surface_position(-118.0, 380.0),
 		_surface_position(122.0, 374.0),
 		_surface_position(-304.0, 215.0),
+		_surface_position(238.0, -402.0),
+		_surface_position(-248.0, -400.0),
+		_surface_position(330.0, -288.0),
+		_surface_position(-405.0, 286.0),
+		_surface_position(346.0, 108.0),
+		_surface_position(176.0, 414.0),
+		_surface_position(-176.0, 421.0),
+		_surface_position(-420.0, -246.0),
+		_surface_position(412.0, -176.0),
+		_surface_position(392.0, 268.0),
+		_surface_position(-270.0, 332.0),
+		_surface_position(284.0, 392.0),
 	]
 	for i in range(positions.size()):
 		_spawn_egg(i, positions[i], EGG_MESSAGES[i])
@@ -71,18 +95,18 @@ func _spawn_egg(index: int, at: Vector3, message: String) -> void:
 	var white := MeshInstance3D.new()
 	white.name = "White"
 	var white_mesh := SphereMesh.new()
-	white_mesh.radius = 0.78
-	white_mesh.height = 1.10
+	white_mesh.radius = 0.62
+	white_mesh.height = 0.90
 	white.mesh = white_mesh
-	white.scale = Vector3(1.30, 0.16, 1.0)
+	white.scale = Vector3(1.22, 0.16, 1.0)
 	white.material_override = _material(Color(0.96, 0.94, 0.82), 0.82)
 	area.add_child(white)
 
 	var yolk := MeshInstance3D.new()
 	yolk.name = "Yolk"
 	var yolk_mesh := SphereMesh.new()
-	yolk_mesh.radius = 0.31
-	yolk_mesh.height = 0.48
+	yolk_mesh.radius = 0.25
+	yolk_mesh.height = 0.40
 	yolk.mesh = yolk_mesh
 	yolk.position.y = 0.18
 	yolk.material_override = _material(Color(1.0, 0.61, 0.06), 0.64)
@@ -90,7 +114,7 @@ func _spawn_egg(index: int, at: Vector3, message: String) -> void:
 
 	var collision := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
-	shape.radius = 1.05
+	shape.radius = 0.88
 	collision.shape = shape
 	area.add_child(collision)
 

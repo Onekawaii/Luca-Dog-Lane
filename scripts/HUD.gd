@@ -50,7 +50,7 @@ func _build_header() -> void:
 	title.name = "Title"
 	title.position = Vector2(28, 22)
 	title.size = Vector2(520, 42)
-	title.text = "LUCA DOG WORLD  //  v0.15.1 KIMI"
+	title.text = "LUCA DOG WORLD  //  v0.15.2 KIMI"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_size_override("font_size", 25)
 	title.add_theme_color_override("font_color", Color(0.75, 1.0, 0.80))
@@ -60,7 +60,7 @@ func _build_header() -> void:
 	hint.name = "Hint"
 	hint.position = Vector2(30, 58)
 	hint.size = Vector2(650, 36)
-	hint.text = "OPEN WORLD // MOUNTAIN PASSES // 12 EGGS HIDDEN"
+	hint.text = "OPEN WORLD // CONTINUOUS TERRAIN // 24 EGGS HIDDEN"
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", Color(0.72, 0.76, 0.74))

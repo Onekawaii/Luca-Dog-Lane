@@ -8,7 +8,7 @@ const GRAVITY := 19.0
 const SAFE_MARGIN := 16.0
 const JUMP_BUFFER_TIME := 0.22
 const COYOTE_TIME := 0.14
-const FALL_RECOVERY_Y := -5.0
+const FALL_RECOVERY_Y := -1.25
 const TOOL_MODES := ["GRAB", "REMOVE", "DUPLICATE", "INSPECT", "MINE", "PLACE", "CRAFT"]
 
 var game: Node
@@ -202,6 +202,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func add_look_delta(delta_pixels: Vector2) -> void:
 	if riding != null:
+		if is_instance_valid(riding):
+			riding.call("add_camera_look", delta_pixels)
 		return
 	var sensitivity := 0.0032
 	yaw -= delta_pixels.x * sensitivity

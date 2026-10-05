@@ -80,30 +80,30 @@ func _setup_environment() -> void:
 	sky.sky_material = sky_material
 	environment.sky = sky
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.72
+	environment.ambient_light_energy = 0.56
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.fog_enabled = true
-	environment.fog_light_color = Color(0.63, 0.72, 0.74)
-	environment.fog_density = 0.0018
+	environment.fog_light_color = Color(0.56, 0.66, 0.68)
+	environment.fog_density = 0.00115
 	world_environment.environment = environment
 	add_child(world_environment)
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52.0, -28.0, 0.0)
-	sun.light_energy = 1.25
+	sun.light_energy = 1.02
 	sun.light_color = Color(1.0, 0.94, 0.82)
 	sun.shadow_enabled = true
 	add_child(sun)
 
 func _build_ground_and_boundaries() -> void:
-	# One continuous slab: rendered top and collision top are both exactly y=0.
-	_create_static_box(
+	# Invisible fail-safe floor only. MacroTerrain owns the visible/collidable
+	# surface now, so there is no second giant flat world rendered underneath it.
+	_create_boundary_wall(
 		"WorldGround",
-		Vector3(0.0, -GROUND_THICKNESS * 0.5, 0.0),
-		Vector3(WORLD_HALF * 2.0, GROUND_THICKNESS, WORLD_HALF * 2.0),
-		Color(0.14, 0.27, 0.16)
+		Vector3(0.0, -GROUND_THICKNESS * 0.5 - 0.25, 0.0),
+		Vector3(WORLD_HALF * 2.0, GROUND_THICKNESS, WORLD_HALF * 2.0)
 	)
-	# Collision-only outer walls. The old visible wall created the dark horizon/lip.
+	# Collision-only outer walls.
 	_create_boundary_wall("NorthBoundary", Vector3(0, 3, -WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
 	_create_boundary_wall("SouthBoundary", Vector3(0, 3, WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
 	_create_boundary_wall("WestBoundary", Vector3(-WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0))
@@ -265,7 +265,9 @@ func _spawn_people() -> void:
 		Vector3(-248, 1.1, -180)
 	]
 	for i in range(positions.size()):
-		_spawn_npc(positions[i], "Wanderer %02d" % (i + 1))
+		var at: Vector3 = positions[i]
+		at.y = _surface_height(at.x, at.z) + 1.1
+		_spawn_npc(at, "Wanderer %02d" % (i + 1))
 
 func _spawn_starter_props() -> void:
 	for i in range(4):

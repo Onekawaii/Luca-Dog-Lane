@@ -16,6 +16,7 @@ var camera_mode := 0
 const CAMERA_NAMES := ["DRIVER", "CHASE", "HOOD", "OVERHEAD"]
 
 var driver_camera: Camera3D
+var chase_arm: SpringArm3D
 var chase_camera: Camera3D
 var hood_camera: Camera3D
 var overhead_camera: Camera3D
@@ -57,6 +58,15 @@ func deactivate_cameras() -> void:
 func get_camera_mode_name() -> String:
 	return CAMERA_NAMES[camera_mode]
 
+func add_camera_look(delta_pixels: Vector2) -> void:
+	if camera_mode != 1 or chase_arm == null:
+		return
+	var sensitivity := 0.12
+	var degrees := chase_arm.rotation_degrees
+	degrees.y = clampf(degrees.y - delta_pixels.x * sensitivity, -115.0, 115.0)
+	degrees.x = clampf(degrees.x - delta_pixels.y * sensitivity, -32.0, 8.0)
+	chase_arm.rotation_degrees = degrees
+
 func _physics_process(delta: float) -> void:
 	var throttle: float = -drive_input.y if driver_active else 0.0
 	var target_speed := 0.0
@@ -92,7 +102,7 @@ func _physics_process(delta: float) -> void:
 	if absf(global_position.z) > world_half - 5.0:
 		global_position.z = clamp(global_position.z, -world_half + 6.0, world_half - 6.0)
 		current_speed = 0.0
-	if global_position.y < -10.0:
+	if global_position.y < -2.0:
 		global_position = Vector3(13, 2, 10)
 		current_speed = 0.0
 		velocity = Vector3.ZERO
@@ -114,13 +124,20 @@ func _build_cameras() -> void:
 	driver_camera.near = 0.08
 	add_child(driver_camera)
 
+	chase_arm = SpringArm3D.new()
+	chase_arm.name = "ChaseSpringArm"
+	chase_arm.position = Vector3(0.0, 2.55, 0.55)
+	chase_arm.rotation_degrees = Vector3(-10.0, 0.0, 0.0)
+	chase_arm.spring_length = 7.4
+	chase_arm.margin = 0.35
+	chase_arm.collision_mask = 1
+	add_child(chase_arm)
+
 	chase_camera = Camera3D.new()
 	chase_camera.name = "ChaseCamera"
-	chase_camera.position = Vector3(0.0, 3.35, 6.8)
-	chase_camera.rotation_degrees = Vector3(-12.0, 0.0, 0.0)
 	chase_camera.fov = 72.0
 	chase_camera.near = 0.12
-	add_child(chase_camera)
+	chase_arm.add_child(chase_camera)
 
 	hood_camera = Camera3D.new()
 	hood_camera.name = "HoodCamera"

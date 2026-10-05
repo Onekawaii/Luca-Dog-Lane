@@ -8,8 +8,8 @@ $Keystore = "$env:USERPROFILE\.android\debug.keystore"
 $Dist = Join-Path $Repo "dist"
 $WinDir = Join-Path $Dist "windows"
 $AndroidDir = Join-Path $Dist "android"
-$Win = Join-Path $WinDir "Luca-Dog-World-v0.15.1-KIMI-MOUNTAINS.exe"
-$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.15.1-KIMI-MOUNTAINS-android.apk"
+$Win = Join-Path $WinDir "Luca-Dog-World-v0.15.2-KIMI-TERRAIN.exe"
+$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.15.2-KIMI-TERRAIN-android.apk"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.7.2 console binary not found: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK not found: $Sdk" }
@@ -91,10 +91,10 @@ if ($Aapt) {
     if ($PackageLine -notmatch "name='com\.onekawaii\.lucadogworld'") {
         throw "Unexpected Android package ID"
     }
-    if ($PackageLine -notmatch "versionCode='16'") {
+    if ($PackageLine -notmatch "versionCode='17'") {
         throw "Unexpected Android versionCode"
     }
-    if ($PackageLine -notmatch "versionName='0\.15\.1-kimi'") {
+    if ($PackageLine -notmatch "versionName='0\.15\.2-kimi'") {
         throw "Unexpected Android versionName"
     }
 }
@@ -108,8 +108,8 @@ $ApkHash = (Get-FileHash $Apk -Algorithm SHA256).Hash.ToLower()
 $Head = (git -C $Repo rev-parse HEAD 2>$null)
 $Receipt = [ordered]@{
     product = "Luca Dog World"
-    version = "0.15.1-kimi"
-    architecture = "clean-room-sandbox-v1+kimi-deterministic-world-core+macro-terrain+egg-hunt"
+    version = "0.15.2-kimi"
+    architecture = "clean-room-sandbox-v1+kimi-core+continuous-terrain+springarm-cameras+24-egg-hunt"
     git_head = $Head
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
     windows = [ordered]@{
@@ -122,15 +122,15 @@ $Receipt = [ordered]@{
         bytes = (Get-Item $Apk).Length
         sha256 = $ApkHash
         package = "com.onekawaii.lucadogworld"
-        version_code = 16
+        version_code = 17
         signed = $true
     }
 }
 
-$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.15.1-KIMI-MOUNTAINS.json"
+$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.15.2-KIMI-TERRAIN.json"
 $Receipt | ConvertTo-Json -Depth 5 | Set-Content $ReceiptPath -Encoding utf8
 
 Write-Host "WINDOWS_SHA256=$WinHash"
 Write-Host "ANDROID_SHA256=$ApkHash"
 Write-Host "RECEIPT=$ReceiptPath"
-Write-Host "[DONE] Luca Dog World v0.15.1-KIMI-MOUNTAINS"
+Write-Host "[DONE] Luca Dog World v0.15.2-KIMI-TERRAIN"

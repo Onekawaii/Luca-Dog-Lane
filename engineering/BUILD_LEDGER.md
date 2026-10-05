@@ -213,3 +213,23 @@ Every entry must contain:
 - **Artifacts:** `%USERPROFILE%\Downloads\Luca-Dog-World-v0.15.1-KIMI-MOUNTAINS\v0151_mountain_pass.png`; `v0151_chase_camera.png`.
 - **Known limitations:** Easter-egg discovery is session-scoped in this milestone. Physical Android terrain driving/collection performance is not yet claimed. Macro terrain supplements ENG-003 rather than replacing the bounded editable voxel slice.
 - **Status:** PASS
+
+
+---
+
+## ENG-009 — Continuous terrain replacement + camera collision + egg expansion
+
+- **Date:** 2026-10-05
+- **Branch / base:** `feat/v0.15.2-continuous-terrain`, based on verified v0.15.1 checkpoint `5372a29d3bfb5a121b944be54db623e7028c8577`.
+- **Player-facing problem:** Physical Android screenshots showed the v0.15.1 mountains as separate smooth wedges layered over the legacy flat world; hard seams/cliffs, an under-world/cyan camera state, and chase-camera terrain intersection remained visible.
+- **Goal:** Replace the visible flat slab + terrain-patch stack with one deterministic world surface while preserving ENG-003, ENG-007, roads, sandbox landmarks, Kimi seed authority, and dual-platform export.
+- **Implementation:** `MacroTerrain.gd` now builds one 80x80-cell continuous ArrayMesh/trimesh world surface from Kimi deterministic fBm plus regional NorthMountainPass, WestRidge, and SouthValley shaping. Main roads, diagonal roads, sandbox, skate area, plaza, world boundary, and the ENG-003 voxel slice receive broad smooth clearances. Legacy `WorldGround` is collision-only and lowered as a fail-safe instead of rendering a second flat world.
+- **Vehicle camera:** CHASE now lives on `ChaseSpringArm` with collision mask/margin and right-side/mobile orbit input. DRIVER, CHASE, HOOD, OVERHEAD remain distinct.
+- **Recovery:** Player under-world threshold tightened to -1.25 m; buggy recovery to -2 m. Runtime acceptance explicitly forces the player below terrain and requires immediate recovery.
+- **Eggs:** Egg hunt expanded from 12 to 24 physical fried-egg pickups; pickup scale/collision reduced so discoveries are less visually oversized.
+- **Visual tuning:** Reduced ambient/sun/fog washout so terrain surface color and relief remain readable on GL Compatibility/mobile-style rendering.
+- **Acceptance:** 28/28 Python tests PASS. Live Godot runtime PASS proves: one continuous visible/collidable terrain owner; legacy flat ground collision-only; north-pass relief; south-valley relief; no cliff-step road shoulder; 24 eggs + collection; four camera modes; spring-arm chase + orbit; under-world recovery; prior sandbox/companion/vehicle gates.
+- **Visual evidence:** Non-headless GTX 1650 captures `v0152_north_pass.png`, `v0152_west_ridge.png`, `v0152_south_valley.png`, `v0152_chase_springarm.png` show continuous blended landforms with no v0.15.1 vertical patch walls or giant rendered flat slab.
+- **Preserved systems:** ENG-003 Voxel Tools editable mountain/cave slice remains active and is explicitly flattened out of macro terrain overlap. ENG-007 Quarry Ridge remains intact.
+- **Known limit:** Physical Android v0.15.2 FPS and touch/terrain playtest remains pending until the exported APK is installed on-device.
+- **Status:** PASS — release candidate pending exact-commit exports.

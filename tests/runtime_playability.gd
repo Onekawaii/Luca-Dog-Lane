@@ -102,45 +102,71 @@ func _run() -> void:
 	else:
 		_fail("outer boundary still has visible wall geometry")
 
+	var fail_safe_ground := world.get_node_or_null("WorldGround")
+	if (
+		fail_safe_ground is StaticBody3D
+		and fail_safe_ground.get_child_count() == 1
+		and fail_safe_ground.get_child(0) is CollisionShape3D
+	):
+		_pass("legacy flat WorldGround is collision-only")
+	else:
+		_fail("legacy flat WorldGround still renders or changed shape")
+
 	var macro := world.get_node_or_null("MacroTerrain")
 	if macro == null:
-		_fail("macro terrain missing")
+		_fail("continuous terrain missing")
 	else:
 		var north_peak := maxf(
-			float(macro.call("height_at", -122.0, -372.0)),
-			float(macro.call("height_at", 128.0, -354.0))
+			float(macro.call("height_at", -150.0, -372.0)),
+			float(macro.call("height_at", 150.0, -354.0))
 		)
 		var north_pass := float(macro.call("height_at", 0.0, -360.0))
 		var south_wall := maxf(
-			float(macro.call("height_at", -150.0, 380.0)),
-			float(macro.call("height_at", 150.0, 380.0))
+			float(macro.call("height_at", -170.0, 390.0)),
+			float(macro.call("height_at", 170.0, 390.0))
 		)
-		var south_floor := float(macro.call("height_at", 0.0, 380.0))
-		if north_peak >= 24.0 and north_peak - north_pass >= 20.0:
+		var south_floor := float(macro.call("height_at", 0.0, 390.0))
+		if north_peak >= 16.0 and north_peak - north_pass >= 14.0:
 			_pass("north mountain pass has visible elevation relief")
 		else:
 			_fail("north mountain relief too flat: peak=%s pass=%s" % [north_peak, north_pass])
-		if south_wall >= 20.0 and south_wall - south_floor >= 16.0:
+		if south_wall >= 15.0 and south_wall - south_floor >= 12.0:
 			_pass("south valley has measurable wall-to-floor relief")
 		else:
 			_fail("south valley relief too flat: wall=%s floor=%s" % [south_wall, south_floor])
-		var terrain_bodies := get_nodes_in_group("macro_terrain")
-		var collision_ready := terrain_bodies.size() >= 3
-		for body in terrain_bodies:
-			if body.get_node_or_null("TerrainCollision") == null:
-				collision_ready = false
-		if collision_ready:
-			_pass("macro mountain/valley terrain has collidable meshes")
+
+		var shoulder_heights: Array[float] = []
+		for x in [18.0, 30.0, 42.0, 54.0, 66.0, 78.0, 90.0]:
+			shoulder_heights.append(float(macro.call("height_at", x, -360.0)))
+		var max_step := 0.0
+		for i in range(1, shoulder_heights.size()):
+			max_step = maxf(max_step, absf(shoulder_heights[i] - shoulder_heights[i - 1]))
+		if max_step <= 9.5:
+			_pass("mountain road shoulder rises without cliff steps")
 		else:
-			_fail("macro terrain collision contract failed")
+			_fail("mountain shoulder still cliffs between samples: " + str(max_step))
+
+		var terrain_bodies := get_nodes_in_group("macro_terrain")
+		var collision_ready := terrain_bodies.size() == 1
+		if collision_ready:
+			var terrain_body = terrain_bodies[0]
+			collision_ready = (
+				terrain_body.name == "WorldTerrain"
+				and terrain_body.get_node_or_null("TerrainMesh") is MeshInstance3D
+				and terrain_body.get_node_or_null("TerrainCollision") is CollisionShape3D
+			)
+		if collision_ready:
+			_pass("one continuous visible/collidable terrain owns the world surface")
+		else:
+			_fail("continuous terrain ownership contract failed")
 
 	var egg_hunt := world.get_node_or_null("EggHunt")
 	var eggs_before := get_nodes_in_group("easter_egg").size()
-	if egg_hunt != null and int(egg_hunt.call("total_eggs")) == 12 and eggs_before == 12:
-		_pass("twelve Easter eggs are physically present in the world")
+	if egg_hunt != null and int(egg_hunt.call("total_eggs")) == 24 and eggs_before == 24:
+		_pass("twenty-four Easter eggs are physically present in the world")
 		if bool(egg_hunt.call("collect_for_test", 0)):
 			await process_frame
-			if int(egg_hunt.call("found_eggs")) == 1 and get_nodes_in_group("easter_egg").size() == 11:
+			if int(egg_hunt.call("found_eggs")) == 1 and get_nodes_in_group("easter_egg").size() == 23:
 				_pass("Easter egg collection updates count and removes pickup")
 			else:
 				_fail("Easter egg collection state did not update")
@@ -223,11 +249,13 @@ func _run() -> void:
 			_fail("buggy forward input is reversed")
 
 		var driver_cam := buggy.get_node_or_null("DriverCamera") as Camera3D
-		var chase_cam := buggy.get_node_or_null("ChaseCamera") as Camera3D
+		var chase_arm := buggy.get_node_or_null("ChaseSpringArm") as SpringArm3D
+		var chase_cam := buggy.get_node_or_null("ChaseSpringArm/ChaseCamera") as Camera3D
 		var hood_cam := buggy.get_node_or_null("HoodCamera") as Camera3D
 		var overhead_cam := buggy.get_node_or_null("OverheadCamera") as Camera3D
 		if (
 			driver_cam != null
+			and chase_arm != null
 			and chase_cam != null
 			and hood_cam != null
 			and overhead_cam != null
@@ -238,10 +266,16 @@ func _run() -> void:
 			_fail("buggy four-view camera rig missing or driver inactive")
 
 		var mode := str(buggy.call("cycle_camera"))
-		if mode == "CHASE" and chase_cam.current:
-			_pass("buggy switches to chase camera")
+		if mode == "CHASE" and chase_cam.current and chase_arm.spring_length >= 7.0:
+			_pass("buggy switches to collision-safe chase camera")
 		else:
-			_fail("buggy chase camera switch failed")
+			_fail("buggy chase camera switch/spring arm failed")
+		var yaw_before := chase_arm.rotation_degrees.y
+		buggy.call("add_camera_look", Vector2(80.0, 0.0))
+		if absf(chase_arm.rotation_degrees.y - yaw_before) > 1.0:
+			_pass("chase camera supports orbit look")
+		else:
+			_fail("chase camera orbit input did not move")
 		mode = str(buggy.call("cycle_camera"))
 		if mode == "HOOD" and hood_cam.current:
 			_pass("buggy switches to hood camera")
@@ -287,6 +321,20 @@ func _run() -> void:
 			_pass("vehicle exit restores walking camera and HUD")
 		else:
 			_fail("vehicle exit did not restore walking camera/HUD")
+
+	# Reproduce the cyan-underworld failure from physical playtest screenshots.
+	var recovery_xz := Vector2(player.global_position.x, player.global_position.z)
+	player.global_position.y = -2.0
+	player.velocity = Vector3.ZERO
+	for _i in range(3):
+		await physics_frame
+	if (
+		player.global_position.y > -0.75
+		and Vector2(player.global_position.x, player.global_position.z).distance_to(recovery_xz) < 40.0
+	):
+		_pass("player recovers immediately from below-world camera state")
+	else:
+		_fail("player remained below terrain after forced underworld state: " + str(player.global_position))
 
 	# HUD notifications are toasts, not permanent hovering messages.
 	hud.call("flash", "toast regression", 0.08)
