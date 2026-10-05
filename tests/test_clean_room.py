@@ -48,8 +48,8 @@ class CleanRoomContractTests(unittest.TestCase):
 
     def test_luca_personal_space_and_eyes(self):
         text = (ROOT / "scripts" / "Luca.gd").read_text(encoding="utf-8")
-        self.assertIn("PERSONAL_SPACE := 4.5", text)
-        self.assertIn("FOLLOW_DISTANCE := 7.0", text)
+        self.assertIn("PERSONAL_SPACE := 3.6", text)
+        self.assertIn("FOLLOW_DISTANCE := 6.5", text)
         for name in ("EyeWhite_L", "EyeWhite_R", "Pupil_L", "Pupil_R"):
             self.assertIn(name.split("_")[0], text)
         self.assertIn("eye_white", text)
@@ -62,10 +62,11 @@ class CleanRoomContractTests(unittest.TestCase):
 
     def test_luca_following_is_smoothed(self):
         text = (ROOT / "scripts" / "Luca.gd").read_text(encoding="utf-8")
-        self.assertIn("ACCEL := 8.5", text)
-        self.assertIn("TURN_RESPONSE := 5.2", text)
-        self.assertIn("FOLLOW_START_RADIUS", text)
-        self.assertIn("FOLLOW_STOP_RADIUS", text)
+        self.assertIn("ACCEL := 10.5", text)
+        self.assertIn("TURN_RESPONSE := 6.2", text)
+        self.assertIn("FOLLOW_WAKE_RADIUS", text)
+        self.assertIn("ARRIVAL_RADIUS", text)
+        self.assertIn("follow_heading = motion.normalized()", text)
         self.assertIn("lerp_angle", text)
 
     def test_buggy_has_four_distinct_cameras_and_view_control(self):
@@ -94,16 +95,21 @@ class CleanRoomContractTests(unittest.TestCase):
         self.assertIn("2.399963", game)
 
     def test_sandbox_modes_are_real(self):
-        text = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")
-        for mode in ("GRAB", "REMOVE", "DUPLICATE", "INSPECT"):
-            self.assertIn(mode, text)
+        import json
+        tools = json.loads((ROOT / "data" / "tools_v016.json").read_text(encoding="utf-8"))
+        actions = {spec["action"] for spec in tools["tools"].values()}
+        for action in ("grab", "remove", "duplicate", "inspect"):
+            self.assertIn(action, actions)
 
     def test_v013_terrain_tools_are_player_reachable(self):
         player = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")
         game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
         hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
-        for mode in ("MINE", "PLACE", "CRAFT"):
-            self.assertIn(mode, player)
+        import json
+        tools = json.loads((ROOT / "data" / "tools_v016.json").read_text(encoding="utf-8"))
+        actions = {spec["action"] for spec in tools["tools"].values()}
+        for action in ("mine", "place", "craft"):
+            self.assertIn(action, actions)
         for method in ("terrain_mine", "terrain_place", "terrain_craft"):
             self.assertIn(f"func {method}", game)
         self.assertIn('set_inventory_status', hud)
@@ -111,7 +117,7 @@ class CleanRoomContractTests(unittest.TestCase):
 
     def test_v013_recipe_is_data_driven(self):
         import json
-        recipes = json.loads((ROOT / "data" / "recipes_v013.json").read_text(encoding="utf-8"))
+        recipes = json.loads((ROOT / "data" / "recipes_v016.json").read_text(encoding="utf-8"))
         recipe = recipes["recipes"]["stone_brick"]
         self.assertEqual(recipe["ingredients"], {"stone": 3})
         self.assertEqual(recipe["outputs"], {"stone_brick": 1})

@@ -7,7 +7,9 @@ var root: Control
 var move_base: Panel
 var move_knob: Panel
 var spawn_panel: Panel
+var map_panel: Panel
 var spawn_button: Button
+var map_button: Button
 var tool_button: Button
 var noclip_button: Button
 var use_button: Button
@@ -38,10 +40,12 @@ func _ready() -> void:
 	_build_joystick()
 	_build_action_buttons()
 	_build_spawn_menu()
+	_build_map_menu()
 
 	root.resized.connect(_layout_for_viewport)
 	call_deferred("_layout_for_viewport")
-	set_tool_mode("GRAB")
+	if player != null:
+		player.call("_sync_tool_label")
 	set_noclip(false)
 	flash("FREE ROAM // left stick moves // drag RIGHT side to look")
 
@@ -50,7 +54,7 @@ func _build_header() -> void:
 	title.name = "Title"
 	title.position = Vector2(28, 22)
 	title.size = Vector2(520, 42)
-	title.text = "LUCA DOG WORLD  //  v0.15.2 KIMI"
+	title.text = "LUCA DOG WORLD  //  v0.16 KIMI"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_size_override("font_size", 25)
 	title.add_theme_color_override("font_color", Color(0.75, 1.0, 0.80))
@@ -60,7 +64,8 @@ func _build_header() -> void:
 	hint.name = "Hint"
 	hint.position = Vector2(30, 58)
 	hint.size = Vector2(650, 36)
-	hint.text = "OPEN WORLD // CONTINUOUS TERRAIN // 24 EGGS HIDDEN"
+	var map_label := str(game.call("get_active_map_label")) if game != null else "LUCA'S FIELD"
+	hint.text = "MAP: %s // DATA-DRIVEN TOOLS // 24 EGGS" % map_label
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", Color(0.72, 0.76, 0.74))
@@ -111,6 +116,10 @@ func _build_action_buttons() -> void:
 	spawn_button = _button("SPAWN", Vector2.ZERO, Vector2(172, 58))
 	spawn_button.pressed.connect(_toggle_spawn_menu)
 	_register_interactive(spawn_button)
+
+	map_button = _button("MAP", Vector2.ZERO, Vector2(172, 58))
+	map_button.pressed.connect(_toggle_map_menu)
+	_register_interactive(map_button)
 
 	tool_button = _button("TOOL", Vector2.ZERO, Vector2(172, 58))
 	tool_button.pressed.connect(func(): player.call("cycle_tool"))
@@ -186,6 +195,45 @@ func _build_spawn_menu() -> void:
 	close.pressed.connect(_toggle_spawn_menu)
 	interactive_controls.append(close)
 
+func _build_map_menu() -> void:
+	map_panel = Panel.new()
+	map_panel.name = "MapPanel"
+	map_panel.size = Vector2(350, 306)
+	map_panel.add_theme_stylebox_override(
+		"panel",
+		_round_style(Color(0.035, 0.055, 0.05, 0.96), Color(0.35, 0.86, 0.48), 18, 2)
+	)
+	root.add_child(map_panel)
+	map_panel.visible = false
+
+	var header := Label.new()
+	header.position = Vector2(20, 14)
+	header.size = Vector2(310, 34)
+	header.text = "WORLD MAPS"
+	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_theme_font_size_override("font_size", 21)
+	header.add_theme_color_override("font_color", Color(0.75, 1.0, 0.80))
+	map_panel.add_child(header)
+
+	var options: Array = game.call("get_map_options") if game != null else []
+	for i in range(options.size()):
+		var option: Dictionary = options[i]
+		var label := str(option.get("label", option.get("id", "MAP")))
+		var map_id := str(option.get("id", ""))
+		var button := _button(
+			label,
+			Vector2(24, 58 + i * 68),
+			Vector2(302, 54),
+			map_panel
+		)
+		button.pressed.connect(_map_pressed.bind(map_id, label))
+		interactive_controls.append(button)
+
+	var close := _button("CLOSE", Vector2(104, 264), Vector2(142, 34), map_panel)
+	close.pressed.connect(_toggle_map_menu)
+	interactive_controls.append(close)
+
 func _register_interactive(control: Control) -> void:
 	interactive_controls.append(control)
 
@@ -201,8 +249,9 @@ func _layout_for_viewport() -> void:
 
 	var right_x: float = maxf(880.0, size.x - 200.0)
 	spawn_button.position = Vector2(right_x, 22.0)
-	tool_button.position = Vector2(right_x, 88.0)
-	noclip_button.position = Vector2(right_x, 154.0)
+	map_button.position = Vector2(right_x, 88.0)
+	tool_button.position = Vector2(right_x, 154.0)
+	noclip_button.position = Vector2(right_x, 220.0)
 
 	use_button.position = Vector2(maxf(790.0, size.x - 230.0), maxf(500.0, size.y - 102.0))
 	jump_button.position = Vector2(maxf(680.0, size.x - 350.0), maxf(420.0, size.y - 178.0))
@@ -212,6 +261,7 @@ func _layout_for_viewport() -> void:
 	status_label.position = Vector2(size.x * 0.5 - 310.0, maxf(560.0, size.y - 56.0))
 
 	spawn_panel.position = Vector2(maxf(500.0, size.x - 565.0), 112.0)
+	map_panel.position = Vector2(maxf(500.0, size.x - 585.0), 112.0)
 
 func _process(delta: float) -> void:
 	if toast_time <= 0.0:
@@ -258,6 +308,8 @@ func _point_in_look_zone(position: Vector2) -> bool:
 func _touch_in_ui(position: Vector2) -> bool:
 	if spawn_panel.visible and spawn_panel.get_global_rect().has_point(position):
 		return true
+	if map_panel.visible and map_panel.get_global_rect().has_point(position):
+		return true
 	for control in interactive_controls:
 		if control == null or not is_instance_valid(control) or not control.is_visible_in_tree():
 			continue
@@ -285,7 +337,20 @@ func _jump_or_up_released() -> void:
 
 func _toggle_spawn_menu() -> void:
 	spawn_panel.visible = not spawn_panel.visible
+	if spawn_panel.visible and map_panel != null:
+		map_panel.visible = false
 	flash("Spawn menu open" if spawn_panel.visible else "Spawn menu closed")
+
+func _toggle_map_menu() -> void:
+	map_panel.visible = not map_panel.visible
+	if map_panel.visible and spawn_panel != null:
+		spawn_panel.visible = false
+	flash("Map selector open" if map_panel.visible else "Map selector closed")
+
+func _map_pressed(map_id: String, label: String) -> void:
+	flash("Loading " + label + "…", 2.0)
+	if not bool(game.call("request_map", map_id)):
+		flash("Map load rejected: " + map_id, 2.0)
 
 func _spawn_pressed(kind: String) -> void:
 	game.call("spawn_from_menu", kind)
@@ -311,6 +376,7 @@ func set_noclip(enabled: bool) -> void:
 func set_vehicle_mode(enabled: bool, camera_name := "DRIVER") -> void:
 	vehicle_active = enabled
 	spawn_button.visible = not enabled
+	map_button.visible = not enabled
 	tool_button.visible = not enabled
 	noclip_button.visible = not enabled
 	jump_button.visible = not enabled

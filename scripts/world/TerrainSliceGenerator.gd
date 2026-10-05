@@ -1,7 +1,11 @@
 extends VoxelGeneratorScript
 
-const WORLD_SEED := 6060
-var world_plan := KimiWorldPlan.new(WORLD_SEED)
+var world_seed := 6060
+var world_plan := KimiWorldPlan.new(world_seed)
+
+func configure(seed: int) -> void:
+	world_seed = seed
+	world_plan = KimiWorldPlan.new(world_seed)
 
 const CHANNEL_TYPE := 0
 const AIR := 0

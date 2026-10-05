@@ -1,0 +1,24 @@
+{
+  "schema_version": 2,
+  "recipes": {
+    "stone_brick": {
+      "label": "Stone Brick",
+      "ingredients": {
+        "stone": 3
+      },
+      "outputs": {
+        "stone_brick": 1
+      }
+    },
+    "trail_beacon": {
+      "label": "Trail Beacon",
+      "ingredients": {
+        "stone": 2,
+        "stone_brick": 1
+      },
+      "outputs": {
+        "trail_beacon": 1
+      }
+    }
+  }
+}

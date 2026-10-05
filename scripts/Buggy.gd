@@ -1,17 +1,19 @@
-extends CharacterBody3D
+extends VehicleBody3D
 
-const MAX_SPEED := 19.0
-const REVERSE_SPEED := 8.0
-const ACCEL := 18.0
-const BRAKE := 26.0
-const TURN_SPEED := 1.55
-const GRAVITY := 20.0
+const ENGINE_FORCE_MAX := 1450.0
+const REVERSE_FORCE_MAX := 900.0
+const BRAKE_FORCE := 52.0
+const COAST_BRAKE := 14.0
+const MAX_STEER := 0.46
+const STEER_RESPONSE := 2.8
+const RESET_Y := -2.5
+const IMPACT_MIN_SPEED := 4.0
 
 var world_half := 480.0
 var drive_input := Vector2.ZERO
 var driver_active := false
-var current_speed := 0.0
 var camera_mode := 0
+var impact_cooldowns: Dictionary = {}
 
 const CAMERA_NAMES := ["DRIVER", "CHASE", "HOOD", "OVERHEAD"]
 
@@ -21,12 +23,21 @@ var chase_camera: Camera3D
 var hood_camera: Camera3D
 var overhead_camera: Camera3D
 var camera_nodes: Array[Camera3D] = []
+var wheel_nodes: Array[VehicleWheel3D] = []
 
 func _ready() -> void:
 	add_to_group("vehicle")
-	floor_snap_length = 0.65
-	floor_max_angle = deg_to_rad(54.0)
+	collision_layer = 16
+	collision_mask = 1 | 8
+	mass = 620.0
+	continuous_cd = true
+	contact_monitor = true
+	max_contacts_reported = 12
+	center_of_mass_mode = RigidBody3D.CENTER_OF_MASS_MODE_CUSTOM
+	center_of_mass = Vector3(0.0, 0.34, 0.15)
+	body_entered.connect(_on_body_entered)
 	_build_buggy()
+	_build_wheels()
 	_build_cameras()
 
 func set_driver_active(active: bool) -> void:
@@ -35,7 +46,9 @@ func set_driver_active(active: bool) -> void:
 		activate_camera(0)
 	else:
 		drive_input = Vector2.ZERO
-		current_speed = move_toward(current_speed, 0.0, BRAKE * get_physics_process_delta_time())
+		engine_force = 0.0
+		brake = COAST_BRAKE
+		steering = 0.0
 		deactivate_cameras()
 
 func set_drive_input(value: Vector2) -> void:
@@ -68,47 +81,82 @@ func add_camera_look(delta_pixels: Vector2) -> void:
 	chase_arm.rotation_degrees = degrees
 
 func _physics_process(delta: float) -> void:
-	var throttle: float = -drive_input.y if driver_active else 0.0
-	var target_speed := 0.0
-	if throttle > 0.0:
-		target_speed = throttle * MAX_SPEED
-	elif throttle < 0.0:
-		target_speed = throttle * REVERSE_SPEED
+	_tick_impact_cooldowns(delta)
 
-	var rate := ACCEL if absf(target_speed) > absf(current_speed) else BRAKE
-	current_speed = move_toward(current_speed, target_speed, rate * delta)
-
-	if driver_active and absf(current_speed) > 0.35:
-		var direction_sign := 1.0 if current_speed >= 0.0 else -1.0
-		rotation.y -= drive_input.x * TURN_SPEED * delta * direction_sign
-
-	# Godot forward is -Z. Driver camera also looks -Z, so "up" on the stick
-	# always moves in the same direction the driver is looking.
-	var forward := -global_transform.basis.z
-	velocity.x = forward.x * current_speed
-	velocity.z = forward.z * current_speed
-
-	if not is_on_floor():
-		velocity.y -= GRAVITY * delta
+	if driver_active:
+		var throttle := -drive_input.y
+		var target_force := 0.0
+		if throttle > 0.03:
+			target_force = -throttle * ENGINE_FORCE_MAX
+		elif throttle < -0.03:
+			target_force = -throttle * REVERSE_FORCE_MAX
+		engine_force = target_force
+		brake = COAST_BRAKE if absf(throttle) <= 0.03 else 0.0
+		var target_steer := -drive_input.x * MAX_STEER
+		steering = move_toward(steering, target_steer, STEER_RESPONSE * delta)
 	else:
-		velocity.y = -0.5
+		engine_force = 0.0
+		brake = BRAKE_FORCE
+		steering = move_toward(steering, 0.0, STEER_RESPONSE * delta)
 
-	move_and_slide()
 	_update_camera_fov()
 
-	if absf(global_position.x) > world_half - 5.0:
-		global_position.x = clamp(global_position.x, -world_half + 6.0, world_half - 6.0)
-		current_speed = 0.0
-	if absf(global_position.z) > world_half - 5.0:
-		global_position.z = clamp(global_position.z, -world_half + 6.0, world_half - 6.0)
-		current_speed = 0.0
-	if global_position.y < -2.0:
-		global_position = Vector3(13, 2, 10)
-		current_speed = 0.0
-		velocity = Vector3.ZERO
+	if (
+		absf(global_position.x) > world_half - 5.0
+		or absf(global_position.z) > world_half - 5.0
+		or global_position.y < RESET_Y
+	):
+		_reset_vehicle(Vector3(13.0, 0.18, 10.0))
+
+func _reset_vehicle(at: Vector3) -> void:
+	global_position = at
+	global_rotation = Vector3.ZERO
+	linear_velocity = Vector3.ZERO
+	angular_velocity = Vector3.ZERO
+	engine_force = 0.0
+	brake = BRAKE_FORCE
+	steering = 0.0
+	sleeping = false
+
+func _tick_impact_cooldowns(delta: float) -> void:
+	for key in impact_cooldowns.keys():
+		var remaining := float(impact_cooldowns[key]) - delta
+		if remaining <= 0.0:
+			impact_cooldowns.erase(key)
+		else:
+			impact_cooldowns[key] = remaining
+
+func _on_body_entered(body: Node) -> void:
+	if body == null or not body.is_in_group("npc") or not body.has_method("take_damage"):
+		return
+	var id := body.get_instance_id()
+	if impact_cooldowns.has(id):
+		return
+	var speed := linear_velocity.length()
+	if speed < IMPACT_MIN_SPEED:
+		return
+	var damage := clampf((speed - 3.0) * 7.5, 8.0, 80.0)
+	var direction := linear_velocity.normalized()
+	body.call(
+		"take_damage",
+		damage,
+		direction * clampf(speed * 0.55, 3.0, 9.0),
+		global_position
+	)
+	impact_cooldowns[id] = 0.65
+
+func get_wheel_contact_count_for_test() -> int:
+	var count := 0
+	for wheel in wheel_nodes:
+		if wheel.is_in_contact():
+			count += 1
+	return count
+
+func get_vehicle_speed_for_test() -> float:
+	return linear_velocity.length()
 
 func _update_camera_fov() -> void:
-	var speed_ratio := clampf(absf(current_speed) / MAX_SPEED, 0.0, 1.0)
+	var speed_ratio := clampf(linear_velocity.length() / 22.0, 0.0, 1.0)
 	if driver_camera != null:
 		driver_camera.fov = lerpf(82.0, 90.0, speed_ratio)
 	if chase_camera != null:
@@ -160,52 +208,86 @@ func _build_cameras() -> void:
 
 func _build_buggy() -> void:
 	var collision := CollisionShape3D.new()
+	collision.name = "ChassisCollision"
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(2.5, 1.1, 4.2)
+	shape.size = Vector3(2.35, 0.82, 3.85)
 	collision.shape = shape
-	collision.position.y = 0.65
+	collision.position = Vector3(0.0, 0.78, 0.0)
 	add_child(collision)
 
 	var chassis := MeshInstance3D.new()
+	chassis.name = "Chassis"
 	var chassis_mesh := BoxMesh.new()
-	chassis_mesh.size = Vector3(2.5, 0.75, 4.2)
+	chassis_mesh.size = Vector3(2.45, 0.68, 3.9)
 	chassis.mesh = chassis_mesh
-	chassis.position.y = 0.75
-	chassis.material_override = _material(Color(0.14, 0.32, 0.48))
+	chassis.position = Vector3(0.0, 0.84, 0.05)
+	chassis.material_override = _material(Color(0.10, 0.28, 0.48))
 	add_child(chassis)
 
-	# Front/hood is -Z, matching Godot camera forward.
 	var hood := MeshInstance3D.new()
+	hood.name = "Hood"
 	var hood_mesh := BoxMesh.new()
-	hood_mesh.size = Vector3(2.1, 0.35, 1.15)
+	hood_mesh.size = Vector3(2.05, 0.28, 1.18)
 	hood.mesh = hood_mesh
-	hood.position = Vector3(0.0, 1.22, -1.38)
-	hood.material_override = _material(Color(0.20, 0.46, 0.62))
+	hood.position = Vector3(0.0, 1.22, -1.28)
+	hood.material_override = _material(Color(0.16, 0.43, 0.68))
 	add_child(hood)
 
 	var cab := MeshInstance3D.new()
+	cab.name = "Cab"
 	var cab_mesh := BoxMesh.new()
-	cab_mesh.size = Vector3(2.1, 0.85, 1.7)
+	cab_mesh.size = Vector3(1.95, 0.72, 1.42)
 	cab.mesh = cab_mesh
-	cab.position = Vector3(0, 1.45, 0.15)
-	cab.material_override = _material(Color(0.20, 0.46, 0.62))
+	cab.position = Vector3(0.0, 1.43, 0.22)
+	cab.material_override = _material(Color(0.18, 0.48, 0.72))
 	add_child(cab)
 
-	for x in [-1.30, 1.30]:
-		for z in [-1.35, 1.35]:
-			var wheel := MeshInstance3D.new()
-			var wheel_mesh := CylinderMesh.new()
-			wheel_mesh.top_radius = 0.48
-			wheel_mesh.bottom_radius = 0.48
-			wheel_mesh.height = 0.34
-			wheel.mesh = wheel_mesh
-			wheel.position = Vector3(x, 0.48, z)
-			wheel.rotation_degrees.z = 90
-			wheel.material_override = _material(Color(0.035, 0.04, 0.04))
-			add_child(wheel)
+	var bumper := MeshInstance3D.new()
+	bumper.name = "FrontBumper"
+	var bumper_mesh := BoxMesh.new()
+	bumper_mesh.size = Vector3(2.42, 0.20, 0.18)
+	bumper.mesh = bumper_mesh
+	bumper.position = Vector3(0.0, 0.58, -2.02)
+	bumper.material_override = _material(Color(0.10, 0.11, 0.12))
+	add_child(bumper)
+
+func _build_wheels() -> void:
+	_add_wheel("FrontLeft", Vector3(-1.12, 0.62, -1.38), true)
+	_add_wheel("FrontRight", Vector3(1.12, 0.62, -1.38), true)
+	_add_wheel("RearLeft", Vector3(-1.12, 0.62, 1.30), false)
+	_add_wheel("RearRight", Vector3(1.12, 0.62, 1.30), false)
+
+func _add_wheel(label: String, at: Vector3, steering_wheel: bool) -> void:
+	var wheel := VehicleWheel3D.new()
+	wheel.name = label
+	wheel.position = at
+	wheel.wheel_radius = 0.48
+	wheel.wheel_rest_length = 0.30
+	wheel.suspension_travel = 0.22
+	wheel.suspension_stiffness = 7.5
+	wheel.suspension_max_force = 7800.0
+	wheel.damping_compression = 0.75
+	wheel.damping_relaxation = 0.88
+	wheel.wheel_friction_slip = 4.6
+	wheel.use_as_steering = steering_wheel
+	wheel.use_as_traction = true
+	add_child(wheel)
+
+	var visual := MeshInstance3D.new()
+	visual.name = "WheelVisual"
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.48
+	mesh.bottom_radius = 0.48
+	mesh.height = 0.34
+	mesh.radial_segments = 16
+	visual.mesh = mesh
+	visual.rotation_degrees.z = 90.0
+	visual.material_override = _material(Color(0.025, 0.03, 0.035))
+	wheel.add_child(visual)
+	wheel_nodes.append(wheel)
 
 func _material(color: Color) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color
-	material.roughness = 0.75
+	material.roughness = 0.78
 	return material

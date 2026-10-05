@@ -9,7 +9,6 @@ const SAFE_MARGIN := 16.0
 const JUMP_BUFFER_TIME := 0.22
 const COYOTE_TIME := 0.14
 const FALL_RECOVERY_Y := -1.25
-const TOOL_MODES := ["GRAB", "REMOVE", "DUPLICATE", "INSPECT", "MINE", "PLACE", "CRAFT"]
 
 var game: Node
 var hud: CanvasLayer
@@ -24,9 +23,10 @@ var coyote_timer := 0.0
 var yaw := 0.0
 var pitch := -0.08
 var noclip := false
+var tool_ids: Array[String] = []
 var tool_index := 0
 var held_body: RigidBody3D
-var riding: CharacterBody3D
+var riding: Node3D
 
 var last_safe_ground_position := Vector3(0.0, 2.5, 24.0)
 var safe_ground_timer := 0.0
@@ -63,6 +63,7 @@ func _ready() -> void:
 	rotation.y = yaw
 	pivot.rotation.x = pitch
 	last_safe_ground_position = global_position
+	_refresh_tool_catalog()
 
 	if not OS.has_feature("mobile"):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -224,12 +225,42 @@ func set_vertical_input(value: float) -> void:
 	if value > 0.0 and not noclip:
 		request_jump()
 
+func _refresh_tool_catalog() -> void:
+	tool_ids.clear()
+	if game != null:
+		for tool_id in game.call("get_tool_ids"):
+			tool_ids.append(str(tool_id))
+	if tool_ids.is_empty():
+		tool_ids = ["grab", "inspect", "mine", "place", "craft"]
+	tool_index = clampi(tool_index, 0, tool_ids.size() - 1)
+	_sync_tool_label()
+
+func _current_tool_id() -> String:
+	if tool_ids.is_empty():
+		return "grab"
+	return tool_ids[tool_index]
+
+func _current_tool_definition() -> Dictionary:
+	if game == null:
+		return {"label": _current_tool_id().to_upper(), "action": _current_tool_id(), "range": 7.0}
+	var definition: Dictionary = game.call("get_tool_definition", _current_tool_id())
+	if definition.is_empty():
+		return {"label": _current_tool_id().to_upper(), "action": _current_tool_id(), "range": 7.0}
+	return definition
+
+func _sync_tool_label() -> void:
+	if hud == null:
+		return
+	var definition := _current_tool_definition()
+	hud.call("set_tool_mode", str(definition.get("label", _current_tool_id().to_upper())))
+
 func cycle_tool() -> void:
 	if held_body != null:
 		_release_held()
-	tool_index = (tool_index + 1) % TOOL_MODES.size()
-	if hud != null:
-		hud.call("set_tool_mode", TOOL_MODES[tool_index])
+	if tool_ids.is_empty():
+		_refresh_tool_catalog()
+	tool_index = (tool_index + 1) % tool_ids.size()
+	_sync_tool_label()
 
 func toggle_noclip() -> void:
 	if riding != null:
@@ -250,29 +281,33 @@ func use_tool() -> void:
 		exit_vehicle()
 		return
 
-	var mode: String = TOOL_MODES[tool_index]
-	if mode == "CRAFT":
+	var definition := _current_tool_definition()
+	var action := str(definition.get("action", "inspect"))
+	var reach := float(definition.get("range", 7.0))
+	var direction := -camera.global_transform.basis.z
+
+	if action == "craft":
 		if hud != null:
 			hud.call("flash", str(game.call("terrain_craft")), 1.8)
 		return
-	if mode == "MINE" or mode == "PLACE":
-		var direction := -camera.global_transform.basis.z
+
+	if action == "mine" or action == "place":
 		var result := ""
-		if mode == "MINE":
-			result = str(game.call("terrain_mine", camera.global_position, direction))
+		if action == "mine":
+			result = str(game.call("terrain_mine", camera.global_position, direction, reach))
 		else:
-			result = str(game.call("terrain_place", camera.global_position, direction))
+			result = str(game.call("terrain_place", camera.global_position, direction, reach))
 		if hud != null:
 			hud.call("flash", result, 1.8)
 		return
 
-	if mode == "GRAB" and held_body != null:
+	if action == "grab" and held_body != null:
 		_release_held()
 		if hud != null:
 			hud.call("flash", "Released prop")
 		return
 
-	var hit := _raycast(7.0)
+	var hit := _raycast(reach)
 	if hit.is_empty():
 		if hud != null:
 			hud.call("flash", "Nothing in reach")
@@ -291,32 +326,61 @@ func use_tool() -> void:
 			hud.call("flash", "Luca is right here. Good dog.")
 		return
 
+	if action == "strike":
+		_strike_target(target, direction, definition)
+		return
+
 	if target.is_in_group("npc"):
 		if hud != null:
 			hud.call("flash", str(target.call("describe")))
 		return
 
-	match mode:
-		"GRAB":
+	match action:
+		"grab":
 			if target is RigidBody3D and target.is_in_group("sandbox_prop"):
 				held_body = target
 				held_body.freeze = true
 				if hud != null:
 					hud.call("flash", "Grabbed " + str(target.name))
-		"REMOVE":
+		"remove":
 			if target.is_in_group("sandbox_prop"):
 				target.queue_free()
 				if hud != null:
 					hud.call("flash", "Removed prop")
-		"DUPLICATE":
+		"duplicate":
 			if target.is_in_group("sandbox_prop"):
 				game.call("duplicate_prop", target)
 				if hud != null:
 					hud.call("flash", "Duplicated prop")
-		"INSPECT":
+		"inspect":
 			if hud != null:
 				var groups = target.get_groups()
 				hud.call("flash", "%s // %s" % [target.name, str(groups)])
+
+func _strike_target(target, direction: Vector3, definition: Dictionary) -> void:
+	var damage := float(definition.get("damage", 0.0))
+	var knockback := float(definition.get("knockback", 0.0))
+	if target.is_in_group("npc") and target.has_method("take_damage"):
+		var result := str(
+			target.call(
+				"take_damage",
+				damage,
+				direction.normalized() * knockback,
+				camera.global_position
+			)
+		)
+		if hud != null:
+			hud.call("flash", result, 1.4)
+		return
+
+	if target is RigidBody3D:
+		target.apply_central_impulse(direction.normalized() * knockback)
+		if hud != null:
+			hud.call("flash", "Hammer impact")
+		return
+
+	if hud != null:
+		hud.call("flash", "Hammer cannot damage that")
 
 func _raycast(distance: float) -> Dictionary:
 	var query := PhysicsRayQueryParameters3D.new()
@@ -332,7 +396,7 @@ func _release_held() -> void:
 		held_body.freeze = false
 	held_body = null
 
-func enter_vehicle(vehicle: CharacterBody3D) -> void:
+func enter_vehicle(vehicle: Node3D) -> void:
 	if noclip:
 		noclip = false
 		if hud != null:

@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "order": [
+    "grab",
+    "inspect",
+    "field_hammer",
+    "mine",
+    "place",
+    "craft",
+    "duplicate",
+    "remove"
+  ],
+  "tools": {
+    "grab": {
+      "label": "GRAB",
+      "action": "grab",
+      "range": 7.0,
+      "starter": true
+    },
+    "inspect": {
+      "label": "INSPECT",
+      "action": "inspect",
+      "range": 8.0,
+      "starter": true
+    },
+    "field_hammer": {
+      "label": "HAMMER",
+      "action": "strike",
+      "range": 4.25,
+      "damage": 25.0,
+      "knockback": 5.5,
+      "starter": true
+    },
+    "mine": {
+      "label": "MINE",
+      "action": "mine",
+      "range": 8.0,
+      "starter": true
+    },
+    "place": {
+      "label": "PLACE",
+      "action": "place",
+      "range": 8.0,
+      "starter": true
+    },
+    "craft": {
+      "label": "CRAFT",
+      "action": "craft",
+      "range": 0.0,
+      "starter": true
+    },
+    "duplicate": {
+      "label": "DUPLICATE",
+      "action": "duplicate",
+      "range": 7.0,
+      "starter": true
+    },
+    "remove": {
+      "label": "REMOVE",
+      "action": "remove",
+      "range": 7.0,
+      "starter": true
+    }
+  }
+}

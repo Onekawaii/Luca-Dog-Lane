@@ -57,7 +57,7 @@ class ContinuousTerrainPassTests(unittest.TestCase):
         player = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")
         buggy = (ROOT / "scripts" / "Buggy.gd").read_text(encoding="utf-8")
         self.assertIn("FALL_RECOVERY_Y := -1.25", player)
-        self.assertIn("global_position.y < -2.0", buggy)
+        self.assertIn("RESET_Y := -2.5", buggy)
 
 
 if __name__ == "__main__":

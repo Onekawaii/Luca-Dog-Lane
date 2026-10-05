@@ -1,35 +1,60 @@
 extends CharacterBody3D
 
-const MAX_SPEED := 6.1
-const RETREAT_SPEED := 3.8
-const ACCEL := 8.5
-const TURN_RESPONSE := 5.2
+const MAX_SPEED := 5.8
+const RETREAT_SPEED := 3.4
+const ACCEL := 10.5
+const DECEL := 13.0
+const TURN_RESPONSE := 6.2
 const GRAVITY := 18.0
-const FOLLOW_DISTANCE := 7.0
-const FOLLOW_SIDE_OFFSET := 2.0
-const PERSONAL_SPACE := 4.5
-const PERSONAL_SPACE_RELEASE := 5.4
-const FOLLOW_START_RADIUS := 3.0
-const FOLLOW_STOP_RADIUS := 1.35
-const RECOVER_DISTANCE := 60.0
+const FOLLOW_DISTANCE := 6.5
+const FOLLOW_SIDE_OFFSET := 1.8
+const PERSONAL_SPACE := 3.6
+const PERSONAL_SPACE_RELEASE := 4.8
+const FOLLOW_WAKE_RADIUS := 2.6
+const ARRIVAL_RADIUS := 1.15
+const PLAYER_MOVE_EPSILON := 0.035
+const RECOVER_DISTANCE := 62.0
+const OBSTACLE_PROBE := 2.4
 
 var player: CharacterBody3D
 var world_half := 480.0
 var state := "WAIT"
 var follow_engaged := false
 var giving_space := false
+var follow_heading := Vector3(0.0, 0.0, -1.0)
+var follow_anchor := Vector3.ZERO
+var previous_player_position := Vector3.ZERO
+var anchor_initialized := false
 
 func _ready() -> void:
 	add_to_group("luca")
 	collision_layer = 2
 	collision_mask = 1
-	floor_snap_length = 0.28
+	floor_snap_length = 0.32
 	floor_max_angle = deg_to_rad(50.0)
 	_build_dog()
+	call_deferred("_initialize_follow_anchor")
+
+func _initialize_follow_anchor() -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	previous_player_position = player.global_position
+	var forward := -player.global_transform.basis.z
+	forward.y = 0.0
+	if forward.length() > 0.01:
+		follow_heading = forward.normalized()
+	follow_anchor = _compute_follow_anchor()
+	anchor_initialized = true
 
 func _physics_process(delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
+	if not anchor_initialized:
+		_initialize_follow_anchor()
+		if not anchor_initialized:
+			return
+
+	_update_follow_anchor_from_player_motion()
 
 	var player_offset := player.global_position - global_position
 	player_offset.y = 0.0
@@ -37,70 +62,126 @@ func _physics_process(delta: float) -> void:
 
 	if player_distance > RECOVER_DISTANCE:
 		state = "RECOVER"
-		global_position = _preferred_follow_position() + Vector3.UP * 0.6
+		global_position = follow_anchor + Vector3.UP * 0.6
 		velocity = Vector3.ZERO
 		follow_engaged = false
 		giving_space = false
 		return
-
-	var preferred := _preferred_follow_position()
-	var target_offset := preferred - global_position
-	target_offset.y = 0.0
-	var target_distance := target_offset.length()
 
 	if giving_space:
 		giving_space = player_distance < PERSONAL_SPACE_RELEASE
 	elif player_distance < PERSONAL_SPACE:
 		giving_space = true
 
+	var target := follow_anchor
+	var target_offset := target - global_position
+	target_offset.y = 0.0
+	var target_distance := target_offset.length()
+
 	if follow_engaged:
-		follow_engaged = target_distance > FOLLOW_STOP_RADIUS
-	elif target_distance > FOLLOW_START_RADIUS:
+		follow_engaged = target_distance > ARRIVAL_RADIUS
+	elif target_distance > FOLLOW_WAKE_RADIUS:
 		follow_engaged = true
 
 	var desired := Vector3.ZERO
 	if giving_space and player_distance > 0.05:
 		state = "GIVE_SPACE"
 		desired = -player_offset.normalized() * RETREAT_SPEED
-	elif follow_engaged and target_distance > 0.05:
+	elif follow_engaged and target_distance > ARRIVAL_RADIUS:
 		state = "FOLLOW"
-		var speed_scale := clampf(target_distance / 8.0, 0.45, 1.0)
-		desired = target_offset.normalized() * MAX_SPEED * speed_scale
+		var direction := target_offset.normalized()
+		direction = _avoid_obstacle(direction)
+		var arrival_scale := clampf(
+			(target_distance - ARRIVAL_RADIUS) / 5.0,
+			0.18,
+			1.0
+		)
+		desired = direction * MAX_SPEED * arrival_scale
 	else:
 		state = "WAIT"
 
-	velocity.x = move_toward(velocity.x, desired.x, ACCEL * delta)
-	velocity.z = move_toward(velocity.z, desired.z, ACCEL * delta)
+	var rate := ACCEL if desired.length() > 0.05 else DECEL
+	velocity.x = move_toward(velocity.x, desired.x, rate * delta)
+	velocity.z = move_toward(velocity.z, desired.z, rate * delta)
 
 	var planar_velocity := Vector3(velocity.x, 0.0, velocity.z)
-	if planar_velocity.length() > 0.28:
+	if planar_velocity.length() > 0.22:
 		var direction := planar_velocity.normalized()
 		var target_yaw := atan2(-direction.x, -direction.z)
 		rotation.y = lerp_angle(rotation.y, target_yaw, minf(TURN_RESPONSE * delta, 1.0))
+	elif desired.is_zero_approx():
+		velocity.x = 0.0 if absf(velocity.x) < 0.08 else velocity.x
+		velocity.z = 0.0 if absf(velocity.z) < 0.08 else velocity.z
 
 	if not is_on_floor():
 		velocity.y -= GRAVITY * delta
 	elif velocity.y < 0.0:
-		velocity.y = 0.0
+		velocity.y = -0.2
 
 	move_and_slide()
 
 	if (
 		absf(global_position.x) > world_half - 4.0
 		or absf(global_position.z) > world_half - 4.0
-		or global_position.y < -5.0
+		or global_position.y < -2.0
 	):
-		global_position = _preferred_follow_position() + Vector3.UP * 0.6
+		global_position = follow_anchor + Vector3.UP * 0.6
 		velocity = Vector3.ZERO
 		follow_engaged = false
 		giving_space = false
 
-func _preferred_follow_position() -> Vector3:
+func _update_follow_anchor_from_player_motion() -> void:
+	var current := player.global_position
+	var motion := current - previous_player_position
+	motion.y = 0.0
+
+	if motion.length() >= PLAYER_MOVE_EPSILON:
+		follow_heading = motion.normalized()
+		follow_anchor = _compute_follow_anchor()
+	else:
+		# Preserve the formation slot when the player only rotates the camera.
+		# Tiny physics jitter may translate the slot, but yaw alone never orbits it.
+		var translation := current - previous_player_position
+		translation.y = 0.0
+		if translation.length() > 0.0001:
+			follow_anchor += translation
+
+	previous_player_position = current
+
+func _compute_follow_anchor() -> Vector3:
+	var heading := follow_heading
+	heading.y = 0.0
+	if heading.length() <= 0.01:
+		heading = Vector3(0.0, 0.0, -1.0)
+	heading = heading.normalized()
+	var right := heading.cross(Vector3.UP).normalized()
 	return (
 		player.global_position
-		+ player.global_transform.basis.z * FOLLOW_DISTANCE
-		+ player.global_transform.basis.x * FOLLOW_SIDE_OFFSET
+		- heading * FOLLOW_DISTANCE
+		+ right * FOLLOW_SIDE_OFFSET
 	)
+
+func _avoid_obstacle(direction: Vector3) -> Vector3:
+	if direction.length() <= 0.01:
+		return direction
+	var query := PhysicsRayQueryParameters3D.new()
+	query.from = global_position + Vector3.UP * 0.65
+	query.to = query.from + direction * OBSTACLE_PROBE
+	query.exclude = [get_rid(), player.get_rid()]
+	query.collision_mask = 1
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return direction
+
+	var side := Vector3.UP.cross(direction).normalized()
+	var toward_anchor := follow_anchor - global_position
+	toward_anchor.y = 0.0
+	if side.dot(toward_anchor) < 0.0:
+		side = -side
+	return (direction * 0.45 + side * 0.85).normalized()
+
+func get_follow_anchor_for_test() -> Vector3:
+	return follow_anchor
 
 func _build_dog() -> void:
 	var collision := CollisionShape3D.new()

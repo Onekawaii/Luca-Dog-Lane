@@ -2,8 +2,8 @@ extends Node3D
 
 const WORLD_HALF := 480.0
 const GROUND_THICKNESS := 2.0
-const PLAYER_START := Vector3(0.0, 2.5, 24.0)
-const WORLD_SEED := 6060
+const DEFAULT_WORLD_SEED := 6060
+const DEFAULT_PLAYER_START := Vector3(0.0, 2.5, 24.0)
 
 var player: CharacterBody3D
 var hud: CanvasLayer
@@ -17,13 +17,20 @@ var spawn_menu_serial := 0
 var spawned_npc_serial := 0
 var world_plan: KimiWorldPlan
 var world_generator: KimiWorldGenerator
+var content_registry: ContentRegistry
+var active_map_id := "lucas_field"
+var active_map_profile: Dictionary = {}
+var world_seed := DEFAULT_WORLD_SEED
+var player_start := DEFAULT_PLAYER_START
+var terrain_scale := 1.0
 
 func _ready() -> void:
 	if OS.get_environment("LUCA_V013_EXPORT_PROBE") == "1":
 		_run_v013_export_probe()
 		return
 
-	world_plan = KimiWorldPlan.new(WORLD_SEED)
+	_setup_content_registry()
+	world_plan = KimiWorldPlan.new(world_seed)
 	world_generator = KimiWorldGenerator.new(world_plan)
 	_setup_environment()
 	_build_ground_and_boundaries()
@@ -40,7 +47,67 @@ func _ready() -> void:
 	_spawn_starter_props()
 	_spawn_hud()
 	_spawn_egg_hunt()
-	print("LUCA_SANDBOX_READY world_half=", WORLD_HALF)
+	print(
+		"LUCA_SANDBOX_READY world_half=", WORLD_HALF,
+		" map=", active_map_id,
+		" seed=", world_seed
+	)
+
+func _setup_content_registry() -> void:
+	content_registry = ContentRegistry.new()
+	content_registry.name = "ContentRegistry"
+	add_child(content_registry)
+	if not content_registry.is_valid():
+		push_error("Content registry failed validation")
+
+	var default_id := content_registry.get_default_map_id()
+	var requested := str(ProjectSettings.get_setting("luca/session_map", default_id))
+	if content_registry.get_map(requested).is_empty():
+		requested = default_id
+
+	active_map_id = requested
+	active_map_profile = content_registry.get_map(active_map_id)
+	world_seed = int(active_map_profile.get("seed", DEFAULT_WORLD_SEED))
+	terrain_scale = float(active_map_profile.get("terrain_scale", 1.0))
+	player_start = _vector3_from_array(
+		active_map_profile.get("spawn", [0.0, 2.5, 24.0]),
+		DEFAULT_PLAYER_START
+	)
+
+func get_tool_ids() -> Array[String]:
+	return content_registry.get_tool_ids() if content_registry != null else []
+
+func get_tool_definition(tool_id: String) -> Dictionary:
+	return content_registry.get_tool(tool_id) if content_registry != null else {}
+
+func get_map_options() -> Array[Dictionary]:
+	return content_registry.get_map_options() if content_registry != null else []
+
+func get_active_map_id() -> String:
+	return active_map_id
+
+func get_active_map_label() -> String:
+	return str(active_map_profile.get("label", active_map_id.to_upper()))
+
+func request_map(map_id: String) -> bool:
+	if content_registry == null or content_registry.get_map(map_id).is_empty():
+		return false
+	ProjectSettings.set_setting("luca/session_map", map_id)
+	call_deferred("_reload_requested_map")
+	return true
+
+func _reload_requested_map() -> void:
+	get_tree().reload_current_scene()
+
+func _vector3_from_array(value, fallback: Vector3) -> Vector3:
+	if typeof(value) != TYPE_ARRAY or value.size() != 3:
+		return fallback
+	return Vector3(float(value[0]), float(value[1]), float(value[2]))
+
+func _color_from_array(value, fallback: Color) -> Color:
+	if typeof(value) != TYPE_ARRAY or value.size() < 3:
+		return fallback
+	return Color(float(value[0]), float(value[1]), float(value[2]))
 
 func _run_v013_export_probe() -> void:
 	var required := [
@@ -73,8 +140,14 @@ func _setup_environment() -> void:
 	environment.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
 	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.16, 0.42, 0.73)
-	sky_material.sky_horizon_color = Color(0.72, 0.86, 0.88)
+	sky_material.sky_top_color = _color_from_array(
+		active_map_profile.get("sky_top", [0.16, 0.42, 0.73]),
+		Color(0.16, 0.42, 0.73)
+	)
+	sky_material.sky_horizon_color = _color_from_array(
+		active_map_profile.get("sky_horizon", [0.72, 0.86, 0.88]),
+		Color(0.72, 0.86, 0.88)
+	)
 	sky_material.ground_bottom_color = Color(0.12, 0.18, 0.16)
 	sky_material.ground_horizon_color = Color(0.50, 0.61, 0.55)
 	sky.sky_material = sky_material
@@ -83,8 +156,11 @@ func _setup_environment() -> void:
 	environment.ambient_light_energy = 0.56
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	environment.fog_enabled = true
-	environment.fog_light_color = Color(0.56, 0.66, 0.68)
-	environment.fog_density = 0.00115
+	environment.fog_light_color = _color_from_array(
+		active_map_profile.get("fog_color", [0.56, 0.66, 0.68]),
+		Color(0.56, 0.66, 0.68)
+	)
+	environment.fog_density = float(active_map_profile.get("fog_density", 0.00115))
 	world_environment.environment = environment
 	add_child(world_environment)
 
@@ -188,7 +264,7 @@ func _build_wilderness() -> void:
 				rock_total += 1
 
 	print(
-		"KIMI_WORLD_CORE_READY seed=", WORLD_SEED,
+		"KIMI_WORLD_CORE_READY seed=", world_seed,
 		" descriptor_digest=", descriptor_digest,
 		" trees=", tree_total,
 		" rocks=", rock_total
@@ -216,6 +292,7 @@ func _spawn_macro_terrain() -> void:
 	node.set_script(load("res://scripts/world/MacroTerrain.gd"))
 	node.set("world_plan", world_plan)
 	node.set("world_half", WORLD_HALF)
+	node.set("height_scale", terrain_scale)
 	add_child(node)
 	macro_terrain = node as MacroTerrain
 
@@ -223,7 +300,7 @@ func _spawn_player() -> void:
 	var node := CharacterBody3D.new()
 	node.name = "Player"
 	node.set_script(load("res://scripts/Player.gd"))
-	node.position = PLAYER_START
+	node.position = player_start
 	node.set("game", self)
 	add_child(node)
 	player = node
@@ -233,6 +310,7 @@ func _spawn_terrain_slice() -> void:
 	node.name = "V013TerrainSlice"
 	node.set_script(load("res://scripts/world/TerrainSlice.gd"))
 	node.set("player", player)
+	node.set("world_seed", world_seed)
 	add_child(node)
 	terrain_slice = node
 
@@ -249,7 +327,7 @@ func _spawn_luca() -> void:
 	node.name = "Luca"
 	node.set_script(load("res://scripts/Luca.gd"))
 	# Spawn Luca well behind/right of the player instead of in camera space.
-	node.position = PLAYER_START + Vector3(7.5, 0.0, 9.0)
+	node.position = player_start + Vector3(7.5, 0.0, 9.0)
 	node.set("player", player)
 	node.set("world_half", WORLD_HALF)
 	add_child(node)
@@ -285,6 +363,7 @@ func _spawn_hud() -> void:
 	add_child(layer)
 	hud = layer
 	player.set("hud", hud)
+	player.call("_sync_tool_label")
 	if terrain_slice != null:
 		terrain_slice.call("set_hud", hud)
 	if quarry_expedition != null:
@@ -300,15 +379,15 @@ func _spawn_egg_hunt() -> void:
 	add_child(node)
 	egg_hunt = node as EggHunt
 
-func terrain_mine(origin: Vector3, direction: Vector3) -> String:
+func terrain_mine(origin: Vector3, direction: Vector3, max_distance := 8.0) -> String:
 	if terrain_slice == null:
 		return "Terrain slice unavailable"
-	return str(terrain_slice.call("mine_from_ray", origin, direction))
+	return str(terrain_slice.call("mine_from_ray", origin, direction, max_distance))
 
-func terrain_place(origin: Vector3, direction: Vector3) -> String:
+func terrain_place(origin: Vector3, direction: Vector3, max_distance := 8.0) -> String:
 	if terrain_slice == null:
 		return "Terrain slice unavailable"
-	return str(terrain_slice.call("place_from_ray", origin, direction))
+	return str(terrain_slice.call("place_from_ray", origin, direction, max_distance))
 
 func terrain_craft() -> String:
 	if terrain_slice == null:
@@ -432,10 +511,12 @@ func _spawn_npc(at: Vector3, display_name: String) -> void:
 	add_child(npc)
 
 func _spawn_buggy(at: Vector3) -> void:
-	var buggy := CharacterBody3D.new()
+	var buggy := VehicleBody3D.new()
 	buggy.name = "SandboxBuggy"
 	buggy.set_script(load("res://scripts/Buggy.gd"))
-	buggy.position = Vector3(clamp(at.x, -440.0, 440.0), max(at.y, 1.1), clamp(at.z, -440.0, 440.0))
+	var x := clampf(at.x, -440.0, 440.0)
+	var z := clampf(at.z, -440.0, 440.0)
+	buggy.position = Vector3(x, _surface_height(x, z) + 0.18, z)
 	buggy.set("world_half", WORLD_HALF)
 	add_child(buggy)
 

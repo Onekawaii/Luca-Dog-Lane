@@ -14,6 +14,7 @@ const REPLAY_INTERVAL := 0.75
 var player: CharacterBody3D
 var hud: CanvasLayer
 var save_path_override := ""
+var world_seed := 6060
 
 var terrain: Node
 var viewer: Node3D
@@ -157,7 +158,9 @@ func _setup_persistence() -> void:
 	var selected_path := save_path_override
 	if selected_path.is_empty():
 		selected_path = OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
-	persistence.call("configure", selected_path)
+	if selected_path.is_empty():
+		selected_path = "user://v016_terrain_slice_%d.json" % world_seed
+	persistence.call("configure", selected_path, world_seed)
 
 func _setup_inventory() -> void:
 	inventory = Node.new()
@@ -186,9 +189,12 @@ func _setup_terrain() -> void:
 	var mesher = ClassDB.instantiate("VoxelMesherBlocky")
 	mesher.set("library", library)
 
+	var generator = load("res://scripts/world/TerrainSliceGenerator.gd").new()
+	generator.call("configure", world_seed)
+
 	terrain = ClassDB.instantiate("VoxelTerrain")
 	terrain.name = "V013VoxelTerrain"
-	terrain.set("generator", load("res://scripts/world/TerrainSliceGenerator.gd").new())
+	terrain.set("generator", generator)
 	terrain.set("mesher", mesher)
 	terrain.set("bounds", SLICE_BOUNDS)
 	terrain.set("max_view_distance", 96)

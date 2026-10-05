@@ -2,17 +2,20 @@ extends Node
 
 signal changed(summary: String)
 
-const RECIPE_PATH := "res://data/recipes_v013.json"
+const RECIPE_PATH := "res://data/recipes_v016.json"
+const ITEM_PATH := "res://data/items_v016.json"
 
 var persistence: Node
-var counts: Dictionary = {"stone": 0, "stone_brick": 0}
+var counts: Dictionary = {}
 var recipes: Dictionary = {}
+var item_labels: Dictionary = {}
 
 func configure(store: Node) -> void:
 	persistence = store
+	_load_items()
 	counts = persistence.call("get_inventory_snapshot")
-	counts["stone"] = int(counts.get("stone", 0))
-	counts["stone_brick"] = int(counts.get("stone_brick", 0))
+	for item_id in item_labels:
+		counts[str(item_id)] = int(counts.get(str(item_id), 0))
 	_load_recipes()
 	_emit_changed()
 
@@ -58,10 +61,26 @@ func craft(recipe_id: String) -> Dictionary:
 	}
 
 func summary() -> String:
-	return "STONE %d  //  BRICK %d" % [count_item("stone"), count_item("stone_brick")]
+	return "STONE %d  //  BRICK %d  //  BEACON %d" % [
+		count_item("stone"),
+		count_item("stone_brick"),
+		count_item("trail_beacon"),
+	]
 
 func snapshot() -> Dictionary:
 	return counts.duplicate(true)
+
+func _load_items() -> void:
+	var text := FileAccess.get_file_as_string(ITEM_PATH)
+	var parsed = JSON.parse_string(text)
+	if typeof(parsed) != TYPE_DICTIONARY:
+		push_error("Item data failed to parse: " + ITEM_PATH)
+		item_labels = {}
+		return
+	item_labels.clear()
+	for item_id in parsed.get("items", {}):
+		var spec: Dictionary = parsed["items"][item_id]
+		item_labels[str(item_id)] = str(spec.get("label", item_id))
 
 func _load_recipes() -> void:
 	var text := FileAccess.get_file_as_string(RECIPE_PATH)

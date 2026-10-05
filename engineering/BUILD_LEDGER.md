@@ -233,3 +233,25 @@ Every entry must contain:
 - **Preserved systems:** ENG-003 Voxel Tools editable mountain/cave slice remains active and is explicitly flattened out of macro terrain overlap. ENG-007 Quarry Ridge remains intact.
 - **Known limit:** Physical Android v0.15.2 FPS and touch/terrain playtest remains pending until the exported APK is installed on-device.
 - **Status:** PASS — release candidate pending exact-commit exports.
+
+
+---
+
+## ENG-010 — v0.16 world systems: physical buggy, stable companion, damageable NPCs, content/maps
+
+- **Date:** 2026-10-05
+- **Branch / base:** `feat/v0.16-world-systems`, based on verified v0.15.2 checkpoint `c07e92f32840872ca2293316d84658888642cc02`.
+- **Physical-playtest input:** Android screenshots showed the buggy still gliding/floating, Luca orbiting arbitrarily, capsule/pill NPC bodies, no NPC damage, and no scalable authoring surface for items/tools/maps.
+- **Vehicle repair:** `Buggy.gd` is now `VehicleBody3D` with four `VehicleWheel3D` contacts, front steering, four-wheel traction, suspension travel/stiffness/damping, tire friction, rigid-body pitch/roll, SpringArm chase camera, and NPC impact damage. Measured acceptance: 4/4 wheel contacts; idle speed ~0.00005 m/s; visual-forward displacement +11.49 m over the drive probe; post-throttle coast speed ~0.037 m/s after 1.5 s.
+- **Companion repair:** Luca's formation anchor is derived from player translation rather than camera/player yaw. Camera-only rotation leaves the anchor fixed; translation updates it. Arrival braking and obstacle sidestep are active. Runtime gate also requires Luca to settle with <0.65 m cumulative travel over the final stationary sample.
+- **NPCs:** NPCs now have 100 HP, shared `take_damage()` interface, knockback, death state, impact damage, and named bilateral anatomy: pelvis, torso, head, upper/lower arms, hands, legs, and feet.
+- **Tool/content layer:** Added validated v0.16 catalogs for items, tools, recipes, and maps plus `ContentRegistry.gd`. Player tool execution consumes catalog action/range/damage/knockback. Field Hammer is the first damage tool and deals 25 HP per hit.
+- **Map layer:** Runtime MAP selector exposes Luca's Field (6060), Red Pine Highlands (7719), and Quarry Basin (3184). Each profile controls seed, terrain scale, spawn, sky, and fog. Map seed propagates into Kimi generation and ENG-003's voxel generator.
+- **Persistence isolation:** ENG-003 v0.16 saves use `user://v016_terrain_slice_<seed>.json`; saved seed is validated on load. The legacy v0.13 save path/schema is not mutated.
+- **Authoring:** `engineering/CONTENT_AUTHORING_v016.md` documents item/tool/recipe/map schemas and the no-silent-schema-mutation rule.
+- **Static verification:** 35/35 Python tests PASS.
+- **Legacy runtime verification:** `runtime_playability.gd` PASS preserves continuous terrain, 24 eggs, mobile controls, cameras, spawning, ENG-003, under-world recovery, and prior gameplay contracts.
+- **v0.16 runtime verification:** PASS proves valid content registry, hammer damage 100→75 HP, anatomical NPC body, no Luca orbit on camera rotation, Luca stationary settling, 4-wheel rest contact, traction drive, coast stop, vehicle-impact NPC damage, map-specific seed/persistence, and materially different alternate-map terrain.
+- **Visual review:** GTX 1650 captures verify anatomical NPC silhouettes, map selector UI, Red Pine Highlands world profile, and physical buggy placement on terrain.
+- **Known limitation:** v0.16 establishes data-driven content authoring and runtime map selection, not a full in-game visual item/tool/map editor. Physical Android v0.16 performance/touch playtest remains pending.
+- **Status:** release candidate pending exact-commit dual-platform export.

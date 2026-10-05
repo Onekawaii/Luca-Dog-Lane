@@ -6,6 +6,7 @@ const MAX_HEIGHT_M := 54.0
 
 var world_plan: KimiWorldPlan
 var world_half := 480.0
+var height_scale := 1.0
 var terrain_body: StaticBody3D
 
 func _ready() -> void:
@@ -58,7 +59,7 @@ func height_at(world_x: float, world_z: float) -> float:
 	var border_distance := minf(world_half - absf(world_x), world_half - absf(world_z))
 	height *= _smoothstep(8.0, 62.0, border_distance)
 
-	return clampf(height, 0.0, MAX_HEIGHT_M)
+	return clampf(height * height_scale, 0.0, MAX_HEIGHT_M * maxf(height_scale, 1.0))
 
 func region_name_at(world_x: float, world_z: float) -> String:
 	var north := _north_pass_height(world_x, world_z)

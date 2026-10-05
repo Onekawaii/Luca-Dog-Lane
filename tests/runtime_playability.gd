@@ -230,7 +230,7 @@ func _run() -> void:
 		_fail("unapproved persistent floating Label3D text remains: " + str(floating_labels.size()))
 
 	# Vehicle forward input must agree with the camera-facing -Z direction.
-	var buggy := world.get_node_or_null("SandboxBuggy") as CharacterBody3D
+	var buggy := world.get_node_or_null("SandboxBuggy") as VehicleBody3D
 	if buggy == null:
 		_fail("initial buggy missing")
 	else:

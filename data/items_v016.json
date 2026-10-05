@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "items": {
+    "stone": {
+      "label": "Stone",
+      "kind": "resource",
+      "stack_max": 999,
+      "description": "Raw stone mined from editable terrain."
+    },
+    "stone_brick": {
+      "label": "Stone Brick",
+      "kind": "building",
+      "stack_max": 999,
+      "description": "Crafted building block for voxel placement."
+    },
+    "field_hammer": {
+      "label": "Field Hammer",
+      "kind": "tool_item",
+      "stack_max": 1,
+      "description": "Blunt field tool. Useful for impact testing and breaking things."
+    },
+    "trail_beacon": {
+      "label": "Trail Beacon",
+      "kind": "utility",
+      "stack_max": 32,
+      "description": "Placeable navigation marker reserved for the map/content pipeline."
+    }
+  }
+}
