@@ -68,12 +68,13 @@ class CleanRoomContractTests(unittest.TestCase):
         self.assertIn("FOLLOW_STOP_RADIUS", text)
         self.assertIn("lerp_angle", text)
 
-    def test_buggy_has_two_cameras_and_view_control(self):
+    def test_buggy_has_four_distinct_cameras_and_view_control(self):
         buggy = (ROOT / "scripts" / "Buggy.gd").read_text(encoding="utf-8")
         player = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")
         hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
-        self.assertIn('driver_camera.name = "DriverCamera"', buggy)
-        self.assertIn('overhead_camera.name = "OverheadCamera"', buggy)
+        for camera_name in ("DriverCamera", "ChaseCamera", "HoodCamera", "OverheadCamera"):
+            self.assertIn(f'name = "{camera_name}"', buggy)
+        self.assertIn('CAMERA_NAMES := ["DRIVER", "CHASE", "HOOD", "OVERHEAD"]', buggy)
         self.assertIn("func cycle_camera()", buggy)
         self.assertIn("func toggle_vehicle_view()", player)
         self.assertIn('VIEW: DRIVER', hud)

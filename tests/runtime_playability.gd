@@ -102,6 +102,53 @@ func _run() -> void:
 	else:
 		_fail("outer boundary still has visible wall geometry")
 
+	var macro := world.get_node_or_null("MacroTerrain")
+	if macro == null:
+		_fail("macro terrain missing")
+	else:
+		var north_peak := maxf(
+			float(macro.call("height_at", -122.0, -372.0)),
+			float(macro.call("height_at", 128.0, -354.0))
+		)
+		var north_pass := float(macro.call("height_at", 0.0, -360.0))
+		var south_wall := maxf(
+			float(macro.call("height_at", -150.0, 380.0)),
+			float(macro.call("height_at", 150.0, 380.0))
+		)
+		var south_floor := float(macro.call("height_at", 0.0, 380.0))
+		if north_peak >= 24.0 and north_peak - north_pass >= 20.0:
+			_pass("north mountain pass has visible elevation relief")
+		else:
+			_fail("north mountain relief too flat: peak=%s pass=%s" % [north_peak, north_pass])
+		if south_wall >= 20.0 and south_wall - south_floor >= 16.0:
+			_pass("south valley has measurable wall-to-floor relief")
+		else:
+			_fail("south valley relief too flat: wall=%s floor=%s" % [south_wall, south_floor])
+		var terrain_bodies := get_nodes_in_group("macro_terrain")
+		var collision_ready := terrain_bodies.size() >= 3
+		for body in terrain_bodies:
+			if body.get_node_or_null("TerrainCollision") == null:
+				collision_ready = false
+		if collision_ready:
+			_pass("macro mountain/valley terrain has collidable meshes")
+		else:
+			_fail("macro terrain collision contract failed")
+
+	var egg_hunt := world.get_node_or_null("EggHunt")
+	var eggs_before := get_nodes_in_group("easter_egg").size()
+	if egg_hunt != null and int(egg_hunt.call("total_eggs")) == 12 and eggs_before == 12:
+		_pass("twelve Easter eggs are physically present in the world")
+		if bool(egg_hunt.call("collect_for_test", 0)):
+			await process_frame
+			if int(egg_hunt.call("found_eggs")) == 1 and get_nodes_in_group("easter_egg").size() == 11:
+				_pass("Easter egg collection updates count and removes pickup")
+			else:
+				_fail("Easter egg collection state did not update")
+		else:
+			_fail("Easter egg test pickup could not be collected")
+	else:
+		_fail("Easter egg population contract failed: " + str(eggs_before))
+
 	var before := get_nodes_in_group("sandbox_prop").size()
 	world.call("spawn_from_menu", "crate")
 	world.call("spawn_from_menu", "crate")
@@ -176,19 +223,38 @@ func _run() -> void:
 			_fail("buggy forward input is reversed")
 
 		var driver_cam := buggy.get_node_or_null("DriverCamera") as Camera3D
+		var chase_cam := buggy.get_node_or_null("ChaseCamera") as Camera3D
+		var hood_cam := buggy.get_node_or_null("HoodCamera") as Camera3D
 		var overhead_cam := buggy.get_node_or_null("OverheadCamera") as Camera3D
-		if driver_cam != null and overhead_cam != null and driver_cam.current:
-			_pass("buggy driver camera activates")
+		if (
+			driver_cam != null
+			and chase_cam != null
+			and hood_cam != null
+			and overhead_cam != null
+			and driver_cam.current
+		):
+			_pass("buggy driver camera activates with four-view rig present")
 		else:
-			_fail("buggy driver camera missing or inactive")
+			_fail("buggy four-view camera rig missing or driver inactive")
+
 		var mode := str(buggy.call("cycle_camera"))
-		if mode == "OVERHEAD" and overhead_cam != null and overhead_cam.current:
+		if mode == "CHASE" and chase_cam.current:
+			_pass("buggy switches to chase camera")
+		else:
+			_fail("buggy chase camera switch failed")
+		mode = str(buggy.call("cycle_camera"))
+		if mode == "HOOD" and hood_cam.current:
+			_pass("buggy switches to hood camera")
+		else:
+			_fail("buggy hood camera switch failed")
+		mode = str(buggy.call("cycle_camera"))
+		if mode == "OVERHEAD" and overhead_cam.current:
 			_pass("buggy switches to overhead camera")
 		else:
 			_fail("buggy overhead camera switch failed")
 		buggy.call("set_driver_active", false)
 
-		# Full player/HUD integration: walking camera -> driver -> overhead -> walking.
+		# Full player/HUD integration: walking camera -> driver -> chase -> hood -> overhead -> walking.
 		var player_camera = player.get("camera") as Camera3D
 		player.call("enter_vehicle", buggy)
 		await process_frame
@@ -199,10 +265,22 @@ func _run() -> void:
 			_fail("vehicle entry camera/HUD integration failed")
 		player.call("toggle_vehicle_view")
 		await process_frame
-		if overhead_cam.current and view_button.text == "VIEW: OVERHEAD":
-			_pass("vehicle VIEW control switches driver to overhead")
+		if chase_cam.current and view_button.text == "VIEW: CHASE":
+			_pass("vehicle VIEW control reaches chase camera")
 		else:
-			_fail("vehicle VIEW control failed")
+			_fail("vehicle VIEW chase control failed")
+		player.call("toggle_vehicle_view")
+		await process_frame
+		if hood_cam.current and view_button.text == "VIEW: HOOD":
+			_pass("vehicle VIEW control reaches hood camera")
+		else:
+			_fail("vehicle VIEW hood control failed")
+		player.call("toggle_vehicle_view")
+		await process_frame
+		if overhead_cam.current and view_button.text == "VIEW: OVERHEAD":
+			_pass("vehicle VIEW control reaches overhead camera")
+		else:
+			_fail("vehicle VIEW overhead control failed")
 		player.call("exit_vehicle")
 		await process_frame
 		if player_camera.current and not view_button.visible:

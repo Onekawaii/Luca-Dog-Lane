@@ -13,11 +13,18 @@ var driver_active := false
 var current_speed := 0.0
 var camera_mode := 0
 
+const CAMERA_NAMES := ["DRIVER", "CHASE", "HOOD", "OVERHEAD"]
+
 var driver_camera: Camera3D
+var chase_camera: Camera3D
+var hood_camera: Camera3D
 var overhead_camera: Camera3D
+var camera_nodes: Array[Camera3D] = []
 
 func _ready() -> void:
 	add_to_group("vehicle")
+	floor_snap_length = 0.65
+	floor_max_angle = deg_to_rad(54.0)
 	_build_buggy()
 	_build_cameras()
 
@@ -34,22 +41,21 @@ func set_drive_input(value: Vector2) -> void:
 	drive_input = value.limit_length(1.0) if driver_active else Vector2.ZERO
 
 func activate_camera(index: int) -> String:
-	camera_mode = posmod(index, 2)
-	driver_camera.current = camera_mode == 0
-	overhead_camera.current = camera_mode == 1
+	camera_mode = posmod(index, CAMERA_NAMES.size())
+	for i in range(camera_nodes.size()):
+		camera_nodes[i].current = i == camera_mode
 	return get_camera_mode_name()
 
 func cycle_camera() -> String:
 	return activate_camera(camera_mode + 1)
 
 func deactivate_cameras() -> void:
-	if driver_camera != null:
-		driver_camera.current = false
-	if overhead_camera != null:
-		overhead_camera.current = false
+	for camera in camera_nodes:
+		if camera != null:
+			camera.current = false
 
 func get_camera_mode_name() -> String:
-	return "DRIVER" if camera_mode == 0 else "OVERHEAD"
+	return CAMERA_NAMES[camera_mode]
 
 func _physics_process(delta: float) -> void:
 	var throttle: float = -drive_input.y if driver_active else 0.0
@@ -78,6 +84,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -0.5
 
 	move_and_slide()
+	_update_camera_fov()
 
 	if absf(global_position.x) > world_half - 5.0:
 		global_position.x = clamp(global_position.x, -world_half + 6.0, world_half - 6.0)
@@ -90,23 +97,49 @@ func _physics_process(delta: float) -> void:
 		current_speed = 0.0
 		velocity = Vector3.ZERO
 
+func _update_camera_fov() -> void:
+	var speed_ratio := clampf(absf(current_speed) / MAX_SPEED, 0.0, 1.0)
+	if driver_camera != null:
+		driver_camera.fov = lerpf(82.0, 90.0, speed_ratio)
+	if chase_camera != null:
+		chase_camera.fov = lerpf(72.0, 80.0, speed_ratio)
+	if hood_camera != null:
+		hood_camera.fov = lerpf(88.0, 98.0, speed_ratio)
+
 func _build_cameras() -> void:
 	driver_camera = Camera3D.new()
 	driver_camera.name = "DriverCamera"
-	driver_camera.position = Vector3(-0.62, 1.78, -0.62)
-	driver_camera.fov = 84.0
+	driver_camera.position = Vector3(-0.58, 1.78, -0.42)
+	driver_camera.fov = 82.0
 	driver_camera.near = 0.08
-	driver_camera.current = false
 	add_child(driver_camera)
+
+	chase_camera = Camera3D.new()
+	chase_camera.name = "ChaseCamera"
+	chase_camera.position = Vector3(0.0, 3.35, 6.8)
+	chase_camera.rotation_degrees = Vector3(-12.0, 0.0, 0.0)
+	chase_camera.fov = 72.0
+	chase_camera.near = 0.12
+	add_child(chase_camera)
+
+	hood_camera = Camera3D.new()
+	hood_camera.name = "HoodCamera"
+	hood_camera.position = Vector3(0.0, 1.56, -2.08)
+	hood_camera.rotation_degrees = Vector3(-2.0, 0.0, 0.0)
+	hood_camera.fov = 88.0
+	hood_camera.near = 0.05
+	add_child(hood_camera)
 
 	overhead_camera = Camera3D.new()
 	overhead_camera.name = "OverheadCamera"
-	overhead_camera.position = Vector3(0.0, 10.5, 5.0)
-	overhead_camera.rotation_degrees = Vector3(-62.0, 0.0, 0.0)
-	overhead_camera.fov = 78.0
+	overhead_camera.position = Vector3(0.0, 15.5, 5.4)
+	overhead_camera.rotation_degrees = Vector3(-68.0, 0.0, 0.0)
+	overhead_camera.fov = 74.0
 	overhead_camera.near = 0.10
-	overhead_camera.current = false
 	add_child(overhead_camera)
+
+	camera_nodes = [driver_camera, chase_camera, hood_camera, overhead_camera]
+	deactivate_cameras()
 
 func _build_buggy() -> void:
 	var collision := CollisionShape3D.new()

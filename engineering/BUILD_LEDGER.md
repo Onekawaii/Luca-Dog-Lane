@@ -191,3 +191,25 @@ Every entry must contain:
 - **Artifacts:** Candidate Windows executable `dist/v014-quarry-candidate/Luca-Dog-World-v014-quarry.exe`, 103,266,280 bytes, SHA-256 `03ef50582e95255dcc611ec6596d649418794248c4ab08628406de1bdfe1431d`; adjacent Voxel Tools Windows DLL present. Temporary visual evidence was inspected and removed before the accepted export.
 - **Known limitations:** No physical Android v0.14 playtest is claimed. Quarry visuals remain intentionally lightweight; this is one optional expedition site, not yet the full deterministic seeded world/site generator.
 - **Status:** PASS
+
+
+---
+
+## ENG-008 — Visible Kimi terrain + vehicle camera + Easter egg pass
+
+- **Date:** 2026-10-05
+- **Branch / HEAD:** `feat/v0.15.1-mountains-cameras-eggs`, candidate based on Kimi checkpoint `a756a7abc5c4bd42a962c8d5be25f05c382c155f`.
+- **Goal:** Make the Kimi world-core visible in normal play by adding real topographic relief, materially different vehicle views, and discoverable Easter eggs without regressing ENG-003 voxel terrain or ENG-007 Quarry Ridge.
+- **Observed evidence:** Three deterministic collidable macro-terrain regions now materialize from the Kimi world plan: North Mountain Pass, West Ridge, and South Valley. Wilderness props sample macro terrain height. Buggy camera cycle is DRIVER -> CHASE -> HOOD -> OVERHEAD with distinct transforms and speed-responsive FOV. Twelve fried-egg collectibles spawn as real Area3D pickups and increment a runtime found count.
+- **Invariant:** Central sandbox remains playable; primary roads remain low corridors through terrain; ENG-003 voxel terrain remains active; Quarry Ridge remains separate; Kimi seed 6060 remains authoritative; Android/Windows share the same project state.
+- **Hypothesis:** Kimi world-space noise plus authored macro shaping can produce immediately visible mountains/valleys at mobile-safe mesh density while preserving deterministic generation and core sandbox controls.
+- **Falsifier:** Any of: mountain peak/pass relief below 20 m; valley wall/floor relief below 16 m; missing terrain collision; fewer than 12 eggs; egg collection fails to remove pickup/update count; vehicle cycle fails to reach any of four named views; old playability gates regress.
+- **Design decision:** Add three tapered static ArrayMesh terrain patches with trimesh collision instead of replacing ENG-003. Keep central roads flattened as passes/valley floors. Reuse Kimi terrain height/fBm for deterministic macro variation. Keep egg hunt session-scoped for this pass; persistence is deferred.
+- **Files changed:** `scripts/world/MacroTerrain.gd`, `scripts/world/EggHunt.gd`, `scripts/Game.gd`, `scripts/Buggy.gd`, `scripts/HUD.gd`, version/export/build metadata, and runtime/static acceptance tests.
+- **Commands executed:** Python unit discovery; Godot 4.7.2 import; updated live `runtime_playability.gd`; non-headless GTX 1650 visual probe; diff check.
+- **Results:** 26/26 Python tests PASS. Live runtime PASS proves collidable macro terrain, north mountain relief, south valley relief, 12 eggs + collection, four active vehicle cameras, and all prior playability gates. Non-headless OpenGL capture on GTX 1650 visibly shows the road cutting through a steep mountain pass and a distinct chase view behind the buggy.
+- **Demolition:** The old two-camera contract was replaced rather than layered. Temporary visual-probe script was removed after captures. Generated icon import noise was restored before checkpoint.
+- **Performance:** Three low-density terrain patches at ~14 m cell spacing; static concave collision only. No full-world voxel replacement. Dedicated physical Android FPS/memory telemetry remains pending.
+- **Artifacts:** `%USERPROFILE%\Downloads\Luca-Dog-World-v0.15.1-KIMI-MOUNTAINS\v0151_mountain_pass.png`; `v0151_chase_camera.png`.
+- **Known limitations:** Easter-egg discovery is session-scoped in this milestone. Physical Android terrain driving/collection performance is not yet claimed. Macro terrain supplements ENG-003 rather than replacing the bounded editable voxel slice.
+- **Status:** PASS

@@ -10,6 +10,8 @@ var hud: CanvasLayer
 var luca: CharacterBody3D
 var terrain_slice: Node3D
 var quarry_expedition: Node3D
+var macro_terrain: MacroTerrain
+var egg_hunt: EggHunt
 var prop_serial := 0
 var spawn_menu_serial := 0
 var spawned_npc_serial := 0
@@ -27,6 +29,7 @@ func _ready() -> void:
 	_build_ground_and_boundaries()
 	_build_roads()
 	_build_landmarks()
+	_spawn_macro_terrain()
 	_build_wilderness()
 	_spawn_player()
 	_spawn_terrain_slice()
@@ -36,6 +39,7 @@ func _ready() -> void:
 	_spawn_buggy(Vector3(13.0, 1.2, 10.0))
 	_spawn_starter_props()
 	_spawn_hud()
+	_spawn_egg_hunt()
 	print("LUCA_SANDBOX_READY world_half=", WORLD_HALF)
 
 func _run_v013_export_probe() -> void:
@@ -164,7 +168,8 @@ func _build_wilderness() -> void:
 				var z := float(candidate["pos_z"])
 				if not _wilderness_candidate_allowed(x, z, 28.0):
 					continue
-				_create_tree(Vector3(x, 0.0, z), float(candidate["scale"]))
+				var terrain_y := _surface_height(x, z)
+				_create_tree(Vector3(x, terrain_y, z), float(candidate["scale"]))
 				tree_total += 1
 
 			for candidate in desc.rock_candidates:
@@ -178,7 +183,8 @@ func _build_wilderness() -> void:
 					float(candidate["rot_y"]),
 					float(candidate["rot_z"])
 				)
-				_create_static_rock(Vector3(x, size * 0.4, z), size, rotation)
+				var terrain_y := _surface_height(x, z)
+				_create_static_rock(Vector3(x, terrain_y + size * 0.4, z), size, rotation)
 				rock_total += 1
 
 	print(
@@ -198,6 +204,20 @@ func _wilderness_candidate_allowed(x: float, z: float, road_clearance: float) ->
 	if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
 		return false
 	return true
+
+func _surface_height(x: float, z: float) -> float:
+	if macro_terrain == null:
+		return 0.0
+	return float(macro_terrain.height_at(x, z))
+
+func _spawn_macro_terrain() -> void:
+	var node := Node3D.new()
+	node.name = "MacroTerrain"
+	node.set_script(load("res://scripts/world/MacroTerrain.gd"))
+	node.set("world_plan", world_plan)
+	node.set("world_half", WORLD_HALF)
+	add_child(node)
+	macro_terrain = node as MacroTerrain
 
 func _spawn_player() -> void:
 	var node := CharacterBody3D.new()
@@ -267,6 +287,16 @@ func _spawn_hud() -> void:
 		terrain_slice.call("set_hud", hud)
 	if quarry_expedition != null:
 		quarry_expedition.call("set_hud", hud)
+
+func _spawn_egg_hunt() -> void:
+	var node := Node3D.new()
+	node.name = "EggHunt"
+	node.set_script(load("res://scripts/world/EggHunt.gd"))
+	node.set("player", player)
+	node.set("hud", hud)
+	node.set("macro_terrain", macro_terrain)
+	add_child(node)
+	egg_hunt = node as EggHunt
 
 func terrain_mine(origin: Vector3, direction: Vector3) -> String:
 	if terrain_slice == null:
