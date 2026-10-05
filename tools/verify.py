@@ -7,7 +7,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-GODOT = Path.home() / ".godot_bin" / "Godot_v4.3-stable_win64_console.exe"
+GODOT = Path.home() / ".luca_toolchain" / "Godot-4.7.2" / "Godot_v4.7.2-stable_win64_console.exe"
 
 FORBIDDEN = (
     "hive_lattice",
@@ -54,7 +54,7 @@ def check_project_contract() -> None:
         fail("main scene is not the clean sandbox scene")
     if "[autoload]" in project:
         fail("autoload section reintroduced")
-    if 'config/version="0.12.2"' not in project:
+    if 'config/version="0.15.0-kimi.1"' not in project:
         fail("unexpected product version")
     print("[PASS] project boots directly into standalone sandbox")
 

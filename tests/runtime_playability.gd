@@ -146,11 +146,15 @@ func _run() -> void:
 		_fail("Luca follow still snaps: step=%s turn=%s" % [max_luca_step, max_luca_turn])
 
 	# No permanent 3D name plates should hover over actors/vehicles.
-	var floating_labels := world.find_children("*", "Label3D", true, false)
+	# Physical world signage is allowed when explicitly tagged.
+	var floating_labels: Array[Node] = []
+	for label in world.find_children("*", "Label3D", true, false):
+		if not label.is_in_group("world_sign"):
+			floating_labels.append(label)
 	if floating_labels.is_empty():
-		_pass("world contains no persistent floating Label3D text")
+		_pass("world contains no unapproved persistent floating Label3D text")
 	else:
-		_fail("persistent floating Label3D text remains: " + str(floating_labels.size()))
+		_fail("unapproved persistent floating Label3D text remains: " + str(floating_labels.size()))
 
 	# Vehicle forward input must agree with the camera-facing -Z direction.
 	var buggy := world.get_node_or_null("SandboxBuggy") as CharacterBody3D

@@ -3,6 +3,7 @@ extends Node3D
 const WORLD_HALF := 480.0
 const GROUND_THICKNESS := 2.0
 const PLAYER_START := Vector3(0.0, 2.5, 24.0)
+const WORLD_SEED := 6060
 
 var player: CharacterBody3D
 var hud: CanvasLayer
@@ -12,14 +13,16 @@ var quarry_expedition: Node3D
 var prop_serial := 0
 var spawn_menu_serial := 0
 var spawned_npc_serial := 0
-var rng := RandomNumberGenerator.new()
+var world_plan: KimiWorldPlan
+var world_generator: KimiWorldGenerator
 
 func _ready() -> void:
 	if OS.get_environment("LUCA_V013_EXPORT_PROBE") == "1":
 		_run_v013_export_probe()
 		return
 
-	rng.seed = 731991
+	world_plan = KimiWorldPlan.new(WORLD_SEED)
+	world_generator = KimiWorldGenerator.new(world_plan)
 	_setup_environment()
 	_build_ground_and_boundaries()
 	_build_roads()
@@ -146,26 +149,55 @@ func _build_landmarks() -> void:
 	_create_surface_box("PlazaBridge", Vector3(-190, 0.04, -205), Vector3(70, 0.08, 10), Color(0.47, 0.40, 0.30))
 
 func _build_wilderness() -> void:
-	for i in range(72):
-		var x := rng.randf_range(-410.0, 410.0)
-		var z := rng.randf_range(-410.0, 410.0)
-		if abs(x) < 28.0 or abs(z) < 28.0:
-			continue
-		if Vector2(x - 55.0, z - 55.0).length() < 70.0:
-			continue
-		if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
-			continue
-		_create_tree(Vector3(x, 0, z), rng.randf_range(0.8, 1.45))
+	var min_chunk := floori(-WORLD_HALF / KimiChunkDescriptor.SIZE_M)
+	var max_chunk := floori(WORLD_HALF / KimiChunkDescriptor.SIZE_M)
+	var descriptor_digest := 0
+	var tree_total := 0
+	var rock_total := 0
 
-	for i in range(36):
-		var x := rng.randf_range(-430.0, 430.0)
-		var z := rng.randf_range(-430.0, 430.0)
-		if abs(x) < 18.0 or abs(z) < 18.0:
-			continue
-		if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
-			continue
-		var size := rng.randf_range(0.7, 2.1)
-		_create_static_rock(Vector3(x, size * 0.4, z), size)
+	for chunk_z in range(min_chunk, max_chunk + 1):
+		for chunk_x in range(min_chunk, max_chunk + 1):
+			var desc := world_generator.describe_chunk(Vector2i(chunk_x, chunk_z))
+			descriptor_digest = KimiDeterministic.mix_value(descriptor_digest, desc.generation_hash)
+			for candidate in desc.vegetation_candidates:
+				var x := float(candidate["pos_x"])
+				var z := float(candidate["pos_z"])
+				if not _wilderness_candidate_allowed(x, z, 28.0):
+					continue
+				_create_tree(Vector3(x, 0.0, z), float(candidate["scale"]))
+				tree_total += 1
+
+			for candidate in desc.rock_candidates:
+				var x := float(candidate["pos_x"])
+				var z := float(candidate["pos_z"])
+				if not _wilderness_candidate_allowed(x, z, 18.0):
+					continue
+				var size := float(candidate["scale"])
+				var rotation := Vector3(
+					float(candidate["rot_x"]),
+					float(candidate["rot_y"]),
+					float(candidate["rot_z"])
+				)
+				_create_static_rock(Vector3(x, size * 0.4, z), size, rotation)
+				rock_total += 1
+
+	print(
+		"KIMI_WORLD_CORE_READY seed=", WORLD_SEED,
+		" descriptor_digest=", descriptor_digest,
+		" trees=", tree_total,
+		" rocks=", rock_total
+	)
+
+func _wilderness_candidate_allowed(x: float, z: float, road_clearance: float) -> bool:
+	if abs(x) > WORLD_HALF - 24.0 or abs(z) > WORLD_HALF - 24.0:
+		return false
+	if abs(x) < road_clearance or abs(z) < road_clearance:
+		return false
+	if Vector2(x - 55.0, z - 55.0).length() < 70.0:
+		return false
+	if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
+		return false
+	return true
 
 func _spawn_player() -> void:
 	var node := CharacterBody3D.new()
@@ -508,10 +540,10 @@ func _create_tree(at: Vector3, scale_factor: float) -> void:
 		body.add_child(crown)
 	add_child(body)
 
-func _create_static_rock(at: Vector3, scale_factor: float) -> void:
+func _create_static_rock(at: Vector3, scale_factor: float, rotation := Vector3.ZERO) -> void:
 	var body := StaticBody3D.new()
 	body.position = at
-	body.rotation_degrees = Vector3(rng.randf_range(-10, 10), rng.randf_range(0, 180), rng.randf_range(-10, 10))
+	body.rotation_degrees = rotation
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
 	mesh.radius = scale_factor

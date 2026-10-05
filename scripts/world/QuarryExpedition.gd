@@ -82,6 +82,7 @@ func _build_sign(marker_name: String, at: Vector3, words: String, color: Color) 
 	marker.add_child(board)
 
 	var label := Label3D.new()
+	label.add_to_group("world_sign")
 	label.text = words
 	label.position = Vector3(0.0, 2.55, 0.12)
 	label.font_size = 42

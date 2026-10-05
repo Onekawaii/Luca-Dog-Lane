@@ -1,5 +1,8 @@
 extends VoxelGeneratorScript
 
+const WORLD_SEED := 6060
+var world_plan := KimiWorldPlan.new(WORLD_SEED)
+
 const CHANNEL_TYPE := 0
 const AIR := 0
 const STONE := 1
@@ -32,7 +35,8 @@ func _generate_block(buffer: VoxelBuffer, origin: Vector3i, lod: int) -> void:
 			var envelope := pow(maxf(0.0, 1.0 - radial), 1.32)
 			var ridge := sin(gx * 0.115) * cos(gz * 0.083) * 2.6 * envelope
 			var shoulder := sin((gx + gz) * 0.047) * 1.4 * envelope
-			var surface_y := 1.0 + 33.0 * envelope + ridge + shoulder
+			var kimi_macro := clampf(world_plan.terrain_height(gx, gz) * 0.025, -2.0, 5.0)
+			var surface_y := 1.0 + (33.0 + kimi_macro) * envelope + ridge + shoulder
 
 			for y in range(size.y):
 				var gy := float(origin.y + y)
