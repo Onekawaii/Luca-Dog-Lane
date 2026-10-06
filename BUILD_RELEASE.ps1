@@ -8,8 +8,8 @@ $Keystore = "$env:USERPROFILE\.android\debug.keystore"
 $Dist = Join-Path $Repo "dist"
 $WinDir = Join-Path $Dist "windows"
 $AndroidDir = Join-Path $Dist "android"
-$Win = Join-Path $WinDir "Luca-Dog-World-v0.15.2-KIMI-TERRAIN.exe"
-$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.15.2-KIMI-TERRAIN-android.apk"
+$Win = Join-Path $WinDir "Luca-Dog-World-v0.15.3-KIMI-ENVIRONMENT.exe"
+$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.15.3-KIMI-ENVIRONMENT-android.apk"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.7.2 console binary not found: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK not found: $Sdk" }
@@ -33,9 +33,9 @@ $Tests = Join-Path $Repo "tests"
 python -m unittest discover -s $Tests -p "test_*.py" -v
 if ($LASTEXITCODE -ne 0) { throw "Unit tests failed" }
 
-Write-Host "[3/8] Import project"
-& $Godot --headless --path $Repo --editor --quit
-if ($LASTEXITCODE -ne 0) { throw "Godot import failed" }
+Write-Host "[3/8] Full runtime preflight"
+& $Godot --headless --path $Repo --quit-after 120
+if ($LASTEXITCODE -ne 0) { throw "Godot runtime preflight failed" }
 
 Write-Host "[4/8] Kimi deterministic world acceptance"
 & $Godot --headless --path $Repo --script res://tests/kimi_world_acceptance.gd
@@ -91,10 +91,10 @@ if ($Aapt) {
     if ($PackageLine -notmatch "name='com\.onekawaii\.lucadogworld'") {
         throw "Unexpected Android package ID"
     }
-    if ($PackageLine -notmatch "versionCode='17'") {
+    if ($PackageLine -notmatch "versionCode='18'") {
         throw "Unexpected Android versionCode"
     }
-    if ($PackageLine -notmatch "versionName='0\.15\.2-kimi'") {
+    if ($PackageLine -notmatch "versionName='0\.15\.3-kimi'") {
         throw "Unexpected Android versionName"
     }
 }
@@ -108,8 +108,8 @@ $ApkHash = (Get-FileHash $Apk -Algorithm SHA256).Hash.ToLower()
 $Head = (git -C $Repo rev-parse HEAD 2>$null)
 $Receipt = [ordered]@{
     product = "Luca Dog World"
-    version = "0.15.2-kimi"
-    architecture = "clean-room-sandbox-v1+kimi-core+continuous-terrain+springarm-cameras+24-egg-hunt"
+    version = "0.15.3-kimi"
+    architecture = "clean-room-sandbox-v1+kimi-core+continuous-terrain+ten-biomes+hydrology+biome-ecology+springarm-cameras+24-egg-hunt"
     git_head = $Head
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
     windows = [ordered]@{
@@ -122,15 +122,15 @@ $Receipt = [ordered]@{
         bytes = (Get-Item $Apk).Length
         sha256 = $ApkHash
         package = "com.onekawaii.lucadogworld"
-        version_code = 17
+        version_code = 18
         signed = $true
     }
 }
 
-$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.15.2-KIMI-TERRAIN.json"
+$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.15.3-KIMI-ENVIRONMENT.json"
 $Receipt | ConvertTo-Json -Depth 5 | Set-Content $ReceiptPath -Encoding utf8
 
 Write-Host "WINDOWS_SHA256=$WinHash"
 Write-Host "ANDROID_SHA256=$ApkHash"
 Write-Host "RECEIPT=$ReceiptPath"
-Write-Host "[DONE] Luca Dog World v0.15.2-KIMI-TERRAIN"
+Write-Host "[DONE] Luca Dog World v0.15.3-KIMI-ENVIRONMENT"

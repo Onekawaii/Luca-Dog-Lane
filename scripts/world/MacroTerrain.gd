@@ -3,25 +3,63 @@ extends Node3D
 
 const TERRAIN_CELL_M := 12.0
 const MAX_HEIGHT_M := 54.0
+const WATER_Y := 0.18
+const WATER_GAP_AT_MAIN_ROAD := 18.0
 
 var world_plan: KimiWorldPlan
 var world_half := 480.0
 var terrain_body: StaticBody3D
+var hydrology_nodes: Array[Node3D] = []
+var biome_color_cache: Dictionary = {}
 
 func _ready() -> void:
 	if world_plan == null:
 		world_plan = KimiWorldPlan.new(6060)
 	_build_world_terrain()
+	_build_hydrology_surfaces()
 	print(
 		"MACRO_TERRAIN_READY continuous=true cells=",
 		ceili((world_half * 2.0) / TERRAIN_CELL_M),
-		" seed=", world_plan.seed
+		" seed=", world_plan.seed,
+		" biomes=", world_plan.biome_ids().size(),
+		" hydrology=", hydrology_nodes.size()
 	)
 
 func height_at(world_x: float, world_z: float) -> float:
 	if absf(world_x) > world_half or absf(world_z) > world_half:
 		return 0.0
+	var height := _base_height_at(world_x, world_z)
+	var hydro := _hydrology_influence_at(world_x, world_z)
+	if hydro > 0.0:
+		var channel_target := 0.0
+		height = lerpf(height, minf(height, channel_target), pow(hydro, 1.35))
+	return clampf(height, 0.0, MAX_HEIGHT_M)
 
+func biome_at(world_x: float, world_z: float) -> StringName:
+	return world_plan.sample_biome(world_x, world_z)
+
+func is_water_at(world_x: float, world_z: float) -> bool:
+	if absf(world_x) < WATER_GAP_AT_MAIN_ROAD:
+		return false
+	if Vector2(world_x + 235.0, world_z + 205.0).length() < 64.0:
+		return false
+	return world_plan.water_kind_at(world_x, world_z) != &"none"
+
+func water_kind_at(world_x: float, world_z: float) -> StringName:
+	return world_plan.water_kind_at(world_x, world_z) if is_water_at(world_x, world_z) else &"none"
+
+func water_surface_y_at(_world_x: float, _world_z: float) -> float:
+	return WATER_Y
+
+func get_hydrology_stats_for_test() -> Dictionary:
+	return {
+		"water_nodes": hydrology_nodes.size(),
+		"river_center_at_zero": world_plan.primary_river_center_z(0.0),
+		"lake_center": world_plan.lake_center(),
+		"lake_radius": world_plan.lake_radius(),
+	}
+
+func _base_height_at(world_x: float, world_z: float) -> float:
 	var p := Vector2(world_x, world_z)
 	var broad := world_plan.fbm(world_x, world_z, 4, 0.0032, 901)
 	var detail := world_plan.fbm(world_x, world_z, 3, 0.0125, 902)
@@ -57,8 +95,16 @@ func height_at(world_x: float, world_z: float) -> float:
 	# Blend down before the hard world boundary so there are no vertical skirt walls.
 	var border_distance := minf(world_half - absf(world_x), world_half - absf(world_z))
 	height *= _smoothstep(8.0, 62.0, border_distance)
+	return height
 
-	return clampf(height, 0.0, MAX_HEIGHT_M)
+func _hydrology_influence_at(world_x: float, world_z: float) -> float:
+	var influence := world_plan.hydrology_influence(world_x, world_z)
+	# The north-south road crosses the river through a dry culvert/bridge gap.
+	influence *= _smoothstep(8.0, WATER_GAP_AT_MAIN_ROAD + 6.0, absf(world_x))
+	# Preserve the authored plaza and its approach.
+	influence *= _radial_clear_factor(
+		Vector2(world_x, world_z), Vector2(-235.0, -205.0), 62.0, 94.0)
+	return influence
 
 func region_name_at(world_x: float, world_z: float) -> String:
 	var north := _north_pass_height(world_x, world_z)
@@ -102,6 +148,15 @@ func _build_world_terrain() -> void:
 	var extent := world_half
 	var cells := maxi(8, ceili((extent * 2.0) / TERRAIN_CELL_M))
 	var step := (extent * 2.0) / float(cells)
+	var heights: Dictionary = {}
+
+	# Evaluate each shared grid vertex once. The previous naive triangle loop
+	# recomputed deterministic fBm/hydrology up to six times per coordinate.
+	for z in range(cells + 1):
+		var world_z := -extent + float(z) * step
+		for x in range(cells + 1):
+			var world_x := -extent + float(x) * step
+			heights[Vector2i(x, z)] = height_at(world_x, world_z)
 
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -112,10 +167,10 @@ func _build_world_terrain() -> void:
 		for x in range(cells):
 			var x0 := -extent + float(x) * step
 			var x1 := x0 + step
-			var p00 := Vector3(x0, height_at(x0, z0), z0)
-			var p10 := Vector3(x1, height_at(x1, z0), z0)
-			var p01 := Vector3(x0, height_at(x0, z1), z1)
-			var p11 := Vector3(x1, height_at(x1, z1), z1)
+			var p00 := Vector3(x0, float(heights[Vector2i(x, z)]), z0)
+			var p10 := Vector3(x1, float(heights[Vector2i(x + 1, z)]), z0)
+			var p01 := Vector3(x0, float(heights[Vector2i(x, z + 1)]), z1)
+			var p11 := Vector3(x1, float(heights[Vector2i(x + 1, z + 1)]), z1)
 
 			_add_vertex(surface, p00)
 			_add_vertex(surface, p10)
@@ -149,30 +204,160 @@ func _build_world_terrain() -> void:
 
 	add_child(terrain_body)
 
+func _build_hydrology_surfaces() -> void:
+	_build_primary_river()
+	_build_tributary(0)
+	_build_tributary(1)
+	_build_marsh_lake()
+
+func _build_primary_river() -> void:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var step := 16.0
+	var x := -world_half + 18.0
+	while x < world_half - 18.0:
+		var x1 := minf(x + step, world_half - 18.0)
+		if not (x < WATER_GAP_AT_MAIN_ROAD and x1 > -WATER_GAP_AT_MAIN_ROAD):
+			var z0 := world_plan.primary_river_center_z(x)
+			var z1 := world_plan.primary_river_center_z(x1)
+			var w0 := world_plan.primary_river_half_width(x)
+			var w1 := world_plan.primary_river_half_width(x1)
+			_add_water_quad(
+				surface,
+				Vector3(x, WATER_Y, z0 - w0),
+				Vector3(x1, WATER_Y, z1 - w1),
+				Vector3(x1, WATER_Y, z1 + w1),
+				Vector3(x, WATER_Y, z0 + w0)
+			)
+		x = x1
+	_add_water_mesh("PrimaryRiverWater", surface.commit() as ArrayMesh, Color(0.17, 0.36, 0.46, 0.86))
+
+func _build_tributary(branch: int) -> void:
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var start_z := -220.0
+	var end_z := 75.0 if branch == 0 else -55.0
+	var step := 12.0
+	var z := start_z
+	while z < end_z:
+		var z1 := minf(z + step, end_z)
+		var x0 := world_plan.tributary_center_x(z, branch)
+		var x1 := world_plan.tributary_center_x(z1, branch)
+		var width := 4.8 if branch == 0 else 4.2
+		_add_water_quad(
+			surface,
+			Vector3(x0 - width, WATER_Y + 0.01, z),
+			Vector3(x1 - width, WATER_Y + 0.01, z1),
+			Vector3(x1 + width, WATER_Y + 0.01, z1),
+			Vector3(x0 + width, WATER_Y + 0.01, z)
+		)
+		z = z1
+	_add_water_mesh(
+		"TributaryWater_%d" % branch,
+		surface.commit() as ArrayMesh,
+		Color(0.19, 0.38, 0.45, 0.80)
+	)
+
+func _build_marsh_lake() -> void:
+	var center := world_plan.lake_center()
+	var radius := world_plan.lake_radius()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = 0.08
+	mesh.radial_segments = 36
+	var visual := MeshInstance3D.new()
+	visual.name = "MarshLakeWater"
+	visual.mesh = mesh
+	visual.position = Vector3(center.x, WATER_Y - 0.02, center.y)
+	visual.material_override = _water_material(Color(0.16, 0.31, 0.29, 0.82))
+	visual.add_to_group("hydrology")
+	add_child(visual)
+	hydrology_nodes.append(visual)
+
+func _add_water_quad(
+	surface: SurfaceTool,
+	a: Vector3,
+	b: Vector3,
+	c: Vector3,
+	d: Vector3
+) -> void:
+	for point in [a, b, c, a, c, d]:
+		surface.set_normal(Vector3.UP)
+		surface.add_vertex(point)
+
+func _add_water_mesh(label: String, mesh: ArrayMesh, color: Color) -> void:
+	if mesh == null:
+		return
+	var visual := MeshInstance3D.new()
+	visual.name = label
+	visual.mesh = mesh
+	visual.material_override = _water_material(color)
+	visual.add_to_group("hydrology")
+	add_child(visual)
+	hydrology_nodes.append(visual)
+
+func _water_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.roughness = 0.18
+	material.metallic = 0.05
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return material
+
 func _add_vertex(surface: SurfaceTool, point: Vector3) -> void:
 	surface.set_color(_terrain_color(point))
 	surface.add_vertex(point)
 
 func _terrain_color(point: Vector3) -> Color:
-	var height := point.y
-	var moisture := world_plan.fbm(point.x, point.z, 3, 0.0042, 921)
-	var low := Color(0.17, 0.30, 0.17)
-	var grass := Color(0.24, 0.37, 0.21)
-	var scrub := Color(0.31, 0.36, 0.24)
-	var rock := Color(0.35, 0.35, 0.32)
+	# Surface tint is intentionally classified on a coarse 48 m ecological grid.
+	# This keeps biome identity deterministic while avoiding tens of thousands
+	# of full climate/fBm classifications during mesh construction.
+	var biome_cell := Vector2i(floori(point.x / 48.0), floori(point.z / 48.0))
+	var biome: StringName
+	if biome_color_cache.has(biome_cell):
+		biome = biome_color_cache[biome_cell]
+	else:
+		var sample_x := (float(biome_cell.x) + 0.5) * 48.0
+		var sample_z := (float(biome_cell.y) + 0.5) * 48.0
+		biome = biome_at(sample_x, sample_z)
+		biome_color_cache[biome_cell] = biome
+	var base := _biome_color(biome)
+	var height_t := clampf(point.y / MAX_HEIGHT_M, 0.0, 1.0)
+	var noise := world_plan.fbm(point.x, point.z, 2, 0.020, 922)
+	var shade := lerpf(0.90, 1.10, noise)
+	var color := Color(
+		clampf(base.r * shade, 0.0, 1.0),
+		clampf(base.g * shade, 0.0, 1.0),
+		clampf(base.b * shade, 0.0, 1.0)
+	)
+	if height_t > 0.58:
+		color = color.lerp(Color(0.42, 0.43, 0.42), (height_t - 0.58) / 0.42)
+	return color
 
-	if moisture > 0.62:
-		low = Color(0.16, 0.31, 0.20)
-		grass = Color(0.22, 0.39, 0.23)
-	elif moisture < 0.38:
-		low = Color(0.24, 0.31, 0.17)
-		grass = Color(0.34, 0.38, 0.21)
-
-	if height < 7.0:
-		return low.lerp(grass, clampf(height / 7.0, 0.0, 1.0))
-	if height < 28.0:
-		return grass.lerp(scrub, clampf((height - 7.0) / 21.0, 0.0, 1.0))
-	return scrub.lerp(rock, clampf((height - 28.0) / 26.0, 0.0, 1.0))
+func _biome_color(biome: StringName) -> Color:
+	match biome:
+		&"riverlands":
+			return Color(0.15, 0.33, 0.24)
+		&"marsh":
+			return Color(0.18, 0.29, 0.20)
+		&"alpine_highlands":
+			return Color(0.36, 0.38, 0.36)
+		&"rocky_scree":
+			return Color(0.39, 0.37, 0.33)
+		&"cedar_swamp":
+			return Color(0.13, 0.27, 0.18)
+		&"badlands":
+			return Color(0.43, 0.34, 0.23)
+		&"dry_meadow":
+			return Color(0.39, 0.43, 0.22)
+		&"pine_forest":
+			return Color(0.15, 0.31, 0.19)
+		&"birch_grove":
+			return Color(0.27, 0.43, 0.24)
+		_:
+			return Color(0.22, 0.38, 0.22)
 
 func _radial_clear_factor(
 	p: Vector2,

@@ -54,7 +54,7 @@ def check_project_contract() -> None:
         fail("main scene is not the clean sandbox scene")
     if "[autoload]" in project:
         fail("autoload section reintroduced")
-    if 'config/version="0.15.2-kimi"' not in project:
+    if 'config/version="0.15.3-kimi"' not in project:
         fail("unexpected product version")
     print("[PASS] project boots directly into standalone sandbox")
 
@@ -88,21 +88,29 @@ def run_godot() -> None:
     if not GODOT.exists():
         fail(f"Godot binary missing: {GODOT}")
     commands = [
-        [str(GODOT), "--headless", "--path", str(ROOT), "--editor", "--quit"],
-        [str(GODOT), "--headless", "--path", str(ROOT), "--quit-after", "120"],
+        (
+            [str(GODOT), "--headless", "--path", str(ROOT), "--script", "res://tests/kimi_world_acceptance.gd"],
+            "KIMI_WORLD_ACCEPTANCE_OK",
+            "deterministic world parse/runtime probe",
+        ),
+        (
+            [str(GODOT), "--headless", "--path", str(ROOT), "--quit-after", "120"],
+            "LUCA_SANDBOX_READY",
+            "full sandbox runtime smoke",
+        ),
     ]
-    for index, command in enumerate(commands, start=1):
+    for index, (command, required_marker, label) in enumerate(commands, start=1):
         result = subprocess.run(command, text=True, capture_output=True, timeout=90)
         combined = result.stdout + "\n" + result.stderr
         bad = ("SCRIPT ERROR", "Parse Error", "Failed to load script", "Invalid call", "Nonexistent function")
         found = [needle for needle in bad if needle.lower() in combined.lower()]
-        if result.returncode != 0 or found:
+        if result.returncode != 0 or found or required_marker not in combined:
             print(combined)
-            fail(f"Godot gate {index} failed: rc={result.returncode}, markers={found}")
-        if index == 2 and "LUCA_SANDBOX_READY" not in combined:
-            print(combined)
-            fail("runtime did not reach sandbox-ready marker")
-    print("[PASS] Godot parse and runtime smoke gates")
+            fail(
+                f"Godot gate {index} ({label}) failed: "
+                f"rc={result.returncode}, markers={found}, required={required_marker!r}"
+            )
+    print("[PASS] Godot deterministic parse + full runtime smoke gates")
 
 def run_playability() -> None:
     command = [
@@ -130,6 +138,32 @@ def run_playability() -> None:
     print("[PASS] live playability regression gate")
 
 
+def run_v0153_environment() -> None:
+    command = [
+        str(GODOT),
+        "--headless",
+        "--path",
+        str(ROOT),
+        "--script",
+        "tests/v0153_environment_acceptance.gd",
+    ]
+    result = subprocess.run(command, text=True, capture_output=True, timeout=120)
+    combined = result.stdout + "\n" + result.stderr
+    bad = (
+        "SCRIPT ERROR",
+        "Parse Error",
+        "Failed to load script",
+        "Invalid call",
+        "Nonexistent function",
+        "Can't add child",
+    )
+    found = [needle for needle in bad if needle.lower() in combined.lower()]
+    if result.returncode != 0 or found or "[ALL V0153 ENVIRONMENT GATES PASSED]" not in combined:
+        print(combined)
+        fail(f"v0.15.3 environment gate failed: rc={result.returncode}, markers={found}")
+    print("[PASS] v0.15.3 biomes/hydrology/ecology runtime gate")
+
+
 def main() -> int:
     check_clean_tree()
     check_project_contract()
@@ -137,6 +171,7 @@ def main() -> int:
     check_sandbox_contract()
     run_godot()
     run_playability()
+    run_v0153_environment()
     print("[ALL GATES PASSED] LUCA CLEAN-ROOM SANDBOX VERIFIED")
     return 0
 

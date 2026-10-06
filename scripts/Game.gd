@@ -158,19 +158,28 @@ func _build_wilderness() -> void:
 	var descriptor_digest := 0
 	var tree_total := 0
 	var rock_total := 0
+	var groundcover_total := 0
+	var biome_counts: Dictionary = {}
 
 	for chunk_z in range(min_chunk, max_chunk + 1):
 		for chunk_x in range(min_chunk, max_chunk + 1):
 			var desc := world_generator.describe_chunk(Vector2i(chunk_x, chunk_z))
 			descriptor_digest = KimiDeterministic.mix_value(descriptor_digest, desc.generation_hash)
+			biome_counts[String(desc.biome)] = int(biome_counts.get(String(desc.biome), 0)) + 1
+
 			for candidate in desc.vegetation_candidates:
 				var x := float(candidate["pos_x"])
 				var z := float(candidate["pos_z"])
 				if not _wilderness_candidate_allowed(x, z, 28.0):
 					continue
+				var biome := StringName(candidate.get("biome", String(world_plan.sample_biome(x, z))))
 				var terrain_y := _surface_height(x, z)
-				_create_tree(Vector3(x, terrain_y, z), float(candidate["scale"]))
+				var scale_factor := float(candidate["scale"])
+				_create_tree(Vector3(x, terrain_y, z), scale_factor, biome)
 				tree_total += 1
+				if biome in [&"dry_meadow", &"riverlands", &"marsh", &"cedar_swamp", &"birch_grove"]:
+					_create_groundcover(Vector3(x, terrain_y + 0.04, z), biome, scale_factor)
+					groundcover_total += 1
 
 			for candidate in desc.rock_candidates:
 				var x := float(candidate["pos_x"])
@@ -183,15 +192,23 @@ func _build_wilderness() -> void:
 					float(candidate["rot_y"]),
 					float(candidate["rot_z"])
 				)
+				var biome := StringName(candidate.get("biome", String(world_plan.sample_biome(x, z))))
 				var terrain_y := _surface_height(x, z)
-				_create_static_rock(Vector3(x, terrain_y + size * 0.4, z), size, rotation)
+				_create_static_rock(
+					Vector3(x, terrain_y + size * 0.4, z),
+					size,
+					rotation,
+					biome
+				)
 				rock_total += 1
 
 	print(
 		"KIMI_WORLD_CORE_READY seed=", WORLD_SEED,
 		" descriptor_digest=", descriptor_digest,
 		" trees=", tree_total,
-		" rocks=", rock_total
+		" rocks=", rock_total,
+		" groundcover=", groundcover_total,
+		" biome_chunks=", biome_counts
 	)
 
 func _wilderness_candidate_allowed(x: float, z: float, road_clearance: float) -> bool:
@@ -202,6 +219,8 @@ func _wilderness_candidate_allowed(x: float, z: float, road_clearance: float) ->
 	if Vector2(x - 55.0, z - 55.0).length() < 70.0:
 		return false
 	if x >= 250.0 and x <= 370.0 and z >= 215.0 and z <= 345.0:
+		return false
+	if macro_terrain != null and macro_terrain.is_water_at(x, z):
 		return false
 	return true
 
@@ -539,50 +558,134 @@ func _create_static_cylinder(label: String, at: Vector3, radius: float, height: 
 	add_child(body)
 	return body
 
-func _create_tree(at: Vector3, scale_factor: float) -> void:
+func _create_tree(
+	at: Vector3,
+	scale_factor: float,
+	biome: StringName = &"mixed_forest"
+) -> void:
 	var body := StaticBody3D.new()
 	body.position = at
-	body.name = "Tree"
+	body.name = "Tree_%s" % String(biome)
+	body.add_to_group("biome_tree")
+	body.set_meta("biome", String(biome))
+
+	var trunk_color := Color(0.30, 0.20, 0.12)
+	var crown_color := Color(0.20, 0.46, 0.24)
+	var crown_tiers := 2
+	var crown_width := 1.8
+	var trunk_scale := 1.0
+	match biome:
+		&"pine_forest":
+			crown_color = Color(0.10, 0.29, 0.17)
+			crown_tiers = 3
+			crown_width = 1.55
+		&"birch_grove":
+			trunk_color = Color(0.78, 0.77, 0.67)
+			crown_color = Color(0.39, 0.58, 0.27)
+			crown_width = 1.65
+			trunk_scale = 0.86
+		&"cedar_swamp":
+			trunk_color = Color(0.25, 0.20, 0.15)
+			crown_color = Color(0.10, 0.32, 0.25)
+			crown_tiers = 3
+			crown_width = 1.45
+		&"riverlands":
+			crown_color = Color(0.18, 0.49, 0.29)
+			crown_width = 1.7
+		&"alpine_highlands", &"rocky_scree":
+			crown_color = Color(0.20, 0.34, 0.22)
+			crown_width = 1.2
+			trunk_scale = 0.78
+		&"dry_meadow", &"badlands":
+			crown_color = Color(0.34, 0.42, 0.21)
+			crown_width = 1.35
+			trunk_scale = 0.88
+
 	var trunk_mesh := MeshInstance3D.new()
 	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.28 * scale_factor
-	trunk.bottom_radius = 0.38 * scale_factor
+	trunk.top_radius = 0.28 * scale_factor * trunk_scale
+	trunk.bottom_radius = 0.38 * scale_factor * trunk_scale
 	trunk.height = 3.2 * scale_factor
 	trunk_mesh.mesh = trunk
 	trunk_mesh.position.y = 1.6 * scale_factor
-	trunk_mesh.material_override = _material(Color(0.30, 0.20, 0.12))
+	trunk_mesh.material_override = _material(trunk_color)
+
 	var collision := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
-	shape.radius = 0.38 * scale_factor
+	shape.radius = 0.38 * scale_factor * trunk_scale
 	shape.height = 3.2 * scale_factor
 	collision.shape = shape
 	collision.position.y = 1.6 * scale_factor
 	body.add_child(trunk_mesh)
 	body.add_child(collision)
-	for tier in range(2):
+
+	for tier in range(crown_tiers):
 		var crown := MeshInstance3D.new()
 		var cone := CylinderMesh.new()
 		cone.top_radius = 0.0
-		cone.bottom_radius = (1.8 - tier * 0.35) * scale_factor
-		cone.height = 2.6 * scale_factor
+		cone.bottom_radius = maxf(0.55, crown_width - tier * 0.28) * scale_factor
+		cone.height = (2.35 + 0.18 * float(tier)) * scale_factor
 		cone.radial_segments = 10
 		crown.mesh = cone
-		crown.position.y = (3.2 + tier * 1.35) * scale_factor
-		crown.material_override = _material(Color(0.20 + tier * 0.03, 0.46, 0.24))
+		crown.position.y = (3.0 + tier * 1.18) * scale_factor
+		crown.material_override = _material(crown_color.lightened(0.035 * float(tier)))
 		body.add_child(crown)
 	add_child(body)
 
-func _create_static_rock(at: Vector3, scale_factor: float, rotation := Vector3.ZERO) -> void:
+func _create_groundcover(at: Vector3, biome: StringName, scale_factor: float) -> void:
+	var tuft := MeshInstance3D.new()
+	tuft.name = "Groundcover_%s" % String(biome)
+	tuft.position = at
+	tuft.add_to_group("biome_groundcover")
+	tuft.set_meta("biome", String(biome))
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.10 * scale_factor
+	mesh.bottom_radius = 0.48 * scale_factor
+	mesh.height = 0.55 * scale_factor
+	mesh.radial_segments = 5
+	tuft.mesh = mesh
+	var color := Color(0.36, 0.48, 0.20)
+	match biome:
+		&"riverlands":
+			color = Color(0.22, 0.48, 0.28)
+		&"marsh":
+			color = Color(0.25, 0.39, 0.22)
+		&"cedar_swamp":
+			color = Color(0.18, 0.35, 0.22)
+		&"birch_grove":
+			color = Color(0.43, 0.55, 0.25)
+	tuft.material_override = _material(color, 0.96)
+	add_child(tuft)
+
+func _create_static_rock(
+	at: Vector3,
+	scale_factor: float,
+	rotation := Vector3.ZERO,
+	biome: StringName = &"mixed_forest"
+) -> void:
 	var body := StaticBody3D.new()
 	body.position = at
 	body.rotation_degrees = rotation
+	body.name = "Rock_%s" % String(biome)
+	body.add_to_group("biome_rock")
+	body.set_meta("biome", String(biome))
+
 	var mesh_instance := MeshInstance3D.new()
 	var mesh := SphereMesh.new()
 	mesh.radius = scale_factor
 	mesh.height = scale_factor * 1.45
 	mesh_instance.mesh = mesh
 	mesh_instance.scale = Vector3(1.3, 0.75, 1.0)
-	mesh_instance.material_override = _material(Color(0.42, 0.45, 0.43))
+	var rock_color := Color(0.42, 0.45, 0.43)
+	match biome:
+		&"badlands":
+			rock_color = Color(0.50, 0.38, 0.27)
+		&"rocky_scree", &"alpine_highlands":
+			rock_color = Color(0.46, 0.46, 0.44)
+		&"riverlands", &"marsh":
+			rock_color = Color(0.34, 0.40, 0.37)
+	mesh_instance.material_override = _material(rock_color)
+
 	var collision := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
 	shape.radius = scale_factor
