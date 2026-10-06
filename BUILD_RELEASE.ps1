@@ -45,9 +45,9 @@ Write-Host "[5/8] Export Windows"
 & $Godot --headless --path $Repo --export-debug "Windows Desktop" $Win
 if ($LASTEXITCODE -ne 0 -or !(Test-Path $Win)) { throw "Windows export failed" }
 
-Write-Host "[6/8] Export Android"
-& $Godot --headless --path $Repo --export-debug "Android" $Apk
-if ($LASTEXITCODE -ne 0 -or !(Test-Path $Apk)) { throw "Android export failed" }
+Write-Host "[6/8] Export Android release"
+& (Join-Path $Repo "tools\export_android_release.ps1") -Repo $Repo
+if ($LASTEXITCODE -ne 0 -or !(Test-Path $Apk)) { throw "Android release export failed" }
 
 Write-Host "[7/8] Verify/sign Android"
 $Signer = $null
