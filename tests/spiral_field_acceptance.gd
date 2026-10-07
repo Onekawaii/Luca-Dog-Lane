@@ -13,9 +13,11 @@ func _fail(message: String) -> void:
 	print("[FAIL] ", message)
 
 func _run() -> void:
-	var save_path := "user://spiral_field_state_v1.json"
-	if FileAccess.file_exists(save_path):
-		DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+	var save_v2 := "user://spiral_field_state_v2.json"
+	var save_v1 := "user://spiral_field_state_v1.json"
+	for save_path in [save_v2, save_v1]:
+		if FileAccess.file_exists(save_path):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
 
 	var packed := load("res://scenes/Main.tscn") as PackedScene
 	if packed == null:
@@ -25,12 +27,13 @@ func _run() -> void:
 
 	var world := packed.instantiate()
 	root.add_child(world)
-	for _i in range(120):
+	for _i in range(140):
 		await physics_frame
 
 	var director := world.get_node_or_null("SpiralWorldDirector")
-	if director == null:
-		_fail("SpiralWorldDirector missing")
+	var hud := world.get_node_or_null("SandboxHUD")
+	if director == null or hud == null:
+		_fail("Spiral director or HUD missing")
 		_finish()
 		return
 
@@ -38,44 +41,139 @@ func _run() -> void:
 	var wail := director.get_node_or_null("Spiral_Wailing")
 	var tabby := director.get_node_or_null("Tabbytulhu")
 	if witness != null and wail != null and tabby != null:
-		_pass("Twin Spirals and Tabbytulhu exist in open world")
+		_pass("Twin Spirals and Tabby'tulhu exist")
 	else:
 		_fail("required Spiral encounters missing")
 
-	var before := str(director.call("status_summary"))
-	var response := str(director.call("interact", witness, "act"))
-	var after := str(director.call("status_summary"))
-	if before != after and "ACT" in response and float(director.get("witnessing")) >= 7.0:
-		_pass("ACT mutates authoritative Spiral state")
+	if (
+		witness != null and witness.get_node_or_null("DistantBeacon") != null
+		and wail != null and wail.get_node_or_null("DistantBeacon") != null
+	):
+		_pass("both Spirals have distant visual beacons")
 	else:
-		_fail("ACT failed to mutate Spiral state")
+		_fail("Spiral distant-beacon guidance missing")
 
-	var mercy := str(director.call("interact", tabby, "mercy"))
-	if "MERCY" in mercy and float(director.get("affection")) >= 5.0:
-		_pass("MERCY/Spare changes Tabbytulhu relationship state")
+	if (
+		tabby != null
+		and tabby.get_node_or_null("Ear_L") != null
+		and tabby.get_node_or_null("Ear_R") != null
+		and tabby.get_node_or_null("Leg_00") != null
+		and tabby.get_node_or_null("Tail_00") != null
+		and tabby.get_node_or_null("WhiskerTentacle_00") != null
+	):
+		_pass("Tabby'tulhu has readable cat anatomy plus eldritch appendages")
 	else:
-		_fail("Tabbytulhu MERCY path failed")
+		_fail("Tabby'tulhu anatomy contract failed")
 
-	if FileAccess.file_exists(save_path):
-		_pass("Spiral state persisted to versioned save")
+	var player := world.get_node_or_null("Player") as CharacterBody3D
+	if player != null and tabby != null:
+		player.global_position = tabby.global_position + Vector3(0.0, 0.0, 5.5)
+		player.rotation = Vector3.ZERO
+		player.set("yaw", 0.0)
+		var pivot = player.get("pivot") as Node3D
+		if pivot != null:
+			pivot.rotation.x = 0.0
+		for _i in range(4):
+			await physics_frame
+		player.call("use_tool")
+		await process_frame
+		var encounter_panel = hud.get("encounter_panel") as Panel
+		if encounter_panel != null and encounter_panel.visible:
+			_pass("Player USE raycasts a Spiral and opens contextual encounter UI")
+			hud.call("close_encounter")
+		else:
+			_fail("Player USE did not open contextual encounter UI")
 	else:
-		_fail("Spiral save file missing")
+		_fail("player or Tabby'tulhu missing for contextual raycast test")
+
+	var tabby_options: Array = director.call("get_encounter_options", tabby)
+	if tabby_options.size() == 4 and str(tabby_options[0].get("action")) == "talk" and str(tabby_options[3].get("action")) == "mercy":
+		_pass("Tabby'tulhu exposes contextual TALK/PET/FEED/MERCY")
+	else:
+		_fail("Tabby'tulhu contextual options failed")
+
+	var witness_options: Array = director.call("get_encounter_options", witness)
+	if witness_options.size() == 4 and str(witness_options[0].get("action")) == "behold":
+		_pass("Witnessing exposes site-specific contextual verbs")
+	else:
+		_fail("Witnessing contextual options failed")
+
+	var before_pressure := float(director.call("pressure"))
+	var response := str(director.call("interact", witness, "touch"))
+	var after_pressure := float(director.call("pressure"))
+	if after_pressure > before_pressure and "shadow" in response:
+		_pass("contextual action mutates authoritative Spiral pressure")
+	else:
+		_fail("contextual action failed to mutate pressure")
+
+	var tabby_response := str(director.call("interact", tabby, "pet"))
+	if "whisker" in tabby_response and float(director.get("affection")) >= 3.0:
+		_pass("Tabby'tulhu PET changes relationship state")
+	else:
+		_fail("Tabby'tulhu PET path failed")
+
+	# Corruption alone should not falsely present a fully infected world while
+	# both Twin Spirals are untouched.
+	director.set("corruption", 50.0)
+	director.set("witnessing", 0.0)
+	director.set("wailing", 0.0)
+	director.call("_refresh_world_state")
+	if str(director.get("stage")) != "INFECTED":
+		_pass("corruption alone no longer falsely reports INFECTED")
+	else:
+		_fail("stage still reports INFECTED with EYE/MOUTH at zero")
+
+	# Force a real resonance threshold and verify environment reacts.
+	var env := world.get_node_or_null("FieldEnvironment") as WorldEnvironment
+	var fog_before := 0.0
+	if env != null and env.environment != null:
+		fog_before = env.environment.fog_density
+	director.set("witnessing", 86.0)
+	director.set("corruption", 62.0)
+	director.call("_refresh_world_state")
+	var fog_after := env.environment.fog_density if env != null and env.environment != null else 0.0
+	if str(director.get("stage")) == "VELVET BREACH" and fog_after > fog_before:
+		_pass("Spiral pressure visibly drives environment state")
+	else:
+		_fail("world environment did not respond to Spiral pressure")
+
+	var terrain_slice: Node = world.get("terrain_slice") as Node
+	if terrain_slice != null and terrain_slice.call("get_voxel_tool_for_test") != null:
+		_pass("actual player TerrainSlice owns a live VoxelTool")
+	else:
+		_fail("actual player TerrainSlice VoxelTool is unavailable")
+
+	if not bool(hud.get("mobile_ui")):
+		var move_base = hud.get("move_base") as Panel
+		var use_button = hud.get("use_button") as Button
+		var spawn_button = hud.get("spawn_button") as Button
+		var noclip_button = hud.get("noclip_button") as Button
+		if not move_base.visible and not use_button.visible and not spawn_button.visible and not noclip_button.visible:
+			_pass("desktop HUD hides touch and developer controls")
+		else:
+			_fail("desktop still shows mobile/developer controls")
+
+	director.call("_save_state")
+	if FileAccess.file_exists(save_v2):
+		_pass("Spiral v2 state persisted to versioned save")
+	else:
+		_fail("Spiral v2 save file missing")
 
 	var saved_witness := float(director.get("witnessing"))
 	var saved_affection := float(director.get("affection"))
 	world.queue_free()
-	for _i in range(8):
+	for _i in range(10):
 		await physics_frame
 
 	var world2 := packed.instantiate()
 	root.add_child(world2)
-	for _i in range(120):
+	for _i in range(140):
 		await physics_frame
 	var director2 := world2.get_node_or_null("SpiralWorldDirector")
 	if director2 != null and is_equal_approx(float(director2.get("witnessing")), saved_witness) and is_equal_approx(float(director2.get("affection")), saved_affection):
-		_pass("save/reload restores Spiral world state")
+		_pass("v2 save/reload restores Spiral state")
 	else:
-		_fail("save/reload did not restore Spiral state")
+		_fail("v2 save/reload failed")
 
 	if director2 != null:
 		director2.call("clear_state_for_test")
@@ -83,10 +181,10 @@ func _run() -> void:
 
 func _finish() -> void:
 	if failures.is_empty():
-		print("[ALL SPIRAL FIELD V001 GATES PASSED]")
+		print("[ALL SPIRAL FIELD V02 GATES PASSED]")
 		quit(0)
 	else:
-		print("[SPIRAL FIELD V001 FAILURES] ", failures.size())
+		print("[SPIRAL FIELD V02 FAILURES] ", failures.size())
 		for item in failures:
 			print(" - ", item)
 		quit(1)

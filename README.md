@@ -1,8 +1,8 @@
 # SPIRAL FIELD 🌀🐕‍🦺
 
-**Open-world nightmare sandbox built from the verified Luca Dog World v0.16 substrate.**
+**Open-world nightmare sandbox built from the verified Luca Dog World v0.26 substrate.**
 
-Working title: **Spiral Field v0.1.0**.
+Working title: **Spiral Field v0.2.0**.
 
 This is a separate game branch. Luca Dog World is preserved as the donor baseline; this project does not replace it.
 
@@ -31,7 +31,7 @@ The first loop is:
 
 `ROAM → DISCOVER → ACT or MERCY → WORLD CHANGES → SAVE → CONTINUE`
 
-## v0.1 world state
+## v0.2 world state
 
 Persistent save schema: `user://spiral_field_state_v1.json`
 
@@ -50,7 +50,7 @@ Desktop keeps the Luca donor controls: WASD, mouse look, Space jump, Shift sprin
 
 Android keeps the left movement stick, right-side look, JUMP, TOOL, USE, NOCLIP, MAP and SPAWN controls.
 
-ACT and MERCY are the first two catalog-driven tools.
+ACT/MERCY are no longer tool-belt entries. Spiral encounters open contextual verbs such as TALK/PET/FEED/MERCY, BEHOLD/AVERT/TOUCH/MERCY, or ANSWER/LISTEN/HUSH/MERCY.
 
 ## Verification
 
@@ -61,14 +61,14 @@ python -m unittest discover -s tests -p "test_*.py" -v
 powershell -ExecutionPolicy Bypass -File .\BUILD_SPIRAL_FIELD.ps1
 ```
 
-Release gates include Python contracts, Kimi determinism, live movement/mobile/vehicle playability, v0.16 system acceptance, Spiral ACT/MERCY + save/reload acceptance, exported Windows Voxel Tools probing, and Android signature/package/native-library validation.
+Release gates include Python contracts, Kimi determinism, live movement/mobile/vehicle playability, v0.26 system acceptance, Spiral ACT/MERCY + save/reload acceptance, exported Windows Voxel Tools probing, and Android signature/package/native-library validation.
 
 > No receipt, no banana.
 
 ## Outputs
 
 ```text
-dist/windows/Spiral-Field-v0.1.0-windows.exe
-dist/android/Spiral-Field-v0.1.0-android.apk
-dist/RELEASE_RECEIPT_Spiral-Field-v0.1.0.json
+dist/windows/Spiral-Field-v0.2.0-windows.exe
+dist/android/Spiral-Field-v0.2.0-android.apk
+dist/RELEASE_RECEIPT_Spiral-Field-v0.2.0.json
 ```

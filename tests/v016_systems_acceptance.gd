@@ -13,7 +13,7 @@ func _fail(message: String) -> void:
 	print("[FAIL] ", message)
 
 func _run() -> void:
-	ProjectSettings.set_setting("luca/session_map", "lucas_field")
+	ProjectSettings.set_setting("spiral_field/session_map", "lucas_field")
 	var packed := load("res://scenes/Main.tscn") as PackedScene
 	if packed == null:
 		_fail("Main.tscn missing")
@@ -225,7 +225,7 @@ func _run() -> void:
 	var first_save := str(first_persistence.get("save_path"))
 	var first_height := float(world.get_node("MacroTerrain").call("height_at", 160.0, -360.0))
 
-	ProjectSettings.set_setting("luca/session_map", "red_pine_highlands")
+	ProjectSettings.set_setting("spiral_field/session_map", "red_pine_highlands")
 	var world2 := packed.instantiate()
 	root.add_child(world2)
 	for _i in range(50):
@@ -252,7 +252,7 @@ func _run() -> void:
 	else:
 		_fail("red pine map did not become authoritative")
 
-	ProjectSettings.set_setting("luca/session_map", "lucas_field")
+	ProjectSettings.set_setting("spiral_field/session_map", "lucas_field")
 	_finish()
 
 func _finish() -> void:

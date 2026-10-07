@@ -126,6 +126,29 @@ func get_persistence_for_test() -> Node:
 func get_terrain_instance_id_for_test() -> int:
 	return terrain.get_instance_id() if terrain != null else 0
 
+func probe_voxel_roundtrip_for_test() -> bool:
+	if voxel_tool == null or terrain == null:
+		return false
+	var candidates := [
+		Vector3i(310, 4, 282),
+		Vector3i(310, 12, 282),
+		Vector3i(310, 20, 282),
+		Vector3i(310, 28, 282),
+		Vector3i(310, 36, 282),
+		Vector3i(310, 44, 282),
+	]
+	for pos in candidates:
+		if not _is_editable(pos):
+			continue
+		var before := int(voxel_tool.call("get_voxel", pos))
+		var replacement := STONE if before == AIR else AIR
+		voxel_tool.call("set_voxel", pos, replacement)
+		var changed := int(voxel_tool.call("get_voxel", pos))
+		voxel_tool.call("set_voxel", pos, before)
+		var restored := int(voxel_tool.call("get_voxel", pos))
+		return changed == replacement and restored == before
+	return false
+
 func apply_voxel_for_test(pos: Vector3i, value: int, persist := true) -> bool:
 	if voxel_tool == null or not _is_editable(pos):
 		return false

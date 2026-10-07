@@ -24,11 +24,20 @@ var active_map_profile: Dictionary = {}
 var world_seed := DEFAULT_WORLD_SEED
 var player_start := DEFAULT_PLAYER_START
 var terrain_scale := 1.0
+var world_environment_node: WorldEnvironment
+var field_environment: Environment
+var field_sky_material: ProceduralSkyMaterial
+var field_sun: DirectionalLight3D
+var base_sky_top := Color(0.16, 0.42, 0.73)
+var base_sky_horizon := Color(0.72, 0.86, 0.88)
+var base_fog_color := Color(0.56, 0.66, 0.68)
+var base_fog_density := 0.00115
 
 func _ready() -> void:
 	if OS.get_environment("LUCA_V013_EXPORT_PROBE") == "1":
 		_run_v013_export_probe()
 		return
+	var player_terrain_probe := OS.get_environment("SPIRAL_PLAYER_TERRAIN_PROBE") == "1"
 
 	_setup_content_registry()
 	world_plan = KimiWorldPlan.new(world_seed)
@@ -50,10 +59,12 @@ func _ready() -> void:
 	_spawn_spiral_world()
 	_spawn_egg_hunt()
 	print(
-		"LUCA_SANDBOX_READY world_half=", WORLD_HALF,
+		"SPIRAL_FIELD_WORLD_READY world_half=", WORLD_HALF,
 		" map=", active_map_id,
 		" seed=", world_seed
 	)
+	if player_terrain_probe:
+		call_deferred("_run_player_terrain_probe")
 
 func _setup_content_registry() -> void:
 	content_registry = ContentRegistry.new()
@@ -63,7 +74,7 @@ func _setup_content_registry() -> void:
 		push_error("Content registry failed validation")
 
 	var default_id := content_registry.get_default_map_id()
-	var requested := str(ProjectSettings.get_setting("luca/session_map", default_id))
+	var requested := str(ProjectSettings.get_setting("spiral_field/session_map", default_id))
 	if content_registry.get_map(requested).is_empty():
 		requested = default_id
 
@@ -94,7 +105,7 @@ func get_active_map_label() -> String:
 func request_map(map_id: String) -> bool:
 	if content_registry == null or content_registry.get_map(map_id).is_empty():
 		return false
-	ProjectSettings.set_setting("luca/session_map", map_id)
+	ProjectSettings.set_setting("spiral_field/session_map", map_id)
 	call_deferred("_reload_requested_map")
 	return true
 
@@ -136,42 +147,110 @@ func _run_v013_export_probe() -> void:
 	print("[ALL EXPORTED VOXEL RUNTIME GATES PASSED]")
 	get_tree().quit(0)
 
+func _run_player_terrain_probe() -> void:
+	for _i in range(30):
+		await get_tree().physics_frame
+	if terrain_slice == null:
+		print("[FAIL] player terrain probe: TerrainSlice missing")
+		get_tree().quit(1)
+		return
+	var voxel_tool = terrain_slice.call("get_voxel_tool_for_test")
+	if voxel_tool == null:
+		print("[FAIL] player terrain probe: VoxelTool is null")
+		get_tree().quit(1)
+		return
+	if int(terrain_slice.call("get_terrain_instance_id_for_test")) == 0:
+		print("[FAIL] player terrain probe: VoxelTerrain missing")
+		get_tree().quit(1)
+		return
+	var inventory = terrain_slice.call("get_inventory_for_test")
+	if inventory == null:
+		print("[FAIL] player terrain probe: inventory missing")
+		get_tree().quit(1)
+		return
+	# The VoxelViewer is parented to the player. Move it into the actual slice
+	# so this exported probe exercises streaming and a real read/write/restore.
+	player.global_position = Vector3(310.0, 48.0, 282.0)
+	player.velocity = Vector3.ZERO
+	for _i in range(180):
+		await get_tree().physics_frame
+	if not bool(terrain_slice.call("probe_voxel_roundtrip_for_test")):
+		print("[FAIL] player terrain probe: streamed VoxelTool round-trip failed")
+		get_tree().quit(1)
+		return
+	print("[ALL PLAYER TERRAIN TOOL GATES PASSED]")
+	get_tree().quit(0)
+
 func _setup_environment() -> void:
-	var world_environment := WorldEnvironment.new()
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_SKY
+	world_environment_node = WorldEnvironment.new()
+	world_environment_node.name = "FieldEnvironment"
+	field_environment = Environment.new()
+	field_environment.background_mode = Environment.BG_SKY
 	var sky := Sky.new()
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = _color_from_array(
+	field_sky_material = ProceduralSkyMaterial.new()
+	base_sky_top = _color_from_array(
 		active_map_profile.get("sky_top", [0.16, 0.42, 0.73]),
 		Color(0.16, 0.42, 0.73)
 	)
-	sky_material.sky_horizon_color = _color_from_array(
+	base_sky_horizon = _color_from_array(
 		active_map_profile.get("sky_horizon", [0.72, 0.86, 0.88]),
 		Color(0.72, 0.86, 0.88)
 	)
-	sky_material.ground_bottom_color = Color(0.12, 0.18, 0.16)
-	sky_material.ground_horizon_color = Color(0.50, 0.61, 0.55)
-	sky.sky_material = sky_material
-	environment.sky = sky
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.56
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.fog_enabled = true
-	environment.fog_light_color = _color_from_array(
+	base_fog_color = _color_from_array(
 		active_map_profile.get("fog_color", [0.56, 0.66, 0.68]),
 		Color(0.56, 0.66, 0.68)
 	)
-	environment.fog_density = float(active_map_profile.get("fog_density", 0.00115))
-	world_environment.environment = environment
-	add_child(world_environment)
+	base_fog_density = float(active_map_profile.get("fog_density", 0.00115))
+	field_sky_material.sky_top_color = base_sky_top
+	field_sky_material.sky_horizon_color = base_sky_horizon
+	field_sky_material.ground_bottom_color = Color(0.08, 0.09, 0.09)
+	field_sky_material.ground_horizon_color = Color(0.38, 0.44, 0.40)
+	sky.sky_material = field_sky_material
+	field_environment.sky = sky
+	field_environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	field_environment.ambient_light_energy = 0.56
+	field_environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+	field_environment.fog_enabled = true
+	field_environment.fog_light_color = base_fog_color
+	field_environment.fog_density = base_fog_density
+	world_environment_node.environment = field_environment
+	add_child(world_environment_node)
 
-	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-52.0, -28.0, 0.0)
-	sun.light_energy = 1.02
-	sun.light_color = Color(1.0, 0.94, 0.82)
-	sun.shadow_enabled = true
-	add_child(sun)
+	field_sun = DirectionalLight3D.new()
+	field_sun.name = "FieldSun"
+	field_sun.rotation_degrees = Vector3(-52.0, -28.0, 0.0)
+	field_sun.light_energy = 1.02
+	field_sun.light_color = Color(1.0, 0.94, 0.82)
+	field_sun.shadow_enabled = true
+	add_child(field_sun)
+
+func apply_spiral_world_state(
+	pressure: float,
+	affection: float,
+	stage: String,
+	witnessing: float,
+	wailing: float
+) -> void:
+	if field_environment == null or field_sky_material == null or field_sun == null:
+		return
+	var t := clampf(pressure / 100.0, 0.0, 1.0)
+	var witness_mix := clampf(witnessing / maxf(1.0, witnessing + wailing), 0.0, 1.0)
+	var wound_color := Color(0.17, 0.025, 0.18).lerp(Color(0.30, 0.055, 0.02), witness_mix)
+	field_sky_material.sky_top_color = base_sky_top.lerp(wound_color, t * 0.88)
+	field_sky_material.sky_horizon_color = base_sky_horizon.lerp(Color(0.27, 0.18, 0.28), t * 0.78)
+	field_sky_material.ground_horizon_color = Color(0.38, 0.44, 0.40).lerp(Color(0.12, 0.045, 0.13), t)
+	field_environment.fog_light_color = base_fog_color.lerp(Color(0.21, 0.08, 0.22), t * 0.90)
+	field_environment.fog_density = lerpf(base_fog_density, 0.0105, t)
+	field_environment.ambient_light_energy = lerpf(0.56, 0.24, t)
+	field_sun.light_energy = lerpf(1.02, 0.42, t)
+	field_sun.light_color = Color(1.0, 0.94, 0.82).lerp(Color(0.78, 0.34, 0.46), t)
+	if stage == "VELVET BREACH":
+		field_environment.fog_density = maxf(field_environment.fog_density, 0.013)
+	# Affection does not cancel the horror; it warms a small portion of the light.
+	field_sun.light_color = field_sun.light_color.lerp(
+		Color(1.0, 0.62, 0.38),
+		clampf(affection / 100.0, 0.0, 1.0) * 0.16
+	)
 
 func _build_ground_and_boundaries() -> void:
 	# Invisible fail-safe floor only. MacroTerrain owns the visible/collidable
@@ -299,6 +378,16 @@ func _spawn_spiral_world() -> void:
 	add_child(node)
 	spiral_world = node
 
+func spiral_encounter_title(target: Object) -> String:
+	if spiral_world == null:
+		return "THE FIELD"
+	return str(spiral_world.call("get_encounter_title", target))
+
+func spiral_encounter_options(target: Object) -> Array:
+	if spiral_world == null:
+		return []
+	return spiral_world.call("get_encounter_options", target)
+
 func spiral_interact(target: Object, action: String) -> String:
 	if spiral_world == null:
 		return "The field is silent."
@@ -368,7 +457,7 @@ func _spawn_people() -> void:
 	for i in range(positions.size()):
 		var at: Vector3 = positions[i]
 		at.y = _surface_height(at.x, at.z) + 1.1
-		_spawn_npc(at, "Wanderer %02d" % (i + 1))
+		_spawn_npc(at, "Drifter %02d" % (i + 1))
 
 func _spawn_starter_props() -> void:
 	for i in range(4):
@@ -427,7 +516,7 @@ func spawn_from_menu(kind: String) -> void:
 	var at := _menu_spawn_point(player.call("get_spawn_point"), kind)
 	if kind == "npc":
 		spawned_npc_serial += 1
-		_spawn_npc(at, "Spawned Wanderer %02d" % spawned_npc_serial)
+		_spawn_npc(at, "Spawned Drifter %02d" % spawned_npc_serial)
 	elif kind == "buggy":
 		_spawn_buggy(at)
 	else:

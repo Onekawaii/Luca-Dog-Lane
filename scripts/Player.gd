@@ -197,7 +197,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_Q:
 		cycle_tool()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_V:
-		toggle_noclip()
+		if hud != null and hud.has_method("developer_mode_enabled") and bool(hud.call("developer_mode_enabled")):
+			toggle_noclip()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_R and riding != null:
 		toggle_vehicle_view()
 
@@ -281,6 +282,18 @@ func use_tool() -> void:
 		exit_vehicle()
 		return
 
+	# Encounter verbs are contextual, not tools. A Spiral target always takes
+	# priority over the ordinary sandbox/tool belt.
+	var encounter_hit := _raycast(9.5)
+	if not encounter_hit.is_empty():
+		var encounter_target = encounter_hit.get("collider")
+		if encounter_target != null and encounter_target.is_in_group("spiral_interactable"):
+			if hud != null and hud.has_method("open_encounter"):
+				var title := str(game.call("spiral_encounter_title", encounter_target))
+				var options: Array = game.call("spiral_encounter_options", encounter_target)
+				hud.call("open_encounter", encounter_target, title, options)
+			return
+
 	var definition := _current_tool_definition()
 	var action := str(definition.get("action", "inspect"))
 	var reach := float(definition.get("range", 7.0))
@@ -317,23 +330,13 @@ func use_tool() -> void:
 	if target == null:
 		return
 
-	if action == "act" or action == "mercy":
-		if target.is_in_group("spiral_interactable"):
-			var result := str(game.call("spiral_interact", target, action))
-			if hud != null:
-				hud.call("flash", result, 3.2)
-			return
-		if hud != null:
-			hud.call("flash", "No Spiral encounter in reach", 1.4)
-		return
-
 	if target.is_in_group("vehicle"):
 		enter_vehicle(target)
 		return
 
 	if target.is_in_group("luca"):
 		if hud != null:
-			hud.call("flash", "Luca is right here. Good dog.")
+			hud.call("flash", "The hound stays close. It keeps looking past you.")
 		return
 
 	if action == "strike":
@@ -366,6 +369,17 @@ func use_tool() -> void:
 			if hud != null:
 				var groups = target.get_groups()
 				hud.call("flash", "%s // %s" % [target.name, str(groups)])
+
+func spiral_choice(target: Object, action: String) -> void:
+	if target == null or not is_instance_valid(target):
+		if hud != null:
+			hud.call("flash", "The encounter is gone.", 1.4)
+		return
+	if not target.is_in_group("spiral_interactable"):
+		return
+	var result := str(game.call("spiral_interact", target, action))
+	if hud != null:
+		hud.call("flash", result, 4.2)
 
 func _strike_target(target, direction: Vector3, definition: Dictionary) -> void:
 	var damage := float(definition.get("damage", 0.0))

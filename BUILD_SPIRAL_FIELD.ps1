@@ -8,8 +8,8 @@ $Keystore = "$env:USERPROFILE\.android\debug.keystore"
 $Dist = Join-Path $Repo "dist"
 $WinDir = Join-Path $Dist "windows"
 $AndroidDir = Join-Path $Dist "android"
-$Win = Join-Path $WinDir "Spiral-Field-v0.1.0-windows.exe"
-$Apk = Join-Path $AndroidDir "Spiral-Field-v0.1.0-android.apk"
+$Win = Join-Path $WinDir "Spiral-Field-v0.2.0-windows.exe"
+$Apk = Join-Path $AndroidDir "Spiral-Field-v0.2.0-android.apk"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.7.2 missing: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK missing: $Sdk" }
@@ -50,16 +50,23 @@ Write-Host "[6/10] Spiral Field acceptance"
 & $Godot --headless --path $Repo --script res://tests/spiral_field_acceptance.gd
 if ($LASTEXITCODE -ne 0) { throw "Spiral Field acceptance failed" }
 
-Write-Host "[7/10] Export Windows"
-& $Godot --headless --path $Repo --export-debug "Windows Desktop" $Win
+Write-Host "[7/10] Export Windows release"
+& $Godot --headless --path $Repo --export-release "Windows Desktop" $Win
 if ($LASTEXITCODE -ne 0 -or !(Test-Path $Win)) { throw "Windows export failed" }
 
-Write-Host "[8/10] Probe Windows exported voxel runtime"
-$env:LUCA_V013_EXPORT_PROBE = "1"
-& $Win --headless
+Write-Host "[8/10] Probe Windows exported player terrain path"
+$ProbeLog = Join-Path $Dist "windows-player-terrain-probe.log"
+Remove-Item $ProbeLog -ErrorAction SilentlyContinue
+$env:SPIRAL_PLAYER_TERRAIN_PROBE = "1"
+& $Win --headless *> $ProbeLog
 $ProbeRc = $LASTEXITCODE
-Remove-Item Env:LUCA_V013_EXPORT_PROBE -ErrorAction SilentlyContinue
-if ($ProbeRc -ne 0) { throw "Exported Windows voxel probe failed rc=$ProbeRc" }
+Remove-Item Env:SPIRAL_PLAYER_TERRAIN_PROBE -ErrorAction SilentlyContinue
+$ProbeText = Get-Content $ProbeLog -Raw
+if ($ProbeRc -ne 0 -or $ProbeText -notmatch "\[ALL PLAYER TERRAIN TOOL GATES PASSED\]") {
+    $ProbeText | Write-Host
+    throw "Exported Windows player terrain-path probe failed rc=$ProbeRc"
+}
+Write-Host "[PASS] exported Windows TerrainSlice -> VoxelTool -> player path"
 
 Write-Host "[9/10] Export + verify Android"
 & $Godot --headless --path $Repo --export-debug "Android" $Apk
@@ -98,8 +105,8 @@ if ($Aapt) {
     $PackageLine = $Badging | Where-Object { $_ -like "package:*" } | Select-Object -First 1
     Write-Host $PackageLine
     if ($PackageLine -notmatch "name='com\.onekawaii\.spiralfield'") { throw "Wrong package ID" }
-    if ($PackageLine -notmatch "versionCode='1'") { throw "Wrong versionCode" }
-    if ($PackageLine -notmatch "versionName='0\.1\.0'") { throw "Wrong versionName" }
+    if ($PackageLine -notmatch "versionCode='2'") { throw "Wrong versionCode" }
+    if ($PackageLine -notmatch "versionName='0\.2\.0'") { throw "Wrong versionName" }
 }
 
 Write-Host "[10/10] Hash + release receipt"
@@ -122,19 +129,19 @@ $Head = (git -C $Repo rev-parse HEAD 2>$null)
 $Status = (git -C $Repo status --short)
 $Receipt = [ordered]@{
     product = "Spiral Field"
-    version = "0.1.0"
+    version = "0.2.0"
     donor = "Luca Dog World v0.16 world systems"
-    architecture = "luca-v016-donor+kimi+macroterrain+voxeltools+vehiclebody3d+luca-companion+spiral-world-director-v1+act-mercy+persistence-v1"
+    architecture = "luca-v016-donor+kimi+macroterrain+voxeltools+vehiclebody3d+companion+spiral-world-director-v2+contextual-encounters+world-pressure+persistence-v2"
     git_head = $Head
     git_status = @($Status)
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
     gates = @(
-        "39 Python tests",
+        "43 Python tests",
         "Kimi deterministic acceptance",
         "runtime playability acceptance",
         "v0.16 systems acceptance",
         "Spiral Field ACT/MERCY persistence acceptance",
-        "Windows exported Voxel Tools probe",
+        "Windows exported player TerrainSlice/VoxelTool probe",
         "Android signature/package/native-lib verification"
     )
     windows = [ordered]@{
@@ -147,12 +154,12 @@ $Receipt = [ordered]@{
         bytes = (Get-Item $Apk).Length
         sha256 = $ApkHash
         package = "com.onekawaii.spiralfield"
-        version_code = 1
-        version_name = "0.1.0"
+        version_code = 2
+        version_name = "0.2.0"
         signed = $true
     }
 }
-$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_Spiral-Field-v0.1.0.json"
+$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_Spiral-Field-v0.2.0.json"
 $Receipt | ConvertTo-Json -Depth 6 | Set-Content $ReceiptPath -Encoding utf8
 
 Write-Host "WINDOWS=$Win"
@@ -160,4 +167,4 @@ Write-Host "WINDOWS_SHA256=$WinHash"
 Write-Host "ANDROID=$Apk"
 Write-Host "ANDROID_SHA256=$ApkHash"
 Write-Host "RECEIPT=$ReceiptPath"
-Write-Host "[DONE] Spiral Field v0.1.0"
+Write-Host "[DONE] Spiral Field v0.2.0"

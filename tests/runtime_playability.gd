@@ -293,8 +293,10 @@ func _run() -> void:
 		player.call("enter_vehicle", buggy)
 		await process_frame
 		var view_button = hud.get("view_button") as Button
-		if player_camera != null and not player_camera.current and driver_cam.current and view_button.visible:
-			_pass("entering buggy activates driver camera and vehicle HUD")
+		var mobile_ui := bool(hud.get("mobile_ui"))
+		var view_visibility_ok: bool = view_button.visible if mobile_ui else not view_button.visible
+		if player_camera != null and not player_camera.current and driver_cam.current and view_visibility_ok:
+			_pass("entering buggy activates driver camera with platform-appropriate HUD")
 		else:
 			_fail("vehicle entry camera/HUD integration failed")
 		player.call("toggle_vehicle_view")

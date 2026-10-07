@@ -1,8 +1,6 @@
 {
   "schema_version": 1,
   "order": [
-    "act",
-    "mercy",
     "grab",
     "inspect",
     "field_hammer",
@@ -62,20 +60,6 @@
       "action": "remove",
       "range": 7.0,
       "starter": true
-    },
-    "act": {
-      "label": "ACT",
-      "action": "act",
-      "range": 8.5,
-      "starter": true,
-      "description": "Talk, pet, feed, witness, or otherwise engage a Spiral encounter."
-    },
-    "mercy": {
-      "label": "MERCY",
-      "action": "mercy",
-      "range": 8.5,
-      "starter": true,
-      "description": "Spare, release, quiet, or de-escalate a Spiral encounter."
     }
   }
 }

@@ -3,33 +3,81 @@
   "default_map": "lucas_field",
   "maps": {
     "lucas_field": {
-      "label": "LUCA'S FIELD",
+      "label": "THE FIRST FIELD",
       "seed": 6060,
       "terrain_scale": 1.0,
-      "spawn": [0.0, 2.5, 24.0],
-      "sky_top": [0.16, 0.42, 0.73],
-      "sky_horizon": [0.72, 0.86, 0.88],
-      "fog_color": [0.56, 0.66, 0.68],
-      "fog_density": 0.00115
+      "spawn": [
+        0.0,
+        2.5,
+        24.0
+      ],
+      "sky_top": [
+        0.1,
+        0.16,
+        0.24
+      ],
+      "sky_horizon": [
+        0.55,
+        0.6,
+        0.62
+      ],
+      "fog_color": [
+        0.42,
+        0.46,
+        0.5
+      ],
+      "fog_density": 0.0022
     },
     "red_pine_highlands": {
-      "label": "RED PINE HIGHLANDS",
+      "label": "WITNESS RIDGE",
       "seed": 7719,
       "terrain_scale": 1.35,
-      "spawn": [12.0, 2.5, 18.0],
-      "sky_top": [0.20, 0.34, 0.48],
-      "sky_horizon": [0.62, 0.72, 0.68],
-      "fog_color": [0.48, 0.57, 0.55],
+      "spawn": [
+        12.0,
+        2.5,
+        18.0
+      ],
+      "sky_top": [
+        0.2,
+        0.34,
+        0.48
+      ],
+      "sky_horizon": [
+        0.62,
+        0.72,
+        0.68
+      ],
+      "fog_color": [
+        0.48,
+        0.57,
+        0.55
+      ],
       "fog_density": 0.00155
     },
     "quarry_basin": {
-      "label": "QUARRY BASIN",
+      "label": "THE HOLLOW QUARRY",
       "seed": 3184,
       "terrain_scale": 0.82,
-      "spawn": [-24.0, 2.5, 32.0],
-      "sky_top": [0.30, 0.39, 0.52],
-      "sky_horizon": [0.73, 0.76, 0.70],
-      "fog_color": [0.60, 0.61, 0.57],
+      "spawn": [
+        -24.0,
+        2.5,
+        32.0
+      ],
+      "sky_top": [
+        0.3,
+        0.39,
+        0.52
+      ],
+      "sky_horizon": [
+        0.73,
+        0.76,
+        0.7
+      ],
+      "fog_color": [
+        0.6,
+        0.61,
+        0.57
+      ],
       "fog_density": 0.00175
     }
   }

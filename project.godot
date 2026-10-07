@@ -1,5 +1,5 @@
 ; Engine configuration file.
-; Luca Dog World clean-room sandbox rewrite.
+; Spiral Field open-world nightmare fork.
 
 config_version=5
 
@@ -7,7 +7,7 @@ config_version=5
 
 config/name="Spiral Field"
 config/description="Open-world nightmare sandbox driven by Spiral state"
-config/version="0.1.0"
+config/version="0.2.0"
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://assets/icon.png"

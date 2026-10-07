@@ -55,7 +55,7 @@ def check_project_contract() -> None:
         fail("main scene is not the clean sandbox scene")
     if "[autoload]" in project:
         fail("autoload section reintroduced")
-    if 'config/version="0.1.0"' not in project:
+    if 'config/version="0.2.0"' not in project:
         fail("unexpected product version")
     print("[PASS] project boots directly into standalone sandbox")
 
@@ -75,12 +75,14 @@ def check_sandbox_contract() -> None:
     game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
     tools_doc = json.loads((ROOT / "data" / "tools_v016.json").read_text(encoding="utf-8"))
     actions = {spec["action"] for spec in tools_doc["tools"].values()}
-    for token in ("SPAWN MENU", "NOCLIP", "TOOL", "WORLD MAPS"):
+    for token in ("DEVELOPER SPAWN", "NOCLIP", "TOOL", "FIELD TRANSITIONS", "open_encounter"):
         if token not in hud:
             fail(f"HUD missing {token}")
-    for action in ("act", "mercy", "grab", "remove", "duplicate", "inspect", "strike", "mine", "place", "craft"):
+    for action in ("grab", "remove", "duplicate", "inspect", "strike", "mine", "place", "craft"):
         if action not in actions:
             fail(f"tool action missing {action}")
+    if "act" in actions or "mercy" in actions:
+        fail("contextual encounter verbs leaked back into tool catalog")
     for token in ("spawn_prop", "_spawn_npc", "_spawn_buggy", "ContentRegistry.new()"):
         if token not in game:
             fail(f"sandbox/content contract missing {token}")
@@ -165,10 +167,10 @@ def run_spiral_field() -> None:
     combined = result.stdout + "\n" + result.stderr
     bad = ("SCRIPT ERROR", "Parse Error", "Failed to load script", "Invalid call", "Nonexistent function", "Can't add child")
     found = [needle for needle in bad if needle.lower() in combined.lower()]
-    if result.returncode != 0 or found or "[ALL SPIRAL FIELD V001 GATES PASSED]" not in combined:
+    if result.returncode != 0 or found or "[ALL SPIRAL FIELD V02 GATES PASSED]" not in combined:
         print(combined)
         fail(f"Spiral Field gate failed: rc={result.returncode}, markers={found}")
-    print("[PASS] Spiral Field ACT/MERCY + persistence gate")
+    print("[PASS] Spiral Field contextual encounters + world-state + persistence gate")
 
 
 def main() -> int:

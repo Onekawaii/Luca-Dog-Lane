@@ -30,9 +30,9 @@ class KimiCoreIntegrationTests(unittest.TestCase):
         presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
         game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
         self.assertIn('config/name="Spiral Field"', project)
-        self.assertIn('config/version="0.1.0"', project)
-        self.assertIn("Spiral-Field-v0.1.0-android.apk", presets)
-        self.assertIn("version/code=1", presets)
+        self.assertIn('config/version="0.2.0"', project)
+        self.assertIn("Spiral-Field-v0.2.0-android.apk", presets)
+        self.assertIn("version/code=2", presets)
         self.assertIn("KimiWorldGenerator", game)
 
 
