@@ -75,20 +75,19 @@ if ($LASTEXITCODE -ne 0 -or !(Test-Path $Apk)) { throw "Android export failed" }
 $BuildTools = Get-ChildItem (Join-Path $Sdk "build-tools") -Directory |
     Sort-Object { try { [version]$_.Name } catch { [version]"0.0" } } -Descending
 $Signer = $null
-$Aapt = $null
 foreach ($Dir in $BuildTools) {
     $Candidate = Join-Path $Dir.FullName "apksigner.bat"
     if (Test-Path $Candidate) {
         & $Candidate version *> $null
         if ($LASTEXITCODE -eq 0) {
             $Signer = $Candidate
-            $MaybeAapt = Join-Path $Dir.FullName "aapt.exe"
-            if (Test-Path $MaybeAapt) { $Aapt = $MaybeAapt }
             break
         }
     }
 }
 if (!$Signer) { throw "No working apksigner found" }
+$ApkAnalyzer = Join-Path $Sdk "cmdline-tools\latest\bin\apkanalyzer.bat"
+if (!(Test-Path $ApkAnalyzer)) { throw "apkanalyzer.bat not found: $ApkAnalyzer" }
 
 & $Signer verify --verbose $Apk *> $null
 if ($LASTEXITCODE -ne 0) {
@@ -99,15 +98,16 @@ $VerifyOutput = & $Signer verify --verbose --print-certs $Apk 2>&1
 if ($LASTEXITCODE -ne 0) { $VerifyOutput | Write-Host; throw "APK signature verify failed" }
 $VerifyOutput | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
 
-if ($Aapt) {
-    $Badging = & $Aapt dump badging $Apk 2>&1
-    if ($LASTEXITCODE -ne 0) { throw "aapt badging failed" }
-    $PackageLine = $Badging | Where-Object { $_ -like "package:*" } | Select-Object -First 1
-    Write-Host $PackageLine
-    if ($PackageLine -notmatch "name='com\.onekawaii\.spiralfield'") { throw "Wrong package ID" }
-    if ($PackageLine -notmatch "versionCode='2'") { throw "Wrong versionCode" }
-    if ($PackageLine -notmatch "versionName='0\.2\.0'") { throw "Wrong versionName" }
-}
+$PackageId = (& $ApkAnalyzer manifest application-id $Apk).Trim()
+if ($LASTEXITCODE -ne 0) { throw "apkanalyzer application-id failed" }
+$VersionCode = (& $ApkAnalyzer manifest version-code $Apk).Trim()
+if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-code failed" }
+$VersionName = (& $ApkAnalyzer manifest version-name $Apk).Trim()
+if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-name failed" }
+Write-Host "package=$PackageId versionCode=$VersionCode versionName=$VersionName"
+if ($PackageId -ne "com.onekawaii.spiralfield") { throw "Wrong package ID: $PackageId" }
+if ($VersionCode -ne "2") { throw "Wrong versionCode: $VersionCode" }
+if ($VersionName -ne "0.2.0") { throw "Wrong versionName: $VersionName" }
 
 Write-Host "[10/10] Hash + release receipt"
 $WinHash = (Get-FileHash $Win -Algorithm SHA256).Hash.ToLower()
@@ -142,7 +142,7 @@ $Receipt = [ordered]@{
         "v0.16 systems acceptance",
         "Spiral Field ACT/MERCY persistence acceptance",
         "Windows exported player TerrainSlice/VoxelTool probe",
-        "Android signature/package/native-lib verification"
+        "Android signature/apkanalyzer package/native-lib verification"
     )
     windows = [ordered]@{
         path = $Win
