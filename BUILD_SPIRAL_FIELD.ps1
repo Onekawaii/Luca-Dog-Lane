@@ -136,7 +136,7 @@ $Receipt = [ordered]@{
     git_status = @($Status)
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
     gates = @(
-        "43 Python tests",
+        "44 Python tests",
         "Kimi deterministic acceptance",
         "runtime playability acceptance",
         "v0.16 systems acceptance",

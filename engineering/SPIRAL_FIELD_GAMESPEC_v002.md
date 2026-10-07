@@ -36,11 +36,17 @@ user://spiral_field_state_v2.json
 
 v1 state is migrated intentionally; the v1 path remains read-only compatibility input.
 
+### Platform rendering
+- Windows retains the GL Compatibility renderer used by the verified donor.
+- Android uses Godot Mobile rendering on Vulkan.
+- Android must emit `RENDERER_READY method=mobile driver=vulkan mobile=true` (or the exact runtime-equivalent driver name).
+- Android verification rejects GLES3 `SceneShaderGLES3` / `CanvasShaderGLES3` link failures.
+
 ### Developer substrate
 The Luca-derived Kimi terrain, MacroTerrain, Voxel Tools, companion behavior, vehicle physics, maps, crafting, spawning, and diagnostics remain available as donor systems. They are not all ordinary player UI.
 
 ## Verification requirements
-1. 43 Python contracts pass.
+1. 44 Python contracts pass.
 2. Godot parses/imports cleanly.
 3. Full donor playability regression passes.
 4. v0.16 systems acceptance passes.

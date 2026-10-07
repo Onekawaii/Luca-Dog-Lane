@@ -73,6 +73,16 @@ class SpiralFieldV02Contracts(unittest.TestCase):
         self.assertIn("SPIRAL_PLAYER_TERRAIN_PROBE", build)
         self.assertIn("ALL PLAYER TERRAIN TOOL GATES PASSED", build)
 
+    def test_android_uses_mobile_vulkan_renderer(self):
+        project = (ROOT / "project.godot").read_text(encoding="utf-8")
+        game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
+        self.assertIn('renderer/rendering_method="gl_compatibility"', project)
+        self.assertIn('renderer/rendering_method.mobile="mobile"', project)
+        self.assertIn('rendering_device/driver.android="vulkan"', project)
+        self.assertIn("RENDERER_READY", game)
+        self.assertIn("get_current_rendering_method", game)
+        self.assertIn("get_current_rendering_driver_name", game)
+
     def test_luca_open_world_substrate_remains_present(self):
         game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
         for token in ("KimiWorldGenerator", "MacroTerrain", "_spawn_buggy", "_spawn_luca", "_spawn_spiral_world"):

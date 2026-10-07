@@ -34,6 +34,11 @@ var base_fog_color := Color(0.56, 0.66, 0.68)
 var base_fog_density := 0.00115
 
 func _ready() -> void:
+	print(
+		"RENDERER_READY method=", RenderingServer.get_current_rendering_method(),
+		" driver=", RenderingServer.get_current_rendering_driver_name(),
+		" mobile=", OS.has_feature("mobile")
+	)
 	if OS.get_environment("LUCA_V013_EXPORT_PROBE") == "1":
 		_run_v013_export_probe()
 		return
