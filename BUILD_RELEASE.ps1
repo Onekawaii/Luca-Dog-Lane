@@ -4,17 +4,15 @@ $Repo = $PSScriptRoot
 $Godot = "$env:USERPROFILE\.luca_toolchain\Godot-4.7.2\Godot_v4.7.2-stable_win64_console.exe"
 $Sdk = "$env:USERPROFILE\AppData\Local\Android\Sdk"
 $JavaHome = "$env:USERPROFILE\.jdk17"
-$Keystore = "$env:USERPROFILE\.android\debug.keystore"
 $Dist = Join-Path $Repo "dist"
 $WinDir = Join-Path $Dist "windows"
 $AndroidDir = Join-Path $Dist "android"
-$Win = Join-Path $WinDir "Luca-Dog-World-v0.16.0-KIMI-WORLD-SYSTEMS.exe"
-$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.16.0-KIMI-WORLD-SYSTEMS-android.apk"
+$Win = Join-Path $WinDir "Luca-Dog-World-v0.16.1-KIMI-PLAYTEST-REPAIR.exe"
+$Apk = Join-Path $AndroidDir "Luca-Dog-World-v0.16.1-KIMI-PLAYTEST-REPAIR-android.apk"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.7.2 console binary not found: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK not found: $Sdk" }
 if (!(Test-Path $JavaHome)) { throw "JDK not found: $JavaHome" }
-if (!(Test-Path $Keystore)) { throw "Debug keystore not found: $Keystore" }
 
 $env:JAVA_HOME = $JavaHome
 $env:PATH = "$(Join-Path $JavaHome 'bin');$env:PATH"
@@ -45,11 +43,11 @@ Write-Host "[5/8] Export Windows"
 & $Godot --headless --path $Repo --export-debug "Windows Desktop" $Win
 if ($LASTEXITCODE -ne 0 -or !(Test-Path $Win)) { throw "Windows export failed" }
 
-Write-Host "[6/8] Export Android"
-& $Godot --headless --path $Repo --export-debug "Android" $Apk
-if ($LASTEXITCODE -ne 0 -or !(Test-Path $Apk)) { throw "Android export failed" }
+Write-Host "[6/8] Export Android release"
+& (Join-Path $Repo "tools\export_android_release.ps1") -Repo $Repo
+if ($LASTEXITCODE -ne 0 -or !(Test-Path $Apk)) { throw "Android release export failed" }
 
-Write-Host "[7/8] Verify/sign Android"
+Write-Host "[7/8] Verify Android release"
 $Signer = $null
 $Aapt = $null
 $BuildTools = Get-ChildItem (Join-Path $Sdk "build-tools") -Directory |
@@ -70,11 +68,7 @@ foreach ($Dir in $BuildTools) {
 if (!$Signer) { throw "No working apksigner.bat found" }
 
 & $Signer verify --verbose $Apk *> $null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "APK is unsigned; signing with local debug key."
-    & $Signer sign --ks $Keystore --ks-key-alias androiddebugkey --ks-pass pass:android --key-pass pass:android $Apk
-    if ($LASTEXITCODE -ne 0) { throw "APK signing failed" }
-}
+if ($LASTEXITCODE -ne 0) { throw "Release APK signature verification failed" }
 
 $VerifyOutput = & $Signer verify --verbose --print-certs $Apk 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -91,10 +85,10 @@ if ($Aapt) {
     if ($PackageLine -notmatch "name='com\.onekawaii\.lucadogworld'") {
         throw "Unexpected Android package ID"
     }
-    if ($PackageLine -notmatch "versionCode='18'") {
+    if ($PackageLine -notmatch "versionCode='19'") {
         throw "Unexpected Android versionCode"
     }
-    if ($PackageLine -notmatch "versionName='0\.16\.0-kimi'") {
+    if ($PackageLine -notmatch "versionName='0\.16\.1-kimi'") {
         throw "Unexpected Android versionName"
     }
 }
@@ -108,8 +102,8 @@ $ApkHash = (Get-FileHash $Apk -Algorithm SHA256).Hash.ToLower()
 $Head = (git -C $Repo rev-parse HEAD 2>$null)
 $Receipt = [ordered]@{
     product = "Luca Dog World"
-    version = "0.16.0-kimi"
-    architecture = "clean-room-sandbox-v1+kimi-core+continuous-terrain+vehiclebody3d+companion-formation+damageable-npcs+content-registry-v1+map-profiles-v1"
+    version = "0.16.1-kimi"
+    architecture = "clean-room-sandbox-v1+kimi-core+continuous-terrain+rendered-surface-lock+local-underworld-recovery+vehiclebody3d+companion-formation+damageable-npcs+content-registry-v1+map-profiles-v1"
     git_head = $Head
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
     windows = [ordered]@{
@@ -122,15 +116,15 @@ $Receipt = [ordered]@{
         bytes = (Get-Item $Apk).Length
         sha256 = $ApkHash
         package = "com.onekawaii.lucadogworld"
-        version_code = 18
+        version_code = 19
         signed = $true
     }
 }
 
-$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.16.0-KIMI-WORLD-SYSTEMS.json"
+$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_v0.16.1-KIMI-PLAYTEST-REPAIR.json"
 $Receipt | ConvertTo-Json -Depth 5 | Set-Content $ReceiptPath -Encoding utf8
 
 Write-Host "WINDOWS_SHA256=$WinHash"
 Write-Host "ANDROID_SHA256=$ApkHash"
 Write-Host "RECEIPT=$ReceiptPath"
-Write-Host "[DONE] Luca Dog World v0.16.0-KIMI-WORLD-SYSTEMS"
+Write-Host "[DONE] Luca Dog World v0.16.1-KIMI-PLAYTEST-REPAIR"

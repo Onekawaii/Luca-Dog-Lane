@@ -57,6 +57,9 @@ class V016SystemsContracts(unittest.TestCase):
             self.assertIn(token, buggy)
         self.assertIn("VehicleBody3D.new()", game)
         self.assertNotIn("var buggy := CharacterBody3D.new()", game)
+        self.assertIn("_build_impact_sensor()", buggy)
+        self.assertIn('sensor.name = "FrontImpactSensor"', buggy)
+        self.assertIn("sensor.body_entered.connect(_on_body_entered)", buggy)
 
     def test_luca_anchor_is_translation_driven_not_camera_yaw_driven(self):
         luca = (ROOT / "scripts" / "Luca.gd").read_text(encoding="utf-8")

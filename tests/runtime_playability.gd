@@ -236,14 +236,18 @@ func _run() -> void:
 	else:
 		var start_pos := buggy.global_position
 		var expected_forward := -buggy.global_transform.basis.z
+		expected_forward.y = 0.0
+		expected_forward = expected_forward.normalized()
 		buggy.call("set_driver_active", true)
 		buggy.call("set_drive_input", Vector2(0.0, -1.0))
-		for i in range(30):
+		# Give VehicleBody3D enough time to load suspension and build traction on
+		# the denser macro-terrain mesh before judging direction.
+		for i in range(90):
 			await physics_frame
 		buggy.call("set_drive_input", Vector2.ZERO)
 		var displacement := buggy.global_position - start_pos
 		displacement.y = 0.0
-		if displacement.dot(expected_forward) > 0.5:
+		if displacement.dot(expected_forward) > 2.0:
 			_pass("buggy forward input moves toward visual/driver forward")
 		else:
 			_fail("buggy forward input is reversed")

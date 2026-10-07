@@ -10,7 +10,7 @@ class ContinuousTerrainPassTests(unittest.TestCase):
         terrain = (ROOT / "scripts" / "world" / "MacroTerrain.gd").read_text(encoding="utf-8")
         self.assertIn("_spawn_macro_terrain()", game)
         self.assertIn('terrain_body.name = "WorldTerrain"', terrain)
-        self.assertIn("TERRAIN_CELL_M := 12.0", terrain)
+        self.assertIn("TERRAIN_CELL_M := 8.0", terrain)
         self.assertIn("create_trimesh_shape", terrain)
         self.assertIn('"_build_ground_and_boundaries()"', '"_build_ground_and_boundaries()"')
         world_ground_block = game.split('func _build_ground_and_boundaries() -> void:', 1)[1].split('func _build_roads()', 1)[0]

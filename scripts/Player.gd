@@ -446,10 +446,16 @@ func get_spawn_point() -> Vector3:
 
 func _recover_if_outside() -> void:
 	var limit: float = 480.0 + SAFE_MARGIN
-	var fell_below_world: bool = global_position.y < FALL_RECOVERY_Y
 	var escaped_bounds: bool = absf(global_position.x) > limit or absf(global_position.z) > limit
+	var surface_y := 0.0
+	var has_surface := false
+	if game != null and not escaped_bounds and game.has_method("surface_height_at"):
+		surface_y = float(game.call("surface_height_at", global_position.x, global_position.z))
+		has_surface = true
 
-	if not fell_below_world and not escaped_bounds:
+	var fell_below_world: bool = global_position.y < FALL_RECOVERY_Y
+	var fell_below_local_surface: bool = has_surface and global_position.y < surface_y - 0.75
+	if not fell_below_world and not fell_below_local_surface and not escaped_bounds:
 		return
 
 	_release_held()
@@ -459,6 +465,8 @@ func _recover_if_outside() -> void:
 	var recovery := last_safe_ground_position
 	if escaped_bounds:
 		recovery = Vector3(0.0, 2.5, 24.0)
+	elif fell_below_local_surface:
+		recovery = Vector3(global_position.x, surface_y + 1.1, global_position.z)
 
 	global_position = recovery + Vector3.UP * 0.25
 	velocity = Vector3.ZERO
@@ -466,7 +474,11 @@ func _recover_if_outside() -> void:
 	if hud != null:
 		hud.call(
 			"flash",
-			"Recovered from edge // returned to last safe ground"
-			if fell_below_world
-			else "Boundary recovery // returned to spawn"
+			"Recovered above local terrain"
+			if fell_below_local_surface
+			else (
+				"Recovered from edge // returned to last safe ground"
+				if fell_below_world
+				else "Boundary recovery // returned to spawn"
+			)
 		)

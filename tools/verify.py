@@ -55,7 +55,7 @@ def check_project_contract() -> None:
         fail("main scene is not the clean sandbox scene")
     if "[autoload]" in project:
         fail("autoload section reintroduced")
-    if 'config/version="0.16.0-kimi"' not in project:
+    if 'config/version="0.16.1-kimi"' not in project:
         fail("unexpected product version")
     print("[PASS] project boots directly into standalone sandbox")
 
@@ -158,6 +158,33 @@ def run_v016_systems() -> None:
     print("[PASS] v0.16 vehicle/companion/damage/content/maps gate")
 
 
+def run_v0161_visual_repair() -> None:
+    command = [
+        str(GODOT),
+        "--headless",
+        "--path",
+        str(ROOT),
+        "--script",
+        "tests/v0154_visual_repair_acceptance.gd",
+    ]
+    result = subprocess.run(command, text=True, capture_output=True, timeout=150)
+    combined = result.stdout + "\n" + result.stderr
+    bad = (
+        "SCRIPT ERROR",
+        "Parse Error",
+        "Failed to load script",
+        "Invalid call",
+        "Nonexistent function",
+        "Can't add child",
+    )
+    found = [needle for needle in bad if needle.lower() in combined.lower()]
+    marker = "[ALL V0154 VISUAL REPAIR GATES PASSED]"
+    if result.returncode != 0 or found or marker not in combined:
+        print(combined)
+        fail(f"v0.16.1 screenshot repair gate failed: rc={result.returncode}, markers={found}")
+    print("[PASS] v0.16.1 rendered-surface and local recovery gate")
+
+
 def main() -> int:
     check_clean_tree()
     check_project_contract()
@@ -166,6 +193,7 @@ def main() -> int:
     run_godot()
     run_playability()
     run_v016_systems()
+    run_v0161_visual_repair()
     print("[ALL GATES PASSED] LUCA CLEAN-ROOM SANDBOX VERIFIED")
     return 0
 

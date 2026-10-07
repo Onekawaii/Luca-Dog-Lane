@@ -77,7 +77,7 @@ func _spawn_all() -> void:
 func _surface_position(x: float, z: float) -> Vector3:
 	var y := 0.0
 	if macro_terrain != null:
-		y = macro_terrain.height_at(x, z)
+		y = macro_terrain.rendered_height_at(x, z)
 	return Vector3(x, y + 1.05, z)
 
 func _spawn_egg(index: int, at: Vector3, message: String) -> void:

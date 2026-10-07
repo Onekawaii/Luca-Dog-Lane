@@ -1,13 +1,16 @@
 class_name MacroTerrain
 extends Node3D
 
-const TERRAIN_CELL_M := 12.0
+const TERRAIN_CELL_M := 8.0
 const MAX_HEIGHT_M := 54.0
 
 var world_plan: KimiWorldPlan
 var world_half := 480.0
 var height_scale := 1.0
 var terrain_body: StaticBody3D
+var terrain_cells := 0
+var terrain_step := TERRAIN_CELL_M
+var terrain_heights := PackedFloat32Array()
 
 func _ready() -> void:
 	if world_plan == null:
@@ -61,6 +64,31 @@ func height_at(world_x: float, world_z: float) -> float:
 
 	return clampf(height * height_scale, 0.0, MAX_HEIGHT_M * maxf(height_scale, 1.0))
 
+func rendered_height_at(world_x: float, world_z: float) -> float:
+	if terrain_cells <= 0 or terrain_heights.is_empty():
+		return height_at(world_x, world_z)
+	if absf(world_x) > world_half or absf(world_z) > world_half:
+		return 0.0
+
+	var gx := clampf((world_x + world_half) / terrain_step, 0.0, float(terrain_cells))
+	var gz := clampf((world_z + world_half) / terrain_step, 0.0, float(terrain_cells))
+	var ix := mini(floori(gx), terrain_cells - 1)
+	var iz := mini(floori(gz), terrain_cells - 1)
+	var fx := gx - float(ix)
+	var fz := gz - float(iz)
+	var h00 := _terrain_grid_height(ix, iz)
+	var h10 := _terrain_grid_height(ix + 1, iz)
+	var h01 := _terrain_grid_height(ix, iz + 1)
+	var h11 := _terrain_grid_height(ix + 1, iz + 1)
+
+	if fx >= fz:
+		return h00 + fx * (h10 - h00) + fz * (h11 - h10)
+	return h00 + fz * (h01 - h00) + fx * (h11 - h01)
+
+func _terrain_grid_height(x: int, z: int) -> float:
+	var stride := terrain_cells + 1
+	return float(terrain_heights[z * stride + x])
+
 func region_name_at(world_x: float, world_z: float) -> String:
 	var north := _north_pass_height(world_x, world_z)
 	var west := _west_ridge_height(world_x, world_z)
@@ -103,6 +131,14 @@ func _build_world_terrain() -> void:
 	var extent := world_half
 	var cells := maxi(8, ceili((extent * 2.0) / TERRAIN_CELL_M))
 	var step := (extent * 2.0) / float(cells)
+	terrain_cells = cells
+	terrain_step = step
+	terrain_heights.resize((cells + 1) * (cells + 1))
+	for z in range(cells + 1):
+		var world_z := -extent + float(z) * step
+		for x in range(cells + 1):
+			var world_x := -extent + float(x) * step
+			terrain_heights[z * (cells + 1) + x] = height_at(world_x, world_z)
 
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -113,10 +149,10 @@ func _build_world_terrain() -> void:
 		for x in range(cells):
 			var x0 := -extent + float(x) * step
 			var x1 := x0 + step
-			var p00 := Vector3(x0, height_at(x0, z0), z0)
-			var p10 := Vector3(x1, height_at(x1, z0), z0)
-			var p01 := Vector3(x0, height_at(x0, z1), z1)
-			var p11 := Vector3(x1, height_at(x1, z1), z1)
+			var p00 := Vector3(x0, _terrain_grid_height(x, z), z0)
+			var p10 := Vector3(x1, _terrain_grid_height(x + 1, z), z0)
+			var p01 := Vector3(x0, _terrain_grid_height(x, z + 1), z1)
+			var p11 := Vector3(x1, _terrain_grid_height(x + 1, z + 1), z1)
 
 			_add_vertex(surface, p00)
 			_add_vertex(surface, p10)
@@ -125,6 +161,7 @@ func _build_world_terrain() -> void:
 			_add_vertex(surface, p11)
 			_add_vertex(surface, p01)
 
+	surface.index()
 	surface.generate_normals()
 	var mesh := surface.commit() as ArrayMesh
 	var material := StandardMaterial3D.new()

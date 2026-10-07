@@ -37,6 +37,7 @@ func _ready() -> void:
 	center_of_mass = Vector3(0.0, 0.34, 0.15)
 	body_entered.connect(_on_body_entered)
 	_build_buggy()
+	_build_impact_sensor()
 	_build_wheels()
 	_build_cameras()
 
@@ -250,6 +251,22 @@ func _build_buggy() -> void:
 	bumper.position = Vector3(0.0, 0.58, -2.02)
 	bumper.material_override = _material(Color(0.10, 0.11, 0.12))
 	add_child(bumper)
+
+func _build_impact_sensor() -> void:
+	var sensor := Area3D.new()
+	sensor.name = "FrontImpactSensor"
+	sensor.position = Vector3(0.0, 0.85, -2.15)
+	sensor.collision_layer = 0
+	sensor.collision_mask = 8
+	sensor.monitoring = true
+	sensor.monitorable = false
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(2.55, 1.25, 0.85)
+	collision.shape = shape
+	sensor.add_child(collision)
+	sensor.body_entered.connect(_on_body_entered)
+	add_child(sensor)
 
 func _build_wheels() -> void:
 	_add_wheel("FrontLeft", Vector3(-1.12, 0.62, -1.38), true)

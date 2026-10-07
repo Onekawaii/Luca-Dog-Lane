@@ -284,7 +284,10 @@ func _wilderness_candidate_allowed(x: float, z: float, road_clearance: float) ->
 func _surface_height(x: float, z: float) -> float:
 	if macro_terrain == null:
 		return 0.0
-	return float(macro_terrain.height_at(x, z))
+	return float(macro_terrain.rendered_height_at(x, z))
+
+func surface_height_at(x: float, z: float) -> float:
+	return _surface_height(x, z)
 
 func _spawn_macro_terrain() -> void:
 	var node := Node3D.new()
@@ -505,7 +508,10 @@ func _spawn_npc(at: Vector3, display_name: String) -> void:
 	var npc := CharacterBody3D.new()
 	npc.name = display_name.replace(" ", "_")
 	npc.set_script(load("res://scripts/NPC.gd"))
-	npc.position = Vector3(clamp(at.x, -440.0, 440.0), max(at.y, 1.1), clamp(at.z, -440.0, 440.0))
+	var x := clampf(at.x, -440.0, 440.0)
+	var z := clampf(at.z, -440.0, 440.0)
+	var ground_y := _surface_height(x, z) + 1.1
+	npc.position = Vector3(x, maxf(at.y, ground_y), z)
 	npc.set("display_name", display_name)
 	npc.set("world_half", WORLD_HALF)
 	add_child(npc)

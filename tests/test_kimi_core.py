@@ -28,9 +28,9 @@ class KimiCoreIntegrationTests(unittest.TestCase):
     def test_build_identity_is_not_v0122(self):
         project = (ROOT / "project.godot").read_text(encoding="utf-8")
         presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
-        self.assertIn('config/version="0.16.0-kimi"', project)
-        self.assertIn("Luca-Dog-World-v0.16.0-KIMI-WORLD-SYSTEMS-android.apk", presets)
-        self.assertIn("version/code=18", presets)
+        self.assertIn('config/version="0.16.1-kimi"', project)
+        self.assertIn("Luca-Dog-World-v0.16.1-KIMI-PLAYTEST-REPAIR-android.apk", presets)
+        self.assertIn("version/code=19", presets)
 
 
 if __name__ == "__main__":
