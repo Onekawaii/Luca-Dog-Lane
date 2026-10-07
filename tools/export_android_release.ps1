@@ -13,8 +13,8 @@ $CredsPath = Join-Path $SigningDir "luca-dog-world-signing.json"
 $Alias = "lucadogworld"
 $PresetPath = Join-Path $Repo "export_presets.cfg"
 $OutDir = Join-Path $Repo "dist\android"
-$Apk = Join-Path $OutDir "Luca-Dog-World-v0.15.3-KIMI-ENVIRONMENT-android.apk"
-$DownloadDir = "$env:USERPROFILE\Downloads\Luca-Dog-World-v0.15.3-KIMI-ENVIRONMENT"
+$Apk = Join-Path $OutDir "Luca-Dog-World-v0.15.4-KIMI-PLAYTEST-REPAIR-android.apk"
+$DownloadDir = "$env:USERPROFILE\Downloads\Luca-Dog-World-v0.15.4-KIMI-PLAYTEST-REPAIR"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.7.2 not found: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK not found: $Sdk" }

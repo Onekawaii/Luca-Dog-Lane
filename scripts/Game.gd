@@ -227,7 +227,10 @@ func _wilderness_candidate_allowed(x: float, z: float, road_clearance: float) ->
 func _surface_height(x: float, z: float) -> float:
 	if macro_terrain == null:
 		return 0.0
-	return float(macro_terrain.height_at(x, z))
+	return float(macro_terrain.rendered_height_at(x, z))
+
+func surface_height_at(x: float, z: float) -> float:
+	return _surface_height(x, z)
 
 func _spawn_macro_terrain() -> void:
 	var node := Node3D.new()

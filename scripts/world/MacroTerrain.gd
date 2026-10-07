@@ -1,7 +1,7 @@
 class_name MacroTerrain
 extends Node3D
 
-const TERRAIN_CELL_M := 12.0
+const TERRAIN_CELL_M := 8.0
 const MAX_HEIGHT_M := 54.0
 const WATER_Y := 0.18
 const WATER_GAP_AT_MAIN_ROAD := 18.0
@@ -11,6 +11,9 @@ var world_half := 480.0
 var terrain_body: StaticBody3D
 var hydrology_nodes: Array[Node3D] = []
 var biome_color_cache: Dictionary = {}
+var terrain_cells := 0
+var terrain_step := TERRAIN_CELL_M
+var terrain_heights := PackedFloat32Array()
 
 func _ready() -> void:
 	if world_plan == null:
@@ -34,6 +37,33 @@ func height_at(world_x: float, world_z: float) -> float:
 		var channel_target := 0.0
 		height = lerpf(height, minf(height, channel_target), pow(hydro, 1.35))
 	return clampf(height, 0.0, MAX_HEIGHT_M)
+
+func rendered_height_at(world_x: float, world_z: float) -> float:
+	if terrain_cells <= 0 or terrain_heights.is_empty():
+		return height_at(world_x, world_z)
+	if absf(world_x) > world_half or absf(world_z) > world_half:
+		return 0.0
+
+	var gx := clampf((world_x + world_half) / terrain_step, 0.0, float(terrain_cells))
+	var gz := clampf((world_z + world_half) / terrain_step, 0.0, float(terrain_cells))
+	var ix := mini(floori(gx), terrain_cells - 1)
+	var iz := mini(floori(gz), terrain_cells - 1)
+	var fx := gx - float(ix)
+	var fz := gz - float(iz)
+	var h00 := _terrain_grid_height(ix, iz)
+	var h10 := _terrain_grid_height(ix + 1, iz)
+	var h01 := _terrain_grid_height(ix, iz + 1)
+	var h11 := _terrain_grid_height(ix + 1, iz + 1)
+
+	# Match the exact diagonal used by the rendered/collidable mesh:
+	# p00,p10,p11 and p00,p11,p01.
+	if fx >= fz:
+		return h00 + fx * (h10 - h00) + fz * (h11 - h10)
+	return h00 + fz * (h01 - h00) + fx * (h11 - h01)
+
+func _terrain_grid_height(x: int, z: int) -> float:
+	var stride := terrain_cells + 1
+	return float(terrain_heights[z * stride + x])
 
 func biome_at(world_x: float, world_z: float) -> StringName:
 	return world_plan.sample_biome(world_x, world_z)
@@ -148,15 +178,17 @@ func _build_world_terrain() -> void:
 	var extent := world_half
 	var cells := maxi(8, ceili((extent * 2.0) / TERRAIN_CELL_M))
 	var step := (extent * 2.0) / float(cells)
-	var heights: Dictionary = {}
+	terrain_cells = cells
+	terrain_step = step
+	terrain_heights.resize((cells + 1) * (cells + 1))
 
-	# Evaluate each shared grid vertex once. The previous naive triangle loop
-	# recomputed deterministic fBm/hydrology up to six times per coordinate.
+	# Evaluate each shared grid vertex once and retain the exact grid used by
+	# the visible mesh so props, eggs, NPCs, and recovery use the same surface.
 	for z in range(cells + 1):
 		var world_z := -extent + float(z) * step
 		for x in range(cells + 1):
 			var world_x := -extent + float(x) * step
-			heights[Vector2i(x, z)] = height_at(world_x, world_z)
+			terrain_heights[z * (cells + 1) + x] = height_at(world_x, world_z)
 
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
@@ -167,10 +199,10 @@ func _build_world_terrain() -> void:
 		for x in range(cells):
 			var x0 := -extent + float(x) * step
 			var x1 := x0 + step
-			var p00 := Vector3(x0, float(heights[Vector2i(x, z)]), z0)
-			var p10 := Vector3(x1, float(heights[Vector2i(x + 1, z)]), z0)
-			var p01 := Vector3(x0, float(heights[Vector2i(x, z + 1)]), z1)
-			var p11 := Vector3(x1, float(heights[Vector2i(x + 1, z + 1)]), z1)
+			var p00 := Vector3(x0, _terrain_grid_height(x, z), z0)
+			var p10 := Vector3(x1, _terrain_grid_height(x + 1, z), z0)
+			var p01 := Vector3(x0, _terrain_grid_height(x, z + 1), z1)
+			var p11 := Vector3(x1, _terrain_grid_height(x + 1, z + 1), z1)
 
 			_add_vertex(surface, p00)
 			_add_vertex(surface, p10)
@@ -179,6 +211,9 @@ func _build_world_terrain() -> void:
 			_add_vertex(surface, p11)
 			_add_vertex(surface, p01)
 
+	# Index shared vertices before normal generation so adjacent triangles use
+	# continuous lighting instead of reading as separate faceted slabs.
+	surface.index()
 	surface.generate_normals()
 	var mesh := surface.commit() as ArrayMesh
 	var material := StandardMaterial3D.new()
@@ -213,7 +248,7 @@ func _build_hydrology_surfaces() -> void:
 func _build_primary_river() -> void:
 	var surface := SurfaceTool.new()
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var step := 16.0
+	var step := 8.0
 	var x := -world_half + 18.0
 	while x < world_half - 18.0:
 		var x1 := minf(x + step, world_half - 18.0)
@@ -237,7 +272,7 @@ func _build_tributary(branch: int) -> void:
 	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var start_z := -220.0
 	var end_z := 75.0 if branch == 0 else -55.0
-	var step := 12.0
+	var step := 6.0
 	var z := start_z
 	while z < end_z:
 		var z1 := minf(z + step, end_z)

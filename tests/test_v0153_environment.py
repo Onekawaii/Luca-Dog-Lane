@@ -65,9 +65,9 @@ class V0153EnvironmentTests(unittest.TestCase):
     def test_v0153_release_identity(self):
         project = (ROOT / "project.godot").read_text(encoding="utf-8")
         presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
-        self.assertIn('config/version="0.15.3-kimi"', project)
-        self.assertIn("Luca-Dog-World-v0.15.3-KIMI-ENVIRONMENT-android.apk", presets)
-        self.assertIn("version/code=18", presets)
+        self.assertIn('config/version="0.15.4-kimi"', project)
+        self.assertIn("Luca-Dog-World-v0.15.4-KIMI-PLAYTEST-REPAIR-android.apk", presets)
+        self.assertIn("version/code=19", presets)
 
 
 if __name__ == "__main__":
