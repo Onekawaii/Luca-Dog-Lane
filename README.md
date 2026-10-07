@@ -1,196 +1,74 @@
-<div align="center">
+# SPIRAL FIELD 🌀🐕‍🦺
 
-<img src="assets/icon.png" width="160" alt="Luca Dog World paw mark">
+**Open-world nightmare sandbox built from the verified Luca Dog World v0.16 substrate.**
 
-# LUCA DOG WORLD 🐕🌲
+Working title: **Spiral Field v0.1.0**.
 
-**A clean-room open-world sandbox built around roaming, spawning, physics toys, NPCs, vehicles, and one very good dog.**
+This is a separate game branch. Luca Dog World is preserved as the donor baseline; this project does not replace it.
 
-`walk anywhere. spawn nonsense. keep Luca nearby.`
+## What survives from Luca Dog World
 
-</div>
+- deterministic Kimi open-world generation
+- continuous MacroTerrain
+- Voxel Tools terrain mining/building
+- first-person desktop controls
+- Android joystick + right-side drag look
+- Luca companion
+- VehicleBody3D buggy and four-camera rig
+- spawn sandbox and catalog-driven tools
+- map profiles, items, recipes, persistence, and regression tests
 
----
+## What Spiral Field adds
 
-## This is a new game
+The new authoritative `SpiralWorldDirector` ports concepts from the supplied legacy projects without importing their old engines:
 
-Luca Dog World v0.12.2 is a ground-up standalone Godot project.
+- **Tabbytulhu UndertalePlus** → ACT / MERCY, affection, corruption, TALK/PET/FEED/SPARE-style responses
+- **Twin Spirals** → physical Witnessing and Wailing sites
+- **Spiral Infection Generator** → deterministic runtime spiral-infection geometry
+- **SCH / Spiral Cow** → nightmare-open-world framing and mutable world-state logic
 
-It does not boot through another campaign, room system, story engine, or inherited scene graph. The application starts directly in one open sandbox world.
+The first loop is:
 
-There is no mandatory first room and no required mission chain. You spawn outside and play.
+`ROAM → DISCOVER → ACT or MERCY → WORLD CHANGES → SAVE → CONTINUE`
 
-### v0.12.2 driving + companion pass
+## v0.1 world state
 
-This pass is based on real Android playtest failures. It keeps the repaired right-side camera and jump controls, smooths Luca's movement with acceleration and turn-rate limits, removes persistent 3D name labels, converts HUD messages to short-lived toasts, aligns buggy forward motion with the driver's view, and adds two switchable vehicle cameras: DRIVER and OVERHEAD.
+Persistent save schema: `user://spiral_field_state_v1.json`
 
-Current sandbox loop:
+Authoritative values:
 
-- roam a 960 m × 960 m world;
-- follow Luca or let him follow you;
-- open the spawn menu and create props;
-- grab, remove, duplicate, or inspect spawned objects;
-- toggle noclip and fly around the map;
-- interact with wandering NPCs;
-- drive the sandbox buggy;
-- explore roads, woods, a workshop, physics/skate space, quarry terraces, and a round plaza.
+- Affection
+- Corruption
+- Witnessing
+- Wailing
+- interaction count
+- Spiral stage: DORMANT → AWAKE → INFECTED → VELVET BREACH
 
-### v0.14 Quarry Expedition milestone
+## Controls
 
-The proven voxel mountain is now a discoverable optional site instead of an isolated engineering slice. In-world quarry signs and trail posts lead toward Quarry Ridge. Crossing into the site through normal collision movement gives a short HUD cue for the existing **MINE → collect → CRAFT → PLACE** loop; leaving the site returns cleanly to the open sandbox with collected materials intact.
+Desktop keeps the Luca donor controls: WASD, mouse look, Space jump, Shift sprint, Q cycle tool, E use, V noclip.
 
-This milestone does not add a mandatory quest, minimap icon carpet, new save schema, or alternate movement rules. The quarry remains part of the same continuous sandbox and uses the same authoritative voxel terrain, collision, inventory, crafting, and persistence systems introduced in v0.13.
+Android keeps the left movement stick, right-side look, JUMP, TOOL, USE, NOCLIP, MAP and SPAWN controls.
 
----
-
-## The boundary fix
-
-The ground is no longer a decorative plane.
-
-The world uses one continuous **rendered + collidable slab** whose visual top and collision top both resolve to y=0.
-
-Four invisible collision-only perimeter bodies close the map without drawing a giant wall on the horizon:
-
-`NorthBoundary · SouthBoundary · WestBoundary · EastBoundary`
-
-The player also has an independent recovery rule. Falling below the world returns the player to the last safe ground position; escaping past the collision perimeter returns the player to spawn.
-
-That means world containment does not depend on one collider behaving perfectly.
-
----
-
-## Sandbox controls
-
-### Desktop
-
-`WASD` move · mouse look · `SPACE` jump · `SHIFT` sprint
-
-`E` use current tool · `Q` cycle tool · `V` noclip
-
-### Android
-
-The mobile HUD provides:
-
-- left movement stick;
-- right-half drag-look, excluding actual buttons/panels;
-- dedicated JUMP button with jump buffering and coyote time;
-- SPAWN menu;
-- TOOL cycle;
-- NOCLIP;
-- USE;
-- UP / DOWN controls while noclip is active.
-
-The interface is built specifically for this game instead of inheriting an older HUD.
-
----
-
-## Tool modes
-
-| Tool | What it does |
-|---|---|
-| **GRAB** | Tethers a spawned rigid prop in front of the camera. |
-| **REMOVE** | Deletes a sandbox prop. |
-| **DUPLICATE** | Makes another copy of a spawned prop. |
-| **INSPECT** | Shows the target node and its gameplay groups. |
-
-Spawnable objects currently include crates, barrels, balls, cones, ramps, NPCs, and buggies.
-
----
-
-## World layout
-
-The current map is deliberately broad and readable rather than procedurally infinite:
-
-- central crossed road network;
-- standalone workshop / spawn yard;
-- skate and physics-testing space;
-- climbable quarry terraces with a real collision ramp;
-- round plaza and bridge;
-- seeded forest distribution;
-- rocks and open fields;
-- drivable road space;
-- hard outer boundary.
-
-This first clean-room map is the foundation. Future areas can be added without changing the boot architecture.
-
----
+ACT and MERCY are the first two catalog-driven tools.
 
 ## Verification
-
-This repository has a structural verifier because “it opened once” is not enough.
 
 Run:
 
 ```powershell
-python tools\verify.py
 python -m unittest discover -s tests -p "test_*.py" -v
+powershell -ExecutionPolicy Bypass -File .\BUILD_SPIRAL_FIELD.ps1
 ```
 
-The verifier checks:
+Release gates include Python contracts, Kimi determinism, live movement/mobile/vehicle playability, v0.16 system acceptance, Spiral ACT/MERCY + save/reload acceptance, exported Windows Voxel Tools probing, and Android signature/package/native-library validation.
 
-- direct standalone boot;
-- no autoload inheritance;
-- continuous ground and all four physical boundaries;
-- independent out-of-bounds recovery;
-- sandbox spawn/tool/noclip contracts;
-- Godot parse and runtime smoke;
-- absence of forbidden old-runtime identifiers from the active tree.
+> No receipt, no banana.
 
-> **No receipt, no banana.**
-
----
-
-## Build
-
-### 📱 Android release
-
-[**Download Luca Dog World v0.12.2 APK**](https://github.com/Onekawaii/Luca-Dog-Lane/releases/download/v0.12.2/Luca-Dog-World-v0.12.2-android.apk)
-
-The release also includes a SHA-256 checksum and exact-state build receipt.
-Tested build engine: **Godot 4.3 stable**.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\BUILD_RELEASE.ps1
-```
-
-Expected artifacts:
+## Outputs
 
 ```text
-dist/windows/Luca-Dog-World-v0.12.2.exe
-dist/android/Luca-Dog-World-v0.12.2-android.apk
-dist/RELEASE_RECEIPT_v0.12.2.json
+dist/windows/Spiral-Field-v0.1.0-windows.exe
+dist/android/Spiral-Field-v0.1.0-android.apk
+dist/RELEASE_RECEIPT_Spiral-Field-v0.1.0.json
 ```
-
-Android package:
-
-`com.onekawaii.lucadogworld`
-
----
-
-## Architecture
-
-The active game is intentionally small enough to understand:
-
-```text
-project.godot
-scenes/Main.tscn
-scripts/
-  Game.gd
-  Player.gd
-  HUD.gd
-  Luca.gd
-  NPC.gd
-  Buggy.gd
-tools/verify.py
-tests/test_clean_room.py
-```
-
-Most geometry is generated with native Godot primitives so collision and visible geometry can be reasoned about together.
-
----
-
-## Operating principle
-
-> **Make the world tangible. Keep the architecture legible. Let the player make a mess. Pet the dog.**
-
-🐕🍌

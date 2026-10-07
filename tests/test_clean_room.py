@@ -124,7 +124,7 @@ class CleanRoomContractTests(unittest.TestCase):
 
     def test_exports_exclude_repo_only_artifacts(self):
         text = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
-        rule = 'exclude_filter="dist/*,tests/*,tools/*,engineering/*,addons/zylann.voxel/editor/*,README.md,AGENTS.md,BUILD_RELEASE.ps1,.gitattributes,.gitignore"'
+        rule = 'exclude_filter="dist/*,tests/*,tools/*,engineering/*,addons/zylann.voxel/editor/*,README.md,AGENTS.md,BUILD_RELEASE.ps1,BUILD_SPIRAL_FIELD.ps1,.gitattributes,.gitignore"'
         self.assertEqual(text.count(rule), 2)
 
     def test_old_runtime_names_absent_from_runtime(self):

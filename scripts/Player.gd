@@ -317,6 +317,16 @@ func use_tool() -> void:
 	if target == null:
 		return
 
+	if action == "act" or action == "mercy":
+		if target.is_in_group("spiral_interactable"):
+			var result := str(game.call("spiral_interact", target, action))
+			if hud != null:
+				hud.call("flash", result, 3.2)
+			return
+		if hud != null:
+			hud.call("flash", "No Spiral encounter in reach", 1.4)
+		return
+
 	if target.is_in_group("vehicle"):
 		enter_vehicle(target)
 		return

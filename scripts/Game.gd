@@ -18,6 +18,7 @@ var spawned_npc_serial := 0
 var world_plan: KimiWorldPlan
 var world_generator: KimiWorldGenerator
 var content_registry: ContentRegistry
+var spiral_world: SpiralWorldDirector
 var active_map_id := "lucas_field"
 var active_map_profile: Dictionary = {}
 var world_seed := DEFAULT_WORLD_SEED
@@ -46,6 +47,7 @@ func _ready() -> void:
 	_spawn_buggy(Vector3(13.0, 1.2, 10.0))
 	_spawn_starter_props()
 	_spawn_hud()
+	_spawn_spiral_world()
 	_spawn_egg_hunt()
 	print(
 		"LUCA_SANDBOX_READY world_half=", WORLD_HALF,
@@ -285,6 +287,27 @@ func _surface_height(x: float, z: float) -> float:
 	if macro_terrain == null:
 		return 0.0
 	return float(macro_terrain.height_at(x, z))
+
+func surface_height_at(x: float, z: float) -> float:
+	return _surface_height(x, z)
+
+func _spawn_spiral_world() -> void:
+	var node := SpiralWorldDirector.new()
+	node.game = self
+	node.player = player
+	node.hud = hud
+	add_child(node)
+	spiral_world = node
+
+func spiral_interact(target: Object, action: String) -> String:
+	if spiral_world == null:
+		return "The field is silent."
+	return spiral_world.interact(target, action)
+
+func spiral_status_summary() -> String:
+	if spiral_world == null:
+		return "AFF 0  COR 0  EYE 0  MOUTH 0  // DORMANT"
+	return spiral_world.status_summary()
 
 func _spawn_macro_terrain() -> void:
 	var node := Node3D.new()

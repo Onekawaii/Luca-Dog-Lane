@@ -25,12 +25,15 @@ class KimiCoreIntegrationTests(unittest.TestCase):
         ):
             self.assertTrue((ROOT / "scripts" / "world" / name).is_file(), name)
 
-    def test_build_identity_is_not_v0122(self):
+    def test_kimi_substrate_survives_new_game_identity(self):
         project = (ROOT / "project.godot").read_text(encoding="utf-8")
         presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
-        self.assertIn('config/version="0.16.0-kimi"', project)
-        self.assertIn("Luca-Dog-World-v0.16.0-KIMI-WORLD-SYSTEMS-android.apk", presets)
-        self.assertIn("version/code=18", presets)
+        game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
+        self.assertIn('config/name="Spiral Field"', project)
+        self.assertIn('config/version="0.1.0"', project)
+        self.assertIn("Spiral-Field-v0.1.0-android.apk", presets)
+        self.assertIn("version/code=1", presets)
+        self.assertIn("KimiWorldGenerator", game)
 
 
 if __name__ == "__main__":

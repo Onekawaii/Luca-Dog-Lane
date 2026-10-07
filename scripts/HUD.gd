@@ -18,6 +18,7 @@ var down_button: Button
 var view_button: Button
 var status_label: Label
 var inventory_label: Label
+var spiral_label: Label
 
 var toast_time := 0.0
 var vehicle_active := false
@@ -47,14 +48,14 @@ func _ready() -> void:
 	if player != null:
 		player.call("_sync_tool_label")
 	set_noclip(false)
-	flash("FREE ROAM // left stick moves // drag RIGHT side to look")
+	flash("FIND THE SPIRALS // drag RIGHT side to look // ACT or MERCY", 2.8)
 
 func _build_header() -> void:
 	var title := Label.new()
 	title.name = "Title"
 	title.position = Vector2(28, 22)
 	title.size = Vector2(520, 42)
-	title.text = "LUCA DOG WORLD  //  v0.16 KIMI"
+	title.text = "SPIRAL FIELD  //  v0.1"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_size_override("font_size", 25)
 	title.add_theme_color_override("font_color", Color(0.75, 1.0, 0.80))
@@ -65,7 +66,7 @@ func _build_header() -> void:
 	hint.position = Vector2(30, 58)
 	hint.size = Vector2(650, 36)
 	var map_label := str(game.call("get_active_map_label")) if game != null else "LUCA'S FIELD"
-	hint.text = "MAP: %s // DATA-DRIVEN TOOLS // 24 EGGS" % map_label
+	hint.text = "MAP: %s // ACT + MERCY // OPEN WORLD" % map_label
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	hint.add_theme_font_size_override("font_size", 16)
 	hint.add_theme_color_override("font_color", Color(0.72, 0.76, 0.74))
@@ -80,6 +81,16 @@ func _build_header() -> void:
 	inventory_label.add_theme_font_size_override("font_size", 16)
 	inventory_label.add_theme_color_override("font_color", Color(0.82, 0.86, 0.83))
 	root.add_child(inventory_label)
+
+	spiral_label = Label.new()
+	spiral_label.name = "SpiralStatus"
+	spiral_label.position = Vector2(30, 114)
+	spiral_label.size = Vector2(760, 30)
+	spiral_label.text = "AFF 0  COR 0  EYE 0  MOUTH 0  // DORMANT"
+	spiral_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	spiral_label.add_theme_font_size_override("font_size", 16)
+	spiral_label.add_theme_color_override("font_color", Color(1.0, 0.58, 0.34))
+	root.add_child(spiral_label)
 
 	status_label = Label.new()
 	status_label.name = "Status"
@@ -363,6 +374,10 @@ func set_tool_mode(mode: String) -> void:
 func set_inventory_status(summary: String) -> void:
 	if inventory_label != null:
 		inventory_label.text = summary
+
+func set_spiral_status(summary: String) -> void:
+	if spiral_label != null:
+		spiral_label.text = summary
 
 func set_noclip(enabled: bool) -> void:
 	noclip_active = enabled
