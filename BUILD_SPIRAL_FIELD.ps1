@@ -109,11 +109,12 @@ if ($LASTEXITCODE -ne 0) { $VerifyOutput | Write-Host; throw "APK signature veri
 $VerifyOutput | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
 
 $AnalyzerMain = "com.android.tools.apk.analyzer.ApkAnalyzerCli"
-$PackageId = (& $JavaExecutable.FullName -classpath $ApkAnalyzerJar $AnalyzerMain manifest application-id $Apk).Trim()
+$AnalyzerToolsProperty = "-Dcom.android.sdklib.toolsdir=$(Join-Path $Sdk 'cmdline-tools\latest\bin\..')"
+$PackageId = (& $JavaExecutable.FullName $AnalyzerToolsProperty -classpath $ApkAnalyzerJar $AnalyzerMain manifest application-id $Apk).Trim()
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer application-id failed" }
-$VersionCode = (& $JavaExecutable.FullName -classpath $ApkAnalyzerJar $AnalyzerMain manifest version-code $Apk).Trim()
+$VersionCode = (& $JavaExecutable.FullName $AnalyzerToolsProperty -classpath $ApkAnalyzerJar $AnalyzerMain manifest version-code $Apk).Trim()
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-code failed" }
-$VersionName = (& $JavaExecutable.FullName -classpath $ApkAnalyzerJar $AnalyzerMain manifest version-name $Apk).Trim()
+$VersionName = (& $JavaExecutable.FullName $AnalyzerToolsProperty -classpath $ApkAnalyzerJar $AnalyzerMain manifest version-name $Apk).Trim()
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-name failed" }
 Write-Host "package=$PackageId versionCode=$VersionCode versionName=$VersionName"
 if ($PackageId -ne "com.onekawaii.spiralfield") { throw "Wrong package ID: $PackageId" }
