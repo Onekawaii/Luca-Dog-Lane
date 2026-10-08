@@ -101,5 +101,26 @@ override, as are the new probes. No silent reset/restoration of the affected
 normal save was performed; the prior normal save cannot be recovered from this
 run's receipts. This side effect is not represented as preservation success.
 
-Status: PARTIAL until independent final visual judgment, exported candidate
-checks and Android device acceptance. No completed-release claim.
+## Exported checkpoint receipts
+
+Game source commit: `6846c6017fa4b26c3c5fff19e3284643e885d5bd` on
+`feat/voxel-world-presentation`. Both are debug development candidates, not releases.
+Output folder: `dist/voxel-candidate-6846c60/`.
+
+| Artifact | Bytes | SHA-256 |
+| --- | ---: | --- |
+| SpiralField-voxel-pass.exe | 107576096 | 9082820f6408d34c3665901680d31a0e95c9f8ab5817f0dbfdf25f903c30a37e |
+| SpiralField-voxel-pass.apk | 79636613 | a4119a1a36bffbaeacfa4c86da9562147e06ac210578dac518e08c035b043bfa |
+
+Windows requires the adjacent `libvoxel.windows.editor.x86_64.dll`; retain the
+candidate folder together. Export logs: `windows-export.log`, `android-export.log`.
+Exported Windows console runtime, through DC, exited 0 in 17.15 seconds with
+`[ALL PLAYER TERRAIN TOOL GATES PASSED]`; see `windows-runtime.log`.
+APK signature verification passed v2 and v3, one signer. APK manifest reports
+`com.onekawaii.spiralfield`, version `0.2.0`; ARM64 and x86_64 Godot and Voxel
+native libraries are present. This is packaging evidence, not Android playtesting.
+Original v0.2 Windows and Android release hashes were reconfirmed unchanged.
+
+Status: PARTIAL pending final independent judgment and Android device acceptance.
+Full object voxelization, realistic animal art, literal frame-by-frame recording
+review and streaming/edit stress qualification remain incomplete. No completed-release claim.
