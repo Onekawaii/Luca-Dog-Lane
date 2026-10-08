@@ -297,6 +297,14 @@ func _sync_tool_label() -> void:
 	if hud.has_method("set_tool_icon"):
 		hud.call("set_tool_icon", equipped_tool.get("icon"))
 
+func select_tool(tool_id: String) -> void:
+	if not tool_ids.has(tool_id):
+		return
+	if held_body != null:
+		_release_held()
+	tool_index = tool_ids.find(tool_id)
+	_sync_tool_label()
+
 func cycle_tool() -> void:
 	if held_body != null:
 		_release_held()

@@ -44,9 +44,11 @@ func _run() -> void:
 			continue
 		var original: int = tool.call("get_voxel", pos)
 		check(original == 2, "grass surface generated at " + str(at))
-		var before_stone: int = slice.get("inventory").call("count_item", "stone")
+		var inventory = slice.get("inventory")
+		var grass_before: int = inventory.call("count_item", "grass_block")
+		var stone_before: int = inventory.call("count_item", "stone")
 		var result: String = world.call("terrain_mine", Vector3(at.x + 0.5, h + 4, at.y + 0.5), Vector3.DOWN, 8.0)
-		check(result.begins_with("MINED"), "public mining action at " + str(at))
+		check(result.contains("grass block dropped"), "grass surface produces a grass block at " + str(at))
 		check(tool.call("get_voxel", pos) == 0, "terrain edit outside quarry at " + str(at))
 		for i in range(90):
 			await physics_frame
@@ -57,12 +59,24 @@ func _run() -> void:
 			check(absf(hit["position"].y - float(pos.y)) < 0.08, "mining removes top collision at " + str(at))
 		var saved: Dictionary = slice.get("persistence").call("get_voxel_deltas")
 		check(saved.get("%d,%d,%d" % [pos.x, pos.y, pos.z], -1) == 0, "mining records persistent delta at " + str(at))
-		var pickup := world.get_node_or_null("TerrainDrop_stone")
-		if pickup != null:
-			player.global_position = pickup.global_position - Vector3.UP * 0.8
+		var grass_drop := world.get_node_or_null("TerrainDrop_grass_block")
+		check(grass_drop != null or inventory.call("count_item", "grass_block") > grass_before, "grass spawns a pickup or is auto-collected")
+		if grass_drop != null:
+			player.global_position = grass_drop.global_position - Vector3.UP * 0.8
 			for i in range(30):
 				await physics_frame
-		check(slice.get("inventory").call("count_item", "stone") > before_stone, "mined stone collected via gameplay at " + str(at))
+		check(inventory.call("count_item", "grass_block") > grass_before, "grass block collected via gameplay at " + str(at))
+		var stone_result: String = world.call("terrain_mine", Vector3(at.x + 0.5, h + 4, at.y + 0.5), Vector3.DOWN, 8.0)
+		check(stone_result.contains("stone dropped"), "stone sublayer produces stone at " + str(at))
+		for i in range(40):
+			await physics_frame
+		var stone_drop := world.get_node_or_null("TerrainDrop_stone")
+		check(stone_drop != null or inventory.call("count_item", "stone") > stone_before, "stone spawns a pickup or is auto-collected")
+		if stone_drop != null:
+			player.global_position = stone_drop.global_position - Vector3.UP * 0.8
+			for i in range(30):
+				await physics_frame
+		check(inventory.call("count_item", "stone") > stone_before, "stone collected from sublayer at " + str(at))
 	for npc in get_nodes_in_group("npc"):
 		check(npc.global_position.y > -1.0, "remote NPC protected by streamed collision " + npc.name)
 	check(world.get_node("SandboxBuggy").global_position.y > -1.0, "remote buggy retains ground support")
@@ -91,7 +105,7 @@ func _run() -> void:
 	reload.set("generator_version", 2)
 	root.add_child(reload)
 	reload.call("configure", saved_path, 6060)
-	check(reload.call("get_voxel_deltas").size() == 5, "world edit deltas reload from actual disk save")
+	check(reload.call("get_voxel_deltas").size() == 9, "surface + stone edit deltas reload from actual disk save")
 	reload.queue_free()
 	print("WORLD_VOXEL_PEAK_OR_CURRENT_STATIC_MEMORY=", Performance.get_monitor(Performance.MEMORY_STATIC))
 	world.queue_free()
@@ -108,6 +122,7 @@ func _run() -> void:
 	check(restored_tool.call("get_voxel", Vector3i(24, -1, 24)) == 0, "reconstructed world replays mined air")
 	check(restored_tool.call("get_voxel", Vector3i(25, 0, 24)) == 3, "reconstructed world replays placed brick")
 	check(restored_slice.get("inventory").call("count_item", "stone") == 1, "reconstructed world restores crafted inventory")
+	check(restored_slice.get("inventory").call("count_item", "grass_block") == 4, "reconstructed world retains discovered grass blocks")
 	var restored_query := PhysicsRayQueryParameters3D.create(Vector3(25.5, 4, 24.5), Vector3(25.5, -4, 24.5), 1)
 	var restored_hit := restored_player.get_world_3d().direct_space_state.intersect_ray(restored_query)
 	check(not restored_hit.is_empty() and absf(restored_hit.get("position", Vector3.ZERO).y - 1.0) < 0.08, "reconstructed placed voxel collision restored")

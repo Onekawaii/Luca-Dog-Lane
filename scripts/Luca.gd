@@ -25,6 +25,8 @@ var follow_heading := Vector3(0.0, 0.0, -1.0)
 var follow_anchor := Vector3.ZERO
 var previous_player_position := Vector3.ZERO
 var anchor_initialized := false
+var follow_enabled := true
+var gait_clock := 0.0
 
 func _ready() -> void:
 	add_to_group("luca")
@@ -54,6 +56,15 @@ func _physics_process(delta: float) -> void:
 		if not anchor_initialized:
 			return
 
+	if not follow_enabled:
+		state = "STAY"
+		velocity.x = move_toward(velocity.x, 0.0, DECEL * delta)
+		velocity.z = move_toward(velocity.z, 0.0, DECEL * delta)
+		if not is_on_floor():
+			velocity.y -= GRAVITY * delta
+		move_and_slide()
+		_animate_gait(delta)
+		return
 	_update_follow_anchor_from_player_motion()
 
 	var player_offset := player.global_position - global_position
@@ -119,6 +130,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = -0.2
 
 	move_and_slide()
+	_animate_gait(delta)
 
 	if (
 		absf(global_position.x) > world_half - 4.0
@@ -129,6 +141,25 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		follow_engaged = false
 		giving_space = false
+
+func toggle_stay() -> String:
+	follow_enabled = not follow_enabled
+	state = "FOLLOW" if follow_enabled else "STAY"
+	velocity = Vector3.ZERO
+	return "LUCA // FOLLOWING" if follow_enabled else "LUCA // STAY HERE"
+
+func _animate_gait(delta: float) -> void:
+	var pace := clampf(Vector2(velocity.x, velocity.z).length() / MAX_SPEED, 0.0, 1.0)
+	gait_clock += delta * (2.0 + pace * 12.0)
+	for side in [-1.0, 1.0]:
+		for front in ["F", "B"]:
+			var limb := get_node_or_null("Leg_%s_%s" % [front, "L" if side < 0.0 else "R"])
+			if limb != null:
+				var offset := 0.0 if front == "F" else PI
+				limb.rotation.x = lerpf(limb.rotation.x, sin(gait_clock + offset) * side * 0.35 * pace, minf(delta * 14.0, 1.0))
+	var tail := get_node_or_null("Tail")
+	if tail != null:
+		tail.rotation.z = sin(gait_clock * 0.48) * 0.3
 
 func _update_follow_anchor_from_player_motion() -> void:
 	var current := player.global_position
@@ -271,6 +302,7 @@ func _build_dog() -> void:
 			leg_mesh.bottom_radius = 0.14
 			leg_mesh.height = 0.72
 			leg.mesh = leg_mesh
+			leg.name = "Leg_%s_%s" % ["F" if front < 0.0 else "B", "L" if side < 0.0 else "R"]
 			leg.position = Vector3(0.31 * side, 0.37, front)
 			leg.material_override = fur
 			add_child(leg)
@@ -281,6 +313,7 @@ func _build_dog() -> void:
 	tail_mesh.bottom_radius = 0.13
 	tail_mesh.height = 0.88
 	tail.mesh = tail_mesh
+	tail.name = "Tail"
 	tail.position = Vector3(0, 1.05, 1.13)
 	tail.rotation_degrees.x = 58
 	tail.material_override = fur

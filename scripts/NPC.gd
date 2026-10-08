@@ -19,6 +19,7 @@ var alive := true
 var knockback_velocity := Vector3.ZERO
 var visual_root: Node3D
 var damage_feedback: Node3D
+var gait_clock := 0.0
 
 func _ready() -> void:
 	add_to_group("npc")
@@ -62,6 +63,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = maxf(velocity.y, knockback_velocity.y)
 
 	move_and_slide()
+	_animate_gait(delta)
 	knockback_velocity = knockback_velocity.move_toward(Vector3.ZERO, KNOCKBACK_DECAY * delta)
 
 	if abs(global_position.x) > world_half - 12.0 or abs(global_position.z) > world_half - 12.0:
@@ -73,6 +75,27 @@ func _physics_process(delta: float) -> void:
 		global_position.y = 2.0
 		velocity = Vector3.ZERO
 		knockback_velocity = Vector3.ZERO
+
+func _animate_gait(delta: float) -> void:
+	if visual_root == null:
+		return
+	var pace := clampf(Vector2(velocity.x, velocity.z).length() / SPEED, 0.0, 1.0)
+	gait_clock += delta * (3.0 + 9.0 * pace)
+	var wave := sin(gait_clock)
+	for side in [-1.0, 1.0]:
+		var tag := "L" if side < 0.0 else "R"
+		var leg := visual_root.get_node_or_null("Leg_" + tag)
+		var arm := visual_root.get_node_or_null("UpperArm_" + tag)
+		var foot := visual_root.get_node_or_null("Foot_" + tag)
+		if leg != null:
+			leg.rotation.x = lerpf(leg.rotation.x, wave * side * 0.55 * pace, minf(delta * 12.0, 1.0))
+		if arm != null:
+			arm.rotation.x = lerpf(arm.rotation.x, -wave * side * 0.40 * pace, minf(delta * 12.0, 1.0))
+		if foot != null:
+			foot.position.y = 0.09 + maxf(0.0, -wave * side) * 0.14 * pace
+	var torso := visual_root.get_node_or_null("Torso")
+	if torso != null:
+		torso.position.y = 1.19 + absf(wave) * 0.035 * pace
 
 func _process_dead(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, 8.0 * delta)

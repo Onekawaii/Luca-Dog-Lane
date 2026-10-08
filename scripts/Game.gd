@@ -120,7 +120,78 @@ func request_map(map_id: String) -> bool:
 	call_deferred("_reload_requested_map")
 	return true
 
+func restart_field() -> void:
+	call_deferred("_reload_requested_map")
+
+func reset_field(all_maps := false) -> String:
+	# Never silently destroy progress. Back up each existing file before removing it.
+	var seeds: Array[int] = [world_seed]
+	if all_maps and content_registry != null:
+		for map_id in content_registry.maps:
+			var seed := int(content_registry.maps[map_id].get("seed", world_seed))
+			if not seeds.has(seed):
+				seeds.append(seed)
+	var paths: Array[String] = []
+	var custom_save := OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
+	if custom_save.is_empty():
+		for seed in seeds:
+			paths.append("user://v020_world_voxels_%d.json" % seed)
+			paths.append("user://v016_terrain_slice_%d.json" % seed)
+	else:
+		for seed in seeds:
+			paths.append(custom_save.replace("{seed}", str(seed)))
+	if terrain_slice != null and terrain_slice.get("persistence") != null:
+		var active_path := str(terrain_slice.get("persistence").get("save_path"))
+		if not paths.has(active_path):
+			paths.append(active_path)
+	if spiral_world != null:
+		paths.append(str(spiral_world.call("state_save_path")))
+		paths.append(str(spiral_world.call("legacy_state_save_path")))
+	var backup_suffix := ".pre-reset-%d.bak" % int(Time.get_unix_time_from_system())
+	for path in paths:
+		if not FileAccess.file_exists(path):
+			continue
+		var source := ProjectSettings.globalize_path(path)
+		if DirAccess.copy_absolute(source, source + backup_suffix) != OK:
+			return "RESET BLOCKED // Could not back up " + path
+	if terrain_slice != null and terrain_slice.get("persistence") != null:
+		terrain_slice.get("persistence").set("save_pending", false)
+	for path in paths:
+		if FileAccess.file_exists(path):
+			if DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) != OK:
+				return "RESET BLOCKED // Could not clear " + path
+	call_deferred("_reload_requested_map")
+	return "NEW FIELD // current map reset (backups saved)" if not all_maps else "NEW FIELDS // all map saves reset (backups saved)"
+
+func toggle_companion_stay() -> String:
+	if luca == null:
+		return "Companion unavailable"
+	return str(luca.call("toggle_stay"))
+
+func cleanup_spawned() -> int:
+	var removed := 0
+	for obj in get_tree().get_nodes_in_group("operator_spawned"):
+		if is_instance_valid(obj):
+			obj.queue_free()
+			removed += 1
+	for obj in get_tree().get_nodes_in_group("ragdoll"):
+		if is_instance_valid(obj) and not obj.is_queued_for_deletion():
+			obj.queue_free()
+			removed += 1
+	return removed
+
+func set_daytime(hour: int) -> void:
+	if field_sun == null:
+		return
+	# Development clock controls sunlight; it does not modify canonical Spiral stage.
+	field_sun.rotation_degrees.x = -52.0 if hour >= 6 and hour <= 18 else 46.0
+	field_sun.light_energy = 1.02 if hour >= 6 and hour <= 18 else 0.08
+
 func _reload_requested_map() -> void:
+	if get_tree().current_scene == null:
+		# Test harnesses often instantiate Main manually, without a registered current_scene.
+		print("WORLD_RELOAD_SKIPPED // no active scene in this harness")
+		return
 	get_tree().reload_current_scene()
 
 func _vector3_from_array(value, fallback: Vector3) -> Vector3:
@@ -508,6 +579,32 @@ func _spawn_egg_hunt() -> void:
 	add_child(node)
 	egg_hunt = node as EggHunt
 
+func get_inventory_snapshot_for_ui() -> Dictionary:
+	if terrain_slice == null or terrain_slice.get("inventory") == null:
+		return {}
+	return terrain_slice.get("inventory").call("snapshot")
+
+func get_item_catalog_for_ui() -> Dictionary:
+	return content_registry.items.duplicate(true) if content_registry != null else {}
+
+func get_recipe_catalog_for_ui() -> Dictionary:
+	return content_registry.recipes.duplicate(true) if content_registry != null else {}
+
+func get_selected_build_material() -> String:
+	return str(terrain_slice.get("selected_place_item")) if terrain_slice != null else "stone_brick"
+
+func select_build_material(item_id: String) -> bool:
+	if terrain_slice == null or not bool(terrain_slice.call("select_place_item", item_id)):
+		return false
+	if player != null:
+		player.call("select_tool", "place")
+	return true
+
+func terrain_craft_recipe(recipe_id: String) -> String:
+	if terrain_slice == null:
+		return "Terrain slice unavailable"
+	return str(terrain_slice.call("craft_recipe", recipe_id))
+
 func terrain_mine(origin: Vector3, direction: Vector3, max_distance := 8.0) -> String:
 	if terrain_slice == null:
 		return "Terrain slice unavailable"
@@ -538,6 +635,10 @@ func spawn_from_menu(kind: String) -> void:
 		_spawn_buggy(at)
 	else:
 		spawn_prop(kind, at)
+	# Only operator-created actors are eligible for live cleanup.
+	var spawned := get_child(get_child_count() - 1)
+	if spawned is Node3D and (spawned.is_in_group("sandbox_prop") or spawned.is_in_group("npc") or spawned is VehicleBody3D):
+		spawned.add_to_group("operator_spawned")
 
 func _menu_spawn_point(base: Vector3, kind: String) -> Vector3:
 	# Golden-angle spiral keeps repeated spawns from occupying the same physics

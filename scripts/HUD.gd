@@ -9,10 +9,13 @@ var move_base: Panel
 var move_knob: Panel
 var spawn_panel: Panel
 var map_panel: Panel
+var map_chart: Control
 var encounter_panel: Panel
 var spawn_button: Button
 var map_button: Button
 var tool_button: Button
+var inventory_button: Button
+var inventory_panel: Panel
 var tool_icon: TextureRect
 var equipped_label: Label
 var noclip_button: Button
@@ -41,6 +44,8 @@ var look_touch_id := -1
 var move_center := Vector2.ZERO
 var noclip_active := false
 var interactive_controls: Array[Control] = []
+var reset_armed := false
+var reset_button: Button
 
 func _ready() -> void:
 	layer = 20
@@ -70,6 +75,7 @@ func _ready() -> void:
 	_build_action_buttons()
 	_build_spawn_menu()
 	_build_map_menu()
+	_build_inventory_menu()
 	_build_encounter_panel()
 
 	root.resized.connect(_layout_for_viewport)
@@ -154,7 +160,7 @@ func _build_header() -> void:
 
 	inventory_label = Label.new()
 	inventory_label.name = "InventoryStatus"
-	inventory_label.position = Vector2(20, 148)
+	inventory_label.position = Vector2(20, 212)
 	inventory_label.size = Vector2(520, 26)
 	inventory_label.text = "STONE 0  //  BRICK 0"
 	inventory_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -225,6 +231,10 @@ func _build_action_buttons() -> void:
 	tool_button.pressed.connect(func(): player.call("cycle_tool"))
 	_register_interactive(tool_button)
 
+	inventory_button = _button("INVENTORY", Vector2.ZERO, Vector2(154, 52))
+	inventory_button.pressed.connect(_toggle_inventory_menu)
+	_register_interactive(inventory_button)
+
 	noclip_button = _button("NOCLIP", Vector2.ZERO, Vector2(154, 52))
 	noclip_button.pressed.connect(func(): player.call("toggle_noclip"))
 	_register_interactive(noclip_button)
@@ -250,7 +260,7 @@ func _build_action_buttons() -> void:
 func _build_spawn_menu() -> void:
 	spawn_panel = Panel.new()
 	spawn_panel.name = "SpawnPanel"
-	spawn_panel.size = Vector2(330, 412)
+	spawn_panel.size = Vector2(330, 546)
 	spawn_panel.add_theme_stylebox_override(
 		"panel",
 		_round_style(Color(0.03, 0.02, 0.04, 0.96), Color(0.55, 0.24, 0.63), 18, 2)
@@ -284,14 +294,23 @@ func _build_spawn_menu() -> void:
 		button.pressed.connect(_spawn_pressed.bind(kinds[i][1]))
 		interactive_controls.append(button)
 
-	var close := _button("CLOSE", Vector2(94, 355), Vector2(142, 42), spawn_panel)
+	var clean := _button("CLEAN SPAWNED", Vector2(20, 374), Vector2(290, 38), spawn_panel)
+	clean.pressed.connect(func(): flash("CLEANUP // removed %d" % int(game.call("cleanup_spawned"))))
+	interactive_controls.append(clean)
+	var day := _button("DAY", Vector2(20, 427), Vector2(138, 38), spawn_panel)
+	day.pressed.connect(func(): game.call("set_daytime", 12))
+	interactive_controls.append(day)
+	var night := _button("NIGHT", Vector2(172, 427), Vector2(138, 38), spawn_panel)
+	night.pressed.connect(func(): game.call("set_daytime", 0))
+	interactive_controls.append(night)
+	var close := _button("CLOSE", Vector2(94, 487), Vector2(142, 42), spawn_panel)
 	close.pressed.connect(_toggle_spawn_menu)
 	interactive_controls.append(close)
 
 func _build_map_menu() -> void:
 	map_panel = Panel.new()
 	map_panel.name = "MapPanel"
-	map_panel.size = Vector2(350, 306)
+	map_panel.size = Vector2(860, 578)
 	map_panel.add_theme_stylebox_override(
 		"panel",
 		_round_style(Color(0.03, 0.02, 0.04, 0.96), Color(0.55, 0.24, 0.63), 18, 2)
@@ -301,13 +320,19 @@ func _build_map_menu() -> void:
 
 	var header := Label.new()
 	header.position = Vector2(20, 14)
-	header.size = Vector2(310, 34)
-	header.text = "FIELD TRANSITIONS"
+	header.size = Vector2(810, 34)
+	header.text = "FIELD SURVEY  //  WORLD MAP & TRANSITIONS"
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_theme_font_size_override("font_size", 20)
 	header.add_theme_color_override("font_color", Color(0.94, 0.82, 1.0))
 	map_panel.add_child(header)
+
+	map_chart = Control.new()
+	map_chart.set_script(load("res://scripts/systems/WorldMapChart.gd"))
+	map_chart.set("game", game)
+	map_chart.position = Vector2(20, 62)
+	map_panel.add_child(map_chart)
 
 	var options: Array = game.call("get_map_options") if game != null else []
 	for i in range(options.size()):
@@ -316,16 +341,40 @@ func _build_map_menu() -> void:
 		var map_id := str(option.get("id", ""))
 		var button := _button(
 			label,
-			Vector2(24, 58 + i * 68),
-			Vector2(302, 54),
+			Vector2(504, 58 + i * 68),
+			Vector2(332, 54),
 			map_panel
 		)
 		button.pressed.connect(_map_pressed.bind(map_id, label))
 		interactive_controls.append(button)
 
-	var close := _button("CLOSE", Vector2(104, 264), Vector2(142, 34), map_panel)
+	var restart := _button("RESTART FIELD", Vector2(504, 268), Vector2(332, 38), map_panel)
+	restart.pressed.connect(func(): game.call("restart_field"))
+	interactive_controls.append(restart)
+	var reset := _button("NEW WORLD (BACKUP)", Vector2(504, 320), Vector2(332, 38), map_panel)
+	reset.pressed.connect(_reset_pressed.bind(reset))
+	reset_button = reset
+	interactive_controls.append(reset)
+	var companion := _button("LUCA: STAY / FOLLOW", Vector2(504, 442), Vector2(332, 40), map_panel)
+	companion.pressed.connect(func(): flash(str(game.call("toggle_companion_stay")), 2.0))
+	interactive_controls.append(companion)
+	var close := _button("CLOSE", Vector2(598, 504), Vector2(142, 38), map_panel)
 	close.pressed.connect(_toggle_map_menu)
 	interactive_controls.append(close)
+
+func _build_inventory_menu() -> void:
+	inventory_panel = Panel.new()
+	inventory_panel.set_script(load("res://scripts/systems/PlayerInventoryPanel.gd"))
+	inventory_panel.set("game", game)
+	root.add_child(inventory_panel)
+	inventory_panel.visible = false
+
+func _toggle_inventory_menu() -> void:
+	inventory_panel.visible = not inventory_panel.visible
+	if inventory_panel.visible:
+		spawn_panel.visible = false
+		map_panel.visible = false
+		inventory_panel.call("refresh")
 
 func _build_encounter_panel() -> void:
 	encounter_panel = Panel.new()
@@ -384,7 +433,8 @@ func _layout_for_viewport() -> void:
 	spawn_button.position = Vector2(right_x, 20.0)
 	map_button.position = Vector2(right_x, 78.0)
 	tool_button.position = Vector2(right_x, 136.0)
-	noclip_button.position = Vector2(right_x, 194.0)
+	inventory_button.position = Vector2(right_x, 194.0)
+	noclip_button.position = Vector2(right_x, 252.0)
 
 	use_button.position = Vector2(maxf(790.0, size.x - 198.0), maxf(500.0, size.y - 88.0))
 	jump_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
@@ -395,7 +445,8 @@ func _layout_for_viewport() -> void:
 	crosshair.position = Vector2(size.x * 0.5 - 16.0, size.y * 0.5 - 16.0)
 	encounter_panel.position = Vector2(size.x * 0.5 - 380.0, maxf(300.0, size.y - 260.0))
 	spawn_panel.position = Vector2(maxf(500.0, size.x - 540.0), 100.0)
-	map_panel.position = Vector2(maxf(500.0, size.x - 560.0), 100.0)
+	map_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 430.0), maxf(0.0, size.y * 0.5 - 289.0))
+	inventory_panel.position = Vector2(maxf(220.0, size.x * 0.5 - 300.0), maxf(84.0, size.y * 0.5 - 238.0))
 
 func _apply_mode_visibility() -> void:
 	if move_base == null:
@@ -408,8 +459,9 @@ func _apply_mode_visibility() -> void:
 	map_button.visible = mobile_ui or developer_ui
 	tool_button.visible = mobile_ui or developer_ui
 	spawn_button.visible = developer_ui and not vehicle_active
-	noclip_button.visible = developer_ui and not vehicle_active
-	inventory_label.visible = developer_ui
+	noclip_button.visible = (mobile_ui or developer_ui) and not vehicle_active
+	inventory_button.visible = true
+	inventory_label.visible = true
 	crosshair.visible = not mobile_ui
 	if not developer_ui:
 		spawn_panel.visible = false
@@ -426,6 +478,10 @@ func _input(event: InputEvent) -> void:
 			developer_ui = not developer_ui
 			_apply_mode_visibility()
 			flash("DEVELOPER UI ON" if developer_ui else "DEVELOPER UI OFF", 1.2)
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_I or event.keycode == KEY_B:
+			_toggle_inventory_menu()
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_M:
@@ -480,6 +536,8 @@ func _point_in_look_zone(position: Vector2) -> bool:
 func _touch_in_ui(position: Vector2) -> bool:
 	if spawn_panel.visible and spawn_panel.get_global_rect().has_point(position):
 		return true
+	if inventory_panel.visible and inventory_panel.get_global_rect().has_point(position):
+		return true
 	if map_panel.visible and map_panel.get_global_rect().has_point(position):
 		return true
 	if encounter_panel.visible and encounter_panel.get_global_rect().has_point(position):
@@ -516,11 +574,28 @@ func _toggle_spawn_menu() -> void:
 	spawn_panel.visible = not spawn_panel.visible
 	if spawn_panel.visible:
 		map_panel.visible = false
+		inventory_panel.visible = false
 
 func _toggle_map_menu() -> void:
+	reset_armed = false
+	if reset_button != null:
+		reset_button.text = "NEW WORLD (BACKUP)"
 	map_panel.visible = not map_panel.visible
 	if map_panel.visible:
 		spawn_panel.visible = false
+		inventory_panel.visible = false
+		if map_chart != null:
+			map_chart.queue_redraw()
+
+func _reset_pressed(button: Button) -> void:
+	if not reset_armed:
+		reset_armed = true
+		button.text = "CONFIRM // RESET & BACKUP"
+		flash("Tap again to reset this world. Existing save will be backed up.", 4.0)
+		return
+	reset_armed = false
+	button.text = "NEW WORLD (BACKUP)"
+	flash(str(game.call("reset_field", false)), 3.0)
 
 func _map_pressed(map_id: String, label: String) -> void:
 	flash("Crossing into " + label + "...", 2.0)
@@ -572,7 +647,9 @@ func set_tool_mode(mode: String) -> void:
 
 func set_inventory_status(summary: String) -> void:
 	if inventory_label != null:
-		inventory_label.text = "DEV MATERIALS // " + summary
+		inventory_label.text = "MATERIALS // " + summary
+	if inventory_panel != null and inventory_panel.visible:
+		inventory_panel.call("refresh")
 
 func set_spiral_status(summary: String) -> void:
 	if spiral_label != null:

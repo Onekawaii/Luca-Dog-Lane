@@ -26,6 +26,7 @@ var persistence: Node
 var inventory: Node
 var replay_timer := 0.0
 var replay_queued := false
+var selected_place_item := "stone_brick"
 
 func _ready() -> void:
 	if world_voxels:
@@ -79,14 +80,15 @@ func mine_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOOL
 
 	voxel_tool.call("set_voxel", pos, AIR)
 	persistence.call("set_voxel_delta", pos, AIR)
-	_spawn_resource_pickup(pos, "stone", 1)
-	return "MINED // stone dropped"
+	var drop_id := "grass_block" if current == SURFACE else ("stone_brick" if current == BRICK else "stone")
+	_spawn_resource_pickup(pos, drop_id, 1)
+	return "MINED // " + drop_id.replace("_", " ") + " dropped"
 
 func place_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOOL_DISTANCE) -> String:
 	if voxel_tool == null:
 		return "Voxel terrain unavailable"
-	if int(inventory.call("count_item", "stone_brick")) < 1:
-		return "Need 1 STONE BRICK // CRAFT uses 3 stone"
+	if int(inventory.call("count_item", selected_place_item)) < 1:
+		return "Need 1 " + selected_place_item.replace("_", " ").to_upper() + " // open INVENTORY"
 
 	var result = voxel_tool.call("raycast", origin, direction.normalized(), max_distance)
 	if result == null:
@@ -104,10 +106,23 @@ func place_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOO
 	if player != null and world_center.distance_to(player.global_position + Vector3.UP * 0.9) < 1.35:
 		return "Placement rejected // player overlap"
 
-	voxel_tool.call("set_voxel", pos, BRICK)
-	persistence.call("set_voxel_delta", pos, BRICK)
-	inventory.call("consume", "stone_brick", 1)
-	return "PLACED STONE BRICK // " + str(inventory.call("summary"))
+	var voxel_id := STONE if selected_place_item == "stone" else (SURFACE if selected_place_item == "grass_block" else BRICK)
+	voxel_tool.call("set_voxel", pos, voxel_id)
+	persistence.call("set_voxel_delta", pos, voxel_id)
+	inventory.call("consume", selected_place_item, 1)
+	return "PLACED " + selected_place_item.replace("_", " ").to_upper() + " // " + str(inventory.call("summary"))
+
+func select_place_item(item_id: String) -> bool:
+	if item_id not in ["stone", "grass_block", "stone_brick"]:
+		return false
+	selected_place_item = item_id
+	return true
+
+func craft_recipe(recipe_id: String) -> String:
+	if inventory == null:
+		return "Inventory unavailable"
+	var result: Dictionary = inventory.call("craft", recipe_id)
+	return str(result.get("message", "Craft failed"))
 
 func craft_stone_brick() -> String:
 	if inventory == null:
@@ -192,6 +207,9 @@ func _setup_persistence() -> void:
 		selected_path = OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
 	if selected_path.is_empty():
 		selected_path = ("user://v020_world_voxels_%d.json" if world_voxels else "user://v016_terrain_slice_%d.json") % world_seed
+	else:
+		# Seeded test namespaces prevent maps sharing one override file.
+		selected_path = selected_path.replace("{seed}", str(world_seed))
 	persistence.call("configure", selected_path, world_seed)
 	# Copy compatible authored-quarry deltas/inventory once; never modify the old save.
 	if world_voxels and save_path_override.is_empty() and OS.get_environment("LUCA_V013_SLICE_SAVE_PATH").is_empty() and not FileAccess.file_exists(selected_path):

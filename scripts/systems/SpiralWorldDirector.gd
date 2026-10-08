@@ -30,6 +30,8 @@ var infection_root: Node3D
 var site_nodes: Dictionary = {}
 var guidance_timer := 0.0
 var animation_time := 0.0
+var cat_reaction_remaining := 0.0
+var cat_reaction_action := ""
 
 func _ready() -> void:
 	name = "SpiralWorldDirector"
@@ -46,6 +48,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	animation_time += delta
+	cat_reaction_remaining = maxf(0.0, cat_reaction_remaining - delta)
 	guidance_timer += delta
 	_animate_encounters()
 	if guidance_timer >= 0.20:
@@ -160,6 +163,9 @@ func interact(target: Object, action: String) -> String:
 				_:
 					return "Tabby'tulhu watches your hand."
 
+	if spiral_id == "tabbytulhu":
+		cat_reaction_action = action
+		cat_reaction_remaining = 2.0
 	affection = clampf(affection, 0.0, 100.0)
 	corruption = clampf(corruption, 0.0, 100.0)
 	witnessing = clampf(witnessing, 0.0, 100.0)
@@ -461,6 +467,20 @@ func _animate_encounters() -> void:
 		var base_y := _terrain_position(TABBY_POS, 0.0).y
 		tabby.position.y = base_y + sin(animation_time * 1.15) * 0.06
 		tabby.rotation.y = sin(animation_time * 0.45) * 0.12
+		var head: Node3D = tabby.get_node_or_null("Head")
+		if head != null:
+			var talk := cat_reaction_remaining > 0.0 and cat_reaction_action == "talk"
+			var feed := cat_reaction_remaining > 0.0 and cat_reaction_action == "feed"
+			head.rotation.z = sin(animation_time * 5.0) * (0.28 if talk else 0.06)
+			head.rotation.x = 0.34 if feed else 0.0
+		for i in range(4):
+			var paw: Node3D = tabby.get_node_or_null("Leg_%02d" % i)
+			if paw != null:
+				var active_pet := cat_reaction_remaining > 0.0 and cat_reaction_action == "pet"
+				paw.position.y = 0.36 + maxf(0.0, sin(animation_time * 8.0 + i * PI)) * (0.11 if active_pet else 0.015)
+		var tail: Node3D = tabby.get_node_or_null("Tail_00")
+		if tail != null:
+			tail.rotation.y = sin(animation_time * 2.1) * (0.32 if cat_reaction_remaining > 0.0 else 0.12)
 
 	for site_id in ["witnessing", "wailing"]:
 		var site = site_nodes.get(site_id)

@@ -7,6 +7,12 @@
       "stack_max": 999,
       "description": "Raw stone mined from editable terrain."
     },
+    "grass_block": {
+      "label": "Grass Block",
+      "kind": "building",
+      "stack_max": 999,
+      "description": "Recovered turf from the world's topsoil. Can be placed again."
+    },
     "stone_brick": {
       "label": "Stone Brick",
       "kind": "building",

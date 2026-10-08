@@ -61,8 +61,9 @@ func craft(recipe_id: String) -> Dictionary:
 	}
 
 func summary() -> String:
-	return "STONE %d  //  BRICK %d  //  BEACON %d" % [
+	return "STONE %d  //  GRASS %d  //  BRICK %d  //  BEACON %d" % [
 		count_item("stone"),
+		count_item("grass_block"),
 		count_item("stone_brick"),
 		count_item("trail_beacon"),
 	]
