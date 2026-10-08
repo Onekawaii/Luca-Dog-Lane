@@ -16,6 +16,7 @@ var map_button: Button
 var tool_button: Button
 var inventory_button: Button
 var inventory_panel: Panel
+var quickbar: Control
 var tool_icon: TextureRect
 var equipped_label: Label
 var noclip_button: Button
@@ -76,6 +77,7 @@ func _ready() -> void:
 	_build_spawn_menu()
 	_build_map_menu()
 	_build_inventory_menu()
+	_build_quickbar()
 	_build_encounter_panel()
 
 	root.resized.connect(_layout_for_viewport)
@@ -119,7 +121,7 @@ func _build_header() -> void:
 	title.name = "Title"
 	title.position = Vector2(18, 10)
 	title.size = Vector2(540, 34)
-	title.text = "SPIRAL FIELD  //  v0.2"
+	title.text = "SPIRAL FIELD  //  v0.2.1"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_size_override("font_size", 24)
 	title.add_theme_color_override("font_color", Color(0.96, 0.91, 1.0))
@@ -362,6 +364,15 @@ func _build_map_menu() -> void:
 	close.pressed.connect(_toggle_map_menu)
 	interactive_controls.append(close)
 
+func _build_quickbar() -> void:
+	quickbar = Control.new()
+	quickbar.set_script(load("res://scripts/systems/PlayerQuickbar.gd"))
+	quickbar.set("game", game)
+	quickbar.set("player", player)
+	root.add_child(quickbar)
+	for button in quickbar.get("buttons"):
+		_register_interactive(button)
+
 func _build_inventory_menu() -> void:
 	inventory_panel = Panel.new()
 	inventory_panel.set_script(load("res://scripts/systems/PlayerInventoryPanel.gd"))
@@ -441,12 +452,15 @@ func _layout_for_viewport() -> void:
 	down_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(500.0, size.y - 88.0))
 	view_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
 
-	status_label.position = Vector2(size.x * 0.5 - 420.0, maxf(520.0, size.y - 70.0))
+	# Don't render gameplay toasts through the ten-slot hotbar.
+	status_label.position = Vector2(size.x * 0.5 - 420.0, maxf(280.0, size.y - 152.0))
 	crosshair.position = Vector2(size.x * 0.5 - 16.0, size.y * 0.5 - 16.0)
 	encounter_panel.position = Vector2(size.x * 0.5 - 380.0, maxf(300.0, size.y - 260.0))
 	spawn_panel.position = Vector2(maxf(500.0, size.x - 540.0), 100.0)
 	map_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 430.0), maxf(0.0, size.y * 0.5 - 289.0))
-	inventory_panel.position = Vector2(maxf(220.0, size.x * 0.5 - 300.0), maxf(84.0, size.y * 0.5 - 238.0))
+	inventory_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 318.0), maxf(8.0, size.y * 0.5 - 252.0))
+	if quickbar != null:
+		quickbar.call("layout_for_viewport", size)
 
 func _apply_mode_visibility() -> void:
 	if move_base == null:
@@ -463,6 +477,8 @@ func _apply_mode_visibility() -> void:
 	inventory_button.visible = true
 	inventory_label.visible = true
 	crosshair.visible = not mobile_ui
+	if quickbar != null:
+		quickbar.visible = not vehicle_active
 	if not developer_ui:
 		spawn_panel.visible = false
 
@@ -650,6 +666,8 @@ func set_inventory_status(summary: String) -> void:
 		inventory_label.text = "MATERIALS // " + summary
 	if inventory_panel != null and inventory_panel.visible:
 		inventory_panel.call("refresh")
+	if quickbar != null:
+		quickbar.call("refresh", true)
 
 func set_spiral_status(summary: String) -> void:
 	if spiral_label != null:

@@ -16,10 +16,20 @@ const EDIT_MASK_SIDE := 960
 var edit_mask_image: Image
 var edit_mask_texture: ImageTexture
 var preview_shader: ShaderMaterial
+var voxel_materials: Array[ShaderMaterial] = []
+var voxel_material_shader: Shader
 var edit_mask_dirty := false
 var edit_mask_timer := 0.0
 
 func _process(delta: float) -> void:
+	# Voxel face visibility is driven by the camera being genuinely underground,
+	# not by proximity to the camera. Prevents z-fighting on untouched grass.
+	var active_camera := get_viewport().get_camera_3d()
+	if active_camera != null and not voxel_materials.is_empty():
+		var point := active_camera.global_position
+		var inside_terrain := point.y < height_at(point.x, point.z) - 0.65
+		for material in voxel_materials:
+			material.set_shader_parameter("underground_view", inside_terrain)
 	if not edit_mask_dirty or edit_mask_texture == null:
 		return
 	edit_mask_timer -= delta
@@ -27,6 +37,18 @@ func _process(delta: float) -> void:
 		edit_mask_texture.update(edit_mask_image)
 		edit_mask_timer = 0.15
 		edit_mask_dirty = false
+
+func make_voxel_visibility_material(kind: String, tint: Color) -> ShaderMaterial:
+	if voxel_material_shader == null:
+		voxel_material_shader = Shader.new()
+		voxel_material_shader.code = "shader_type spatial; render_mode cull_back, shadows_disabled; varying vec3 pworld; uniform sampler2D edited_columns : filter_nearest, repeat_disable; uniform sampler2D block_texture : source_color, filter_linear_mipmap; uniform vec4 block_tint : source_color = vec4(1.0); uniform bool underground_view = false; void vertex(){pworld=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){vec2 mask_uv=(pworld.xz+vec2(480.0))/960.0; bool quarry=pworld.x>254.0 && pworld.x<370.0 && pworld.z>226.0 && pworld.z<338.0; if(!underground_view && !quarry && texture(edited_columns,clamp(mask_uv,vec2(0.0),vec2(1.0))).r<0.5){discard;} ALBEDO=texture(block_texture,UV).rgb*block_tint.rgb; ROUGHNESS=0.94;}"
+	var result := ShaderMaterial.new()
+	result.shader = voxel_material_shader
+	result.set_shader_parameter("edited_columns", edit_mask_texture)
+	result.set_shader_parameter("block_texture", load("res://scripts/systems/ObjectMaterials.gd").texture(kind))
+	result.set_shader_parameter("block_tint", tint)
+	voxel_materials.append(result)
+	return result
 
 func sync_voxel_edit_columns(edits: Dictionary) -> void:
 	if edit_mask_image == null:

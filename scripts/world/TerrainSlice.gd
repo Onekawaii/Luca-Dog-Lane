@@ -302,7 +302,12 @@ func _cube_model(color: Color):
 		kind = "brick"
 	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make(kind, Color.WHITE)
 	material.vertex_color_use_as_albedo = true
-	model.call("set_material_override", 0, material)
+	if world_voxels and macro_terrain != null:
+		# Render the voxel mesh only at authored quarry, edits and underground.
+		# Voxel collision/data remains authoritative and unchanged.
+		model.call("set_material_override", 0, macro_terrain.make_voxel_visibility_material(kind, color))
+	else:
+		model.call("set_material_override", 0, material)
 	model.set("collision_mask", 1)
 	return model
 

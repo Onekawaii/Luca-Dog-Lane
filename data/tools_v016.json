@@ -4,6 +4,7 @@
     "grab",
     "inspect",
     "field_hammer",
+    "lantern",
     "mine",
     "place",
     "craft",
@@ -29,6 +30,12 @@
       "range": 4.25,
       "damage": 25.0,
       "knockback": 5.5,
+      "starter": true
+    },
+    "lantern": {
+      "label": "LANTERN",
+      "action": "illuminate",
+      "range": 0.0,
       "starter": true
     },
     "mine": {

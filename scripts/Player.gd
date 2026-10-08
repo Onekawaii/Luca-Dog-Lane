@@ -15,6 +15,9 @@ var hud: CanvasLayer
 var pivot: Node3D
 var camera: Camera3D
 var equipped_tool: Node3D
+var lantern_light: OmniLight3D
+var lantern_enabled := false
+var hotbar_index := 0
 var body_collision: CollisionShape3D
 
 var touch_move := Vector2.ZERO
@@ -63,6 +66,17 @@ func _ready() -> void:
 	equipped_tool = load("res://scripts/systems/EquippedTool.gd").new()
 	equipped_tool.name = "EquippedTool"
 	camera.add_child(equipped_tool)
+	lantern_light = OmniLight3D.new()
+	lantern_light.name = "UndergroundLantern"
+	lantern_light.position = Vector3(0.20, -0.24, -0.38)
+	lantern_light.light_color = Color(1.0, 0.73, 0.40)
+	lantern_light.light_energy = 4.8
+	lantern_light.omni_range = 20.0
+	lantern_light.omni_attenuation = 0.85
+	# Dynamic lighting on both Android/PC; PC additionally casts lamp shadows.
+	lantern_light.shadow_enabled = not OS.has_feature("mobile")
+	lantern_light.visible = false
+	camera.add_child(lantern_light)
 
 	rotation.y = yaw
 	pivot.rotation.x = pitch
@@ -232,6 +246,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_E:
 		use_tool()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode >= KEY_1 and event.keycode <= KEY_9:
+		select_hotbar_slot(event.keycode - KEY_1)
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_0:
+		select_hotbar_slot(9)
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
+		toggle_lantern()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_Q:
 		cycle_tool()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_V:
@@ -301,12 +321,57 @@ func _sync_tool_label() -> void:
 	if hud.has_method("set_tool_icon"):
 		hud.call("set_tool_icon", equipped_tool.get("icon"))
 
+func toggle_lantern() -> void:
+	lantern_enabled = not lantern_enabled
+	lantern_light.visible = lantern_enabled
+	if hud != null:
+		hud.call("flash", "LANTERN // " + ("ON" if lantern_enabled else "OFF"), 1.4)
+
+func select_hotbar_slot(index: int) -> void:
+	if index < 0 or index >= 10:
+		return
+	var tool := ""
+	match index:
+		0: tool = "grab"
+		1: tool = "inspect"
+		2: tool = "mine"
+		3, 4, 5:
+			var material: String = ["stone", "grass_block", "stone_brick"][index - 3]
+			if game != null:
+				game.call("select_build_material", material)
+		6: tool = "field_hammer"
+		7:
+			if _current_tool_id() == "lantern":
+				toggle_lantern()
+			else:
+				tool = "lantern"
+				if not lantern_enabled:
+					toggle_lantern()
+		8: tool = "craft"
+		9: tool = "remove"
+	if not tool.is_empty():
+		select_tool(tool)
+	hotbar_index = index
+	if hud != null and hud.get("quickbar") != null:
+		hud.get("quickbar").call("refresh", true)
+
 func select_tool(tool_id: String) -> void:
 	if not tool_ids.has(tool_id):
 		return
 	if held_body != null:
 		_release_held()
 	tool_index = tool_ids.find(tool_id)
+	match tool_id:
+		"grab": hotbar_index = 0
+		"inspect": hotbar_index = 1
+		"mine": hotbar_index = 2
+		"place":
+			var selected_material := str(game.call("get_selected_build_material")) if game != null else "stone_brick"
+			hotbar_index = 3 if selected_material == "stone" else (4 if selected_material == "grass_block" else 5)
+		"field_hammer": hotbar_index = 6
+		"lantern": hotbar_index = 7
+		"craft": hotbar_index = 8
+		"remove": hotbar_index = 9
 	_sync_tool_label()
 
 func cycle_tool() -> void:
@@ -314,8 +379,7 @@ func cycle_tool() -> void:
 		_release_held()
 	if tool_ids.is_empty():
 		_refresh_tool_catalog()
-	tool_index = (tool_index + 1) % tool_ids.size()
-	_sync_tool_label()
+	select_tool(tool_ids[(tool_index + 1) % tool_ids.size()])
 
 func toggle_noclip() -> void:
 	if riding != null:
@@ -354,6 +418,10 @@ func use_tool() -> void:
 	var action := str(definition.get("action", "inspect"))
 	var reach := float(definition.get("range", 7.0))
 	var direction := -camera.global_transform.basis.z
+
+	if action == "illuminate":
+		toggle_lantern()
+		return
 
 	if action == "craft":
 		if hud != null:

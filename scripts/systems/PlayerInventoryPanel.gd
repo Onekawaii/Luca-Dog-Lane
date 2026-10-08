@@ -1,134 +1,152 @@
 extends Panel
-# Player-facing inventory, material palette, and recipe surface.
-# Reads the authoritative TerrainSlice inventory through Game; never caches counts.
+# Field satchel: stores actual resources and recipes. The hotbar handles equips.
+# No duplicate selection state and no "PLACE" buttons in the inventory.
 
 var game: Node
 var stock_list: VBoxContainer
 var recipe_list: VBoxContainer
-var selected_label: Label
+var summary_label: Label
 
 func _ready() -> void:
 	name = "InventoryPanel"
-	size = Vector2(600, 476)
+	size = Vector2(636, 504)
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.025, 0.02, 0.04, 0.97)
-	style.border_color = Color(0.67, 0.32, 0.73)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(14)
-	add_theme_stylebox_override("panel", style)
+	var shell := StyleBoxFlat.new()
+	shell.bg_color = Color(0.035, 0.032, 0.048, 0.975)
+	shell.border_color = Color(0.62, 0.35, 0.72)
+	shell.set_border_width_all(2)
+	shell.set_corner_radius_all(14)
+	add_theme_stylebox_override("panel", shell)
 
-	var title := Label.new()
-	title.text = "INVENTORY  //  MATERIALS & CRAFTING"
-	title.position = Vector2(20, 12)
-	title.add_theme_font_size_override("font_size", 21)
-	add_child(title)
-
-	selected_label = Label.new()
-	selected_label.position = Vector2(22, 48)
-	selected_label.size = Vector2(540, 26)
-	add_child(selected_label)
+	_label(self, "FIELD SATCHEL", Vector2(24, 16), Vector2(570, 38), 26, Color(1, 0.88, 0.98))
+	_label(self, "FOUND MATERIALS  /  RECIPES  /  CRAFTING", Vector2(24, 54), Vector2(570, 26), 13, Color(0.7, 0.64, 0.76))
+	summary_label = _label(self, "", Vector2(24, 82), Vector2(590, 28), 13, Color(0.92, 0.79, 0.57))
 
 	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(20, 84)
-	scroll.size = Vector2(560, 324)
+	scroll.position = Vector2(22, 122)
+	scroll.size = Vector2(592, 316)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
-
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", 9)
+	column.add_theme_constant_override("separation", 12)
 	scroll.add_child(column)
 
-	var stocks_title := Label.new()
-	stocks_title.text = "MATERIALS / FOUND IN WORLD"
-	column.add_child(stocks_title)
+	var resources := Label.new()
+	resources.text = "MATERIALS  —  TAP THE BOTTOM HOTBAR TO EQUIP"
+	resources.add_theme_font_size_override("font_size", 14)
+	column.add_child(resources)
 	stock_list = VBoxContainer.new()
+	stock_list.add_theme_constant_override("separation", 6)
 	column.add_child(stock_list)
 
-	var recipe_title := Label.new()
-	recipe_title.text = "RECIPES / CRAFT WITH COLLECTED MATERIALS"
-	column.add_child(recipe_title)
+	var recipes := Label.new()
+	recipes.text = "CRAFTING BENCH  —  RECIPES USE ACTUAL INVENTORY"
+	recipes.add_theme_font_size_override("font_size", 14)
+	column.add_child(recipes)
 	recipe_list = VBoxContainer.new()
+	recipe_list.add_theme_constant_override("separation", 7)
 	column.add_child(recipe_list)
-
+	_label(self, "1–9, 0 = QUICK ACCESS   |   L = LANTERN", Vector2(24, 448), Vector2(430, 33), 13, Color(0.72, 0.65, 0.77))
 	var close := Button.new()
-	close.text = "CLOSE"
-	close.position = Vector2(222, 425)
-	close.size = Vector2(154, 38)
+	close.text = "RETURN"
+	close.position = Vector2(488, 450)
+	close.size = Vector2(126, 38)
 	close.pressed.connect(func(): visible = false)
 	add_child(close)
 	refresh()
 
+func _label(parent: Node, text_value: String, at: Vector2, dimensions: Vector2, font_size: int, color_value: Color) -> Label:
+	var label := Label.new()
+	label.position = at
+	label.size = dimensions
+	label.text = text_value
+	label.add_theme_font_size_override("font_size", font_size)
+	label.add_theme_color_override("font_color", color_value)
+	parent.add_child(label)
+	return label
+
+func _clear_rows(container: VBoxContainer) -> void:
+	for child in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
+
 func refresh() -> void:
 	if game == null or stock_list == null:
 		return
-	for child in stock_list.get_children():
-		stock_list.remove_child(child)
-		child.queue_free()
-	for child in recipe_list.get_children():
-		recipe_list.remove_child(child)
-		child.queue_free()
-
+	_clear_rows(stock_list)
+	_clear_rows(recipe_list)
 	var inventory: Dictionary = game.call("get_inventory_snapshot_for_ui")
 	var items: Dictionary = game.call("get_item_catalog_for_ui")
-	var selected := str(game.call("get_selected_build_material"))
-	selected_label.text = "SELECTED FOR PLACE: " + selected.replace("_", " ").to_upper()
-	var keys := items.keys()
-	keys.sort()
-	for entry in keys:
-		var item_id := str(entry)
+	var stone := int(inventory.get("stone", 0))
+	var grass := int(inventory.get("grass_block", 0))
+	var brick := int(inventory.get("stone_brick", 0))
+	summary_label.text = "STONE %d   •   TURF %d   •   BRICK %d" % [stone, grass, brick]
+	var ids := items.keys()
+	ids.sort()
+	for key in ids:
+		var item_id := str(key)
 		var spec: Dictionary = items[item_id]
-		var amount := int(inventory.get(item_id, 0))
 		var kind := str(spec.get("kind", "resource"))
-		# The field hammer is an unlimited equipped tool, not a zero-count resource.
-		if kind == "tool_item":
+		var count := int(inventory.get(item_id, 0))
+		if kind == "tool_item" or (kind == "utility" and count <= 0):
 			continue
-		# Future utility content is not presented as obtainable until it really is.
-		if kind == "utility" and amount <= 0:
-			continue
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
+		var row := PanelContainer.new()
+		var row_style := StyleBoxFlat.new()
+		row_style.bg_color = Color(0.095, 0.094, 0.12, 0.98)
+		row_style.set_corner_radius_all(7)
+		row_style.content_margin_left = 12
+		row_style.content_margin_right = 12
+		row_style.content_margin_top = 7
+		row_style.content_margin_bottom = 7
+		row.add_theme_stylebox_override("panel", row_style)
 		stock_list.add_child(row)
-		var label := Label.new()
-		label.custom_minimum_size = Vector2(328, 35)
-		label.text = "%s  x%d" % [str(spec.get("label", item_id)).to_upper(), amount]
-		label.tooltip_text = str(spec.get("description", ""))
-		row.add_child(label)
-		if item_id in ["stone", "grass_block", "stone_brick"]:
-			var select := Button.new()
-			select.text = "SELECTED" if item_id == selected else "PLACE"
-			select.disabled = item_id == selected
-			select.custom_minimum_size = Vector2(130, 36)
-			select.pressed.connect(_select_material.bind(item_id))
-			row.add_child(select)
-
-	var recipes: Dictionary = game.call("get_recipe_catalog_for_ui")
-	var recipe_ids := recipes.keys()
+		var line := HBoxContainer.new()
+		row.add_child(line)
+		var icon_box := ColorRect.new()
+		icon_box.custom_minimum_size = Vector2(28, 28)
+		icon_box.color = Color(0.42, 0.44, 0.41)
+		if item_id == "grass_block":
+			icon_box.color = Color(0.35, 0.62, 0.31)
+		elif item_id == "stone_brick":
+			icon_box.color = Color(0.62, 0.52, 0.43)
+		line.add_child(icon_box)
+		var spacer := Control.new()
+		spacer.custom_minimum_size.x = 12
+		line.add_child(spacer)
+		var name_label := Label.new()
+		name_label.text = str(spec.get("label", item_id)).to_upper()
+		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		name_label.tooltip_text = str(spec.get("description", ""))
+		line.add_child(name_label)
+		var qty := Label.new()
+		qty.text = "× %d" % count
+		qty.add_theme_font_size_override("font_size", 19)
+		qty.add_theme_color_override("font_color", Color(1, 0.81, 0.47))
+		line.add_child(qty)
+	var recipe_catalog: Dictionary = game.call("get_recipe_catalog_for_ui")
+	var recipe_ids := recipe_catalog.keys()
 	recipe_ids.sort()
 	for key in recipe_ids:
 		var recipe_id := str(key)
-		var recipe: Dictionary = recipes[recipe_id]
+		var recipe: Dictionary = recipe_catalog[recipe_id]
 		var ingredients: Dictionary = recipe.get("ingredients", {})
-		var requirement_parts: Array[String] = []
+		var requirements: Array[String] = []
 		var can_craft := true
-		for item in ingredients:
-			var needed := int(ingredients[item])
-			requirement_parts.append("%s %d/%d" % [str(item).replace("_", " "), int(inventory.get(item, 0)), needed])
-			if int(inventory.get(item, 0)) < needed:
+		for ingredient in ingredients:
+			var need := int(ingredients[ingredient])
+			var available := int(inventory.get(ingredient, 0))
+			requirements.append("%s %d/%d" % [str(ingredient).replace("_", " "), available, need])
+			if available < need:
 				can_craft = false
 		var button := Button.new()
-		button.text = "CRAFT %s // %s" % [str(recipe.get("label", recipe_id)).to_upper(), ", ".join(requirement_parts)]
+		button.custom_minimum_size.y = 46
+		button.text = "MAKE %s   •   %s" % [str(recipe.get("label", recipe_id)).to_upper(), "  |  ".join(requirements)]
 		button.disabled = not can_craft
-		button.custom_minimum_size = Vector2(540, 40)
 		button.pressed.connect(_craft.bind(recipe_id))
 		recipe_list.add_child(button)
 
-func _select_material(item_id: String) -> void:
-	if bool(game.call("select_build_material", item_id)):
-		refresh()
-
 func _craft(recipe_id: String) -> void:
-	var result := str(game.call("terrain_craft_recipe", recipe_id))
-	get_parent().get_parent().call("flash", result, 2.0)
+	var response := str(game.call("terrain_craft_recipe", recipe_id))
+	get_parent().get_parent().call("flash", response, 2.0)
 	refresh()

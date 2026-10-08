@@ -20,6 +20,10 @@ func equip(id: String, selected_material := "stone_brick") -> void:
 		"field_hammer":
 			_piece("WoodHandle", Vector3.ZERO, Vector3(0.055, 0.42, 0.055), wood)
 			_piece("SteelHead", Vector3(0, 0.23, 0), Vector3(0.28, 0.12, 0.12), steel, true)
+		"lantern":
+			_piece("LanternHandle", Vector3(0, 0.22, 0), Vector3(0.17, 0.05, 0.04), steel, true)
+			_piece("LanternBody", Vector3(0, 0, 0), Vector3(0.18, 0.31, 0.18), Color(0.32, 0.31, 0.26), true)
+			_piece("LanternGlass", Vector3(0, 0.01, -0.105), Vector3(0.12, 0.19, 0.04), Color(1.0, 0.72, 0.26))
 		"mine":
 			_piece("WoodHandle", Vector3.ZERO, Vector3(0.055, 0.44, 0.055), wood)
 			_piece("PickHead", Vector3(0, 0.23, 0), Vector3(0.43, 0.06, 0.065), steel, true)
@@ -83,6 +87,7 @@ func _make_icon(id: String) -> ImageTexture:
 	var shapes: Array[Rect2i] = []
 	match id:
 		"field_hammer": shapes = [Rect2i(21, 15, 6, 27), Rect2i(10, 8, 28, 12)]
+		"lantern": shapes = [Rect2i(13, 15, 22, 25), Rect2i(20, 8, 8, 9)]
 		"mine": shapes = [Rect2i(21, 14, 6, 28), Rect2i(5, 9, 38, 5)]
 		"place": shapes = [Rect2i(8, 13, 32, 22)]
 		"inspect": shapes = [Rect2i(14, 6, 20, 36), Rect2i(18, 10, 12, 16)]
