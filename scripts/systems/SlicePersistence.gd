@@ -92,6 +92,10 @@ func save_now() -> bool:
 		push_error("Terrain slice save write failed: " + save_path)
 		return false
 	file.store_string(JSON.stringify(state, "\t"))
+	file.flush()
+	if file.get_error() != OK:
+		push_error("Terrain slice save flush failed: " + save_path)
+		return false
 	save_pending = false
 	return true
 

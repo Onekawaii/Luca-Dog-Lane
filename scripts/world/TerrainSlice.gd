@@ -329,6 +329,19 @@ func _replay_saved_edits() -> void:
 			voxel_tool.call("set_voxel", pos, int(edits[key]))
 
 func _spawn_resource_pickup(pos: Vector3i, item_id: String, amount: int) -> void:
+	var world_pos := _voxel_world_center(pos)
+	var drops := get_tree().get_nodes_in_group("terrain_pickup")
+	for drop in drops:
+		if drop.is_queued_for_deletion() or drop.inventory != inventory:
+			continue
+		if drop.item_id == item_id and drop.global_position.distance_to(world_pos) < 1.5:
+			drop.amount += amount
+			return
+	# Bound active rigid bodies without discarding mined resources. Overflow goes
+	# directly to the same inventory; ordinary drops still need proximity pickup.
+	if drops.size() >= 64:
+		inventory.call("add_item", item_id, amount)
+		return
 	var pickup := RigidBody3D.new()
 	pickup.name = "TerrainDrop_" + item_id
 	pickup.set_script(load("res://scripts/systems/ResourcePickup.gd"))
@@ -336,7 +349,6 @@ func _spawn_resource_pickup(pos: Vector3i, item_id: String, amount: int) -> void
 	pickup.set("player", player)
 	pickup.set("item_id", item_id)
 	pickup.set("amount", amount)
-	var world_pos := _voxel_world_center(pos)
 	var launch := Vector3.UP * 3.2
 	if player != null:
 		var toward_player := player.global_position + Vector3.UP - world_pos

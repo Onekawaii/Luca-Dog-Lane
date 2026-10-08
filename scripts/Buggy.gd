@@ -104,10 +104,10 @@ func deactivate_cameras() -> void:
 func get_camera_mode_name() -> String:
 	return CAMERA_NAMES[camera_mode]
 
-func add_camera_look(delta_pixels: Vector2) -> void:
+func add_camera_look(delta_pixels: Vector2, sensitivity_scale := 1.0) -> void:
 	if camera_mode != 1 or chase_arm == null:
 		return
-	var sensitivity := 0.12
+	var sensitivity := 0.12 * sensitivity_scale
 	var degrees := chase_arm.rotation_degrees
 	degrees.y = clampf(degrees.y - delta_pixels.x * sensitivity, -115.0, 115.0)
 	degrees.x = clampf(degrees.x - delta_pixels.y * sensitivity, -32.0, 8.0)

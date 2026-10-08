@@ -572,6 +572,9 @@ func _add_cylinder(
 	parent.add_child(node)
 
 func _save_state() -> void:
+	save_state_now()
+
+func save_state_now() -> bool:
 	var payload := {
 		"schema_version": 2,
 		"affection": affection,
@@ -584,6 +587,11 @@ func _save_state() -> void:
 	var file := FileAccess.open(state_save_path(), FileAccess.WRITE)
 	if file != null:
 		file.store_string(JSON.stringify(payload, "  "))
+		file.flush()
+		if file.get_error() == OK:
+			return true
+	push_error("Spiral save write failed: " + state_save_path())
+	return false
 
 func _load_state() -> void:
 	if FileAccess.file_exists(state_save_path()):

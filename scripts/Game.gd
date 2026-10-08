@@ -7,6 +7,7 @@ const DEFAULT_PLAYER_START := Vector3(0.0, 2.5, 24.0)
 
 var player: CharacterBody3D
 var hud: CanvasLayer
+var session_menu: CanvasLayer
 var luca: CharacterBody3D
 var terrain_slice: Node3D
 var quarry_expedition: Node3D
@@ -69,6 +70,11 @@ func _ready() -> void:
 	_spawn_hud()
 	_spawn_spiral_world()
 	_spawn_egg_hunt()
+	session_menu = load("res://scripts/systems/SessionMenu.gd").new()
+	session_menu.game = self
+	session_menu.hud = hud
+	session_menu.player = player
+	add_child(session_menu)
 	print(
 		"SPIRAL_FIELD_WORLD_READY world_half=", WORLD_HALF,
 		" map=", active_map_id,
@@ -76,6 +82,10 @@ func _ready() -> void:
 	)
 	if player_terrain_probe:
 		call_deferred("_run_player_terrain_probe")
+	if OS.get_environment("SPIRAL_PC_MENU_PROBE") == "1":
+		var probe: Node = load("res://scripts/systems/PCMenuAcceptanceProbe.gd").new()
+		probe.world = self
+		add_child(probe)
 
 func _setup_content_registry() -> void:
 	content_registry = ContentRegistry.new()
@@ -97,6 +107,16 @@ func _setup_content_registry() -> void:
 		active_map_profile.get("spawn", [0.0, 2.5, 24.0]),
 		DEFAULT_PLAYER_START
 	)
+
+func save_session() -> bool:
+	# Flush existing schemas; no fabricated player/entity persistence promises.
+	var terrain_saved := true
+	if terrain_slice != null:
+		terrain_saved = bool(terrain_slice.persistence.call("save_now"))
+	var spiral_saved := true
+	if spiral_world != null:
+		spiral_saved = bool(spiral_world.call("save_state_now"))
+	return terrain_saved and spiral_saved
 
 func get_tool_ids() -> Array[String]:
 	return content_registry.get_tool_ids() if content_registry != null else []

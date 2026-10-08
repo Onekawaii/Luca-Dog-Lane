@@ -8,33 +8,37 @@ var launch_velocity := Vector3.ZERO
 var age := 0.0
 
 func _ready() -> void:
+	add_to_group("terrain_pickup")
 	mass = 0.28
 	collision_layer = 8
 	collision_mask = 1
 	continuous_cd = true
 
 	var mesh_instance := MeshInstance3D.new()
-	var mesh := SphereMesh.new()
-	mesh.radius = 0.22
-	mesh.height = 0.44
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3.ONE * 0.20
 	mesh_instance.mesh = mesh
-	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.52, 0.56, 0.53)
-	material.roughness = 0.95
+	var kind := "grass" if item_id == "grass_block" else ("brick" if item_id == "stone_brick" else "stone")
+	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make(kind, Color.WHITE)
 	mesh_instance.material_override = material
 	add_child(mesh_instance)
 
 	var collision := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
-	shape.radius = 0.22
+	shape.radius = 0.10
 	collision.shape = shape
 	add_child(collision)
 
 	linear_velocity = launch_velocity
 
 func _physics_process(delta: float) -> void:
+	if is_queued_for_deletion():
+		return
 	age += delta
 	if global_position.y < -20.0:
+		# Streaming/out-of-world escape must not erase mined resources.
+		if inventory != null:
+			inventory.call("add_item", item_id, amount)
 		queue_free()
 		return
 	if age < 0.15 or player == null or inventory == null:

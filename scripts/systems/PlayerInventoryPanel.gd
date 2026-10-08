@@ -33,7 +33,7 @@ func _ready() -> void:
 	scroll.add_child(column)
 
 	var resources := Label.new()
-	resources.text = "MATERIALS  —  TAP THE BOTTOM HOTBAR TO EQUIP"
+	resources.text = "MATERIALS  -  CLOSE INVENTORY TO EQUIP FROM HOTBAR"
 	resources.add_theme_font_size_override("font_size", 14)
 	column.add_child(resources)
 	stock_list = VBoxContainer.new()
@@ -47,7 +47,7 @@ func _ready() -> void:
 	recipe_list = VBoxContainer.new()
 	recipe_list.add_theme_constant_override("separation", 7)
 	column.add_child(recipe_list)
-	_label(self, "1–9, 0 = QUICK ACCESS   |   L = LANTERN", Vector2(24, 448), Vector2(430, 33), 13, Color(0.72, 0.65, 0.77))
+	_label(self, "ESC / RETURN = CLOSE   |   RECIPES USE REAL STOCK", Vector2(24, 448), Vector2(430, 33), 13, Color(0.72, 0.65, 0.77))
 	var close := Button.new()
 	close.text = "RETURN"
 	close.position = Vector2(488, 450)

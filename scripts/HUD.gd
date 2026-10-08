@@ -19,11 +19,13 @@ var inventory_panel: Panel
 var quickbar: Control
 var tool_icon: TextureRect
 var equipped_label: Label
+var controls_label: Label
 var noclip_button: Button
 var use_button: Button
 var jump_button: Button
 var down_button: Button
 var view_button: Button
+var menu_button: Button
 var status_label: Label
 var inventory_label: Label
 var spiral_label: Label
@@ -71,6 +73,13 @@ func _ready() -> void:
 	equipped_label.add_theme_font_size_override("font_size", 16)
 	equipped_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(equipped_label)
+	controls_label = Label.new()
+	controls_label.position = Vector2(20, 242)
+	controls_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	controls_label.add_theme_font_size_override("font_size", 14)
+	controls_label.add_theme_constant_override("outline_size", 4)
+	controls_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	root.add_child(controls_label)
 	_build_crosshair()
 	_build_joystick()
 	_build_action_buttons()
@@ -79,6 +88,8 @@ func _ready() -> void:
 	_build_inventory_menu()
 	_build_quickbar()
 	_build_encounter_panel()
+	for panel in [spawn_panel, map_panel, inventory_panel, encounter_panel]:
+		panel.visibility_changed.connect(sync_modal_input)
 
 	root.resized.connect(_layout_for_viewport)
 	call_deferred("_layout_for_viewport")
@@ -87,7 +98,7 @@ func _ready() -> void:
 		player.call("_sync_tool_label")
 	set_noclip(false)
 	flash(
-		"Find the two Spirals. E interacts." if not mobile_ui
+		"LMB uses tools // E interacts // Esc pauses" if not mobile_ui
 		else "Find the two Spirals // drag RIGHT side to look",
 		2.8
 	)
@@ -258,6 +269,9 @@ func _build_action_buttons() -> void:
 	view_button = _button("VIEW: DRIVER", Vector2.ZERO, Vector2(150, 56))
 	view_button.pressed.connect(func(): player.call("toggle_vehicle_view"))
 	_register_interactive(view_button)
+	menu_button = _button("MENU", Vector2.ZERO, Vector2(154, 52))
+	menu_button.pressed.connect(func(): game.session_menu.call("open", "pause"))
+	_register_interactive(menu_button)
 
 func _build_spawn_menu() -> void:
 	spawn_panel = Panel.new()
@@ -446,6 +460,7 @@ func _layout_for_viewport() -> void:
 	tool_button.position = Vector2(right_x, 136.0)
 	inventory_button.position = Vector2(right_x, 194.0)
 	noclip_button.position = Vector2(right_x, 252.0)
+	menu_button.position = Vector2(right_x, 310.0 if developer_ui else 20.0)
 
 	use_button.position = Vector2(maxf(790.0, size.x - 198.0), maxf(500.0, size.y - 88.0))
 	jump_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
@@ -466,19 +481,23 @@ func _apply_mode_visibility() -> void:
 	if move_base == null:
 		return
 	move_base.visible = mobile_ui
-	use_button.visible = mobile_ui
+	use_button.visible = mobile_ui or vehicle_active
 	jump_button.visible = mobile_ui and not vehicle_active
 	down_button.visible = mobile_ui and noclip_active and not vehicle_active
-	view_button.visible = mobile_ui and vehicle_active
+	view_button.visible = vehicle_active
 	map_button.visible = mobile_ui or developer_ui
 	tool_button.visible = mobile_ui or developer_ui
 	spawn_button.visible = developer_ui and not vehicle_active
+	menu_button.visible = true
 	noclip_button.visible = (mobile_ui or developer_ui) and not vehicle_active
 	inventory_button.visible = true
 	inventory_label.visible = true
 	crosshair.visible = not mobile_ui
 	if quickbar != null:
 		quickbar.visible = not vehicle_active
+	tool_icon.visible = not vehicle_active
+	equipped_label.visible = not vehicle_active
+	_update_controls_label()
 	if not developer_ui:
 		spawn_panel.visible = false
 
@@ -487,6 +506,38 @@ func _process(delta: float) -> void:
 		toast_time = maxf(0.0, toast_time - delta)
 		if toast_time <= 0.0 and status_label != null:
 			status_label.visible = false
+
+func has_modal() -> bool:
+	return spawn_panel.visible or map_panel.visible or inventory_panel.visible or encounter_panel.visible
+
+func _update_controls_label() -> void:
+	if controls_label == null:
+		return
+	controls_label.text = "NOCLIP ON // V returns to walking" if noclip_active else "LMB USE // I INVENTORY // ESC MENU"
+	if vehicle_active:
+		controls_label.text = "CAR " + str(player.riding.call("get_camera_mode_name")) + " // R / F5 VIEW // E EXIT // ESC MENU"
+	controls_label.visible = not mobile_ui
+
+func close_modals(sync := true) -> void:
+	spawn_panel.hide()
+	map_panel.hide()
+	inventory_panel.hide()
+	close_encounter()
+	if sync:
+		sync_modal_input()
+
+func sync_modal_input() -> void:
+	var menu = game.get("session_menu") if game != null else null
+	var blocked: bool = has_modal() or (menu != null and menu.call("is_open"))
+	if player != null:
+		player.call("set_gameplay_blocked", blocked)
+	if quickbar != null:
+		for button in quickbar.buttons:
+			button.disabled = blocked
+	move_touch_id = -1
+	look_touch_id = -1
+	if not mobile_ui:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if blocked else Input.MOUSE_MODE_CAPTURED
 
 func _input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -512,6 +563,11 @@ func _input(event: InputEvent) -> void:
 			close_encounter()
 			get_viewport().set_input_as_handled()
 			return
+
+	if has_modal():
+		if event is InputEventMouseMotion or event is InputEventKey:
+			get_viewport().set_input_as_handled()
+		return
 
 	if not mobile_ui:
 		return
@@ -699,6 +755,7 @@ func set_vehicle_mode(enabled: bool, camera_name := "DRIVER") -> void:
 func set_vehicle_camera(camera_name: String) -> void:
 	if view_button != null:
 		view_button.text = "VIEW: " + camera_name
+	_update_controls_label()
 
 func flash(message: String, seconds := 1.6) -> void:
 	if status_label != null:

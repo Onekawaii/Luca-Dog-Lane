@@ -18,6 +18,8 @@ var equipped_tool: Node3D
 var lantern_light: OmniLight3D
 var lantern_enabled := false
 var hotbar_index := 0
+var gameplay_blocked := false
+var look_sensitivity := 0.0032
 var body_collision: CollisionShape3D
 
 var touch_move := Vector2.ZERO
@@ -87,6 +89,10 @@ func _ready() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta: float) -> void:
+	if gameplay_blocked:
+		if riding != null and is_instance_valid(riding):
+			riding.call("set_drive_input", Vector2.ZERO)
+		return
 	jump_buffer = max(0.0, jump_buffer - delta)
 	_recover_if_outside()
 	# Hold on spawn/teleport until local voxel data is available, not on a hidden floor.
@@ -237,14 +243,17 @@ func _update_safe_ground(delta: float) -> void:
 		safe_ground_timer = 0.0
 
 func _unhandled_input(event: InputEvent) -> void:
+	if gameplay_blocked:
+		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		add_look_delta(event.relative)
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_E:
+		elif riding == null:
+			use_tool()
+		get_viewport().set_input_as_handled()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
 		use_tool()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode >= KEY_1 and event.keycode <= KEY_9:
 		select_hotbar_slot(event.keycode - KEY_1)
@@ -257,15 +266,31 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_V:
 		# Noclip is a universal PC navigation/debugging shortcut, not a hidden developer unlock.
 		toggle_noclip()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_R and riding != null:
+	elif event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_R or event.keycode == KEY_F5) and riding != null:
 		toggle_vehicle_view()
+	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			select_hotbar_slot(posmod(hotbar_index - 1, 10))
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			select_hotbar_slot(posmod(hotbar_index + 1, 10))
+
+func set_gameplay_blocked(blocked: bool) -> void:
+	gameplay_blocked = blocked
+	touch_move = Vector2.ZERO
+	vertical_axis = 0.0
+	jump_buffer = 0.0
+	velocity = Vector3.ZERO
+	if riding != null and is_instance_valid(riding):
+		riding.call("set_drive_input", Vector2.ZERO)
 
 func add_look_delta(delta_pixels: Vector2) -> void:
+	if gameplay_blocked:
+		return
 	if riding != null:
 		if is_instance_valid(riding):
-			riding.call("add_camera_look", delta_pixels)
+			riding.call("add_camera_look", delta_pixels, look_sensitivity / 0.0032)
 		return
-	var sensitivity := 0.0032
+	var sensitivity := look_sensitivity
 	yaw -= delta_pixels.x * sensitivity
 	pitch = clamp(pitch - delta_pixels.y * sensitivity, -1.48, 1.48)
 	rotation.y = yaw
@@ -396,6 +421,8 @@ func toggle_noclip() -> void:
 		hud.call("flash", "NOCLIP ON" if noclip else "NOCLIP OFF")
 
 func use_tool() -> void:
+	if gameplay_blocked:
+		return
 	if equipped_tool != null:
 		equipped_tool.call("use_animation")
 	if riding != null:
@@ -559,7 +586,7 @@ func enter_vehicle(vehicle: Node3D) -> void:
 
 	if hud != null:
 		hud.call("set_vehicle_mode", true, camera_name)
-		hud.call("flash", "Driving // VIEW switches camera", 1.8)
+		hud.call("flash", "Driving // R / F5 changes view // E exits", 3.0)
 
 func toggle_vehicle_view() -> void:
 	if riding == null or not is_instance_valid(riding):
