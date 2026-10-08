@@ -13,6 +13,8 @@ var encounter_panel: Panel
 var spawn_button: Button
 var map_button: Button
 var tool_button: Button
+var tool_icon: TextureRect
+var equipped_label: Label
 var noclip_button: Button
 var use_button: Button
 var jump_button: Button
@@ -52,6 +54,17 @@ func _ready() -> void:
 	add_child(root)
 
 	_build_header()
+	tool_icon = TextureRect.new()
+	tool_icon.name = "EquippedToolIcon"
+	tool_icon.position = Vector2(16, 154)
+	tool_icon.size = Vector2(48, 48)
+	tool_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(tool_icon)
+	equipped_label = Label.new()
+	equipped_label.position = Vector2(74, 165)
+	equipped_label.add_theme_font_size_override("font_size", 16)
+	equipped_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(equipped_label)
 	_build_crosshair()
 	_build_joystick()
 	_build_action_buttons()
@@ -70,6 +83,10 @@ func _ready() -> void:
 		else "Find the two Spirals // drag RIGHT side to look",
 		2.8
 	)
+
+func set_tool_icon(texture: Texture2D) -> void:
+	if tool_icon != null:
+		tool_icon.texture = texture
 
 func _is_mobile_platform() -> bool:
 	# Android and iOS are authoritative export tags. Keep the broader mobile
@@ -383,7 +400,7 @@ func _layout_for_viewport() -> void:
 func _apply_mode_visibility() -> void:
 	if move_base == null:
 		return
-	move_base.visible = mobile_ui and not vehicle_active
+	move_base.visible = mobile_ui
 	use_button.visible = mobile_ui
 	jump_button.visible = mobile_ui and not vehicle_active
 	down_button.visible = mobile_ui and noclip_active and not vehicle_active
@@ -548,6 +565,8 @@ func _encounter_button_pressed(index: int) -> void:
 	player.call("spiral_choice", target, action)
 
 func set_tool_mode(mode: String) -> void:
+	if equipped_label != null:
+		equipped_label.text = mode
 	if tool_button != null:
 		tool_button.text = "TOOL: " + mode
 

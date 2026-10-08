@@ -33,6 +33,12 @@ var base_sky_horizon := Color(0.72, 0.86, 0.88)
 var base_fog_color := Color(0.56, 0.66, 0.68)
 var base_fog_density := 0.00115
 
+func uses_world_voxels() -> bool:
+	var override := OS.get_environment("SPIRAL_WORLD_VOXELS")
+	if not override.is_empty():
+		return override == "1"
+	return bool(ProjectSettings.get_setting("spiral_field/world_voxels", true))
+
 func _ready() -> void:
 	print(
 		"RENDERER_READY method=", RenderingServer.get_current_rendering_method(),
@@ -265,6 +271,8 @@ func _build_ground_and_boundaries() -> void:
 		Vector3(0.0, -GROUND_THICKNESS * 0.5 - 0.25, 0.0),
 		Vector3(WORLD_HALF * 2.0, GROUND_THICKNESS, WORLD_HALF * 2.0)
 	)
+	if uses_world_voxels():
+		get_node("WorldGround").set("collision_layer", 0)
 	# Collision-only outer walls.
 	_create_boundary_wall("NorthBoundary", Vector3(0, 3, -WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
 	_create_boundary_wall("SouthBoundary", Vector3(0, 3, WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
@@ -410,6 +418,7 @@ func _spawn_macro_terrain() -> void:
 	node.set("world_plan", world_plan)
 	node.set("world_half", WORLD_HALF)
 	node.set("height_scale", terrain_scale)
+	node.set("voxel_preview", uses_world_voxels())
 	add_child(node)
 	macro_terrain = node as MacroTerrain
 
@@ -428,6 +437,8 @@ func _spawn_terrain_slice() -> void:
 	node.set_script(load("res://scripts/world/TerrainSlice.gd"))
 	node.set("player", player)
 	node.set("world_seed", world_seed)
+	node.set("world_voxels", uses_world_voxels())
+	node.set("height_scale", terrain_scale)
 	add_child(node)
 	terrain_slice = node
 
@@ -449,6 +460,7 @@ func _spawn_luca() -> void:
 	node.set("world_half", WORLD_HALF)
 	add_child(node)
 	luca = node
+	_attach_stream_guard(node)
 
 func _spawn_people() -> void:
 	var positions := [
@@ -607,9 +619,14 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 			color = Color(0.58, 0.34, 0.16)
 
 	mesh_instance.material_override = _material(color, 0.78)
+	var prop_material: StandardMaterial3D = mesh_instance.material_override
+	if kind == "crate" or kind == "barrel":
+		prop_material = load("res://scripts/systems/ObjectMaterials.gd").make("wood" if kind == "crate" else "metal", color)
+		mesh_instance.material_override = prop_material
 	body.add_child(mesh_instance)
 	body.add_child(collision)
 	add_child(body)
+	_attach_stream_guard(body)
 	return body
 
 func duplicate_prop(source: Node3D) -> void:
@@ -626,6 +643,7 @@ func _spawn_npc(at: Vector3, display_name: String) -> void:
 	npc.set("display_name", display_name)
 	npc.set("world_half", WORLD_HALF)
 	add_child(npc)
+	_attach_stream_guard(npc)
 
 func _spawn_buggy(at: Vector3) -> void:
 	var buggy := VehicleBody3D.new()
@@ -636,6 +654,14 @@ func _spawn_buggy(at: Vector3) -> void:
 	buggy.position = Vector3(x, _surface_height(x, z) + 0.18, z)
 	buggy.set("world_half", WORLD_HALF)
 	add_child(buggy)
+	_attach_stream_guard(buggy)
+
+func _attach_stream_guard(body: Node3D) -> void:
+	if not uses_world_voxels():
+		return
+	var guard: Node = load("res://scripts/world/WorldStreamGuard.gd").new()
+	guard.set("slice", terrain_slice)
+	body.add_child(guard)
 
 func _create_boundary_wall(label: String, at: Vector3, size: Vector3) -> StaticBody3D:
 	var body := StaticBody3D.new()

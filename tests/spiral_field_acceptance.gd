@@ -13,11 +13,8 @@ func _fail(message: String) -> void:
 	print("[FAIL] ", message)
 
 func _run() -> void:
-	var save_v2 := "user://spiral_field_state_v2.json"
-	var save_v1 := "user://spiral_field_state_v1.json"
-	for save_path in [save_v2, save_v1]:
-		if FileAccess.file_exists(save_path):
-			DirAccess.remove_absolute(ProjectSettings.globalize_path(save_path))
+	var save_v2 := "user://qa_spiral_%d.json" % Time.get_ticks_usec()
+	OS.set_environment("SPIRAL_STATE_SAVE_PATH", save_v2)
 
 	var packed := load("res://scenes/Main.tscn") as PackedScene
 	if packed == null:

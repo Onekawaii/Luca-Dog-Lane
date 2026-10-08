@@ -14,6 +14,7 @@ var game: Node
 var hud: CanvasLayer
 var pivot: Node3D
 var camera: Camera3D
+var equipped_tool: Node3D
 var body_collision: CollisionShape3D
 
 var touch_move := Vector2.ZERO
@@ -59,6 +60,9 @@ func _ready() -> void:
 	camera.fov = 76.0
 	camera.near = 0.05
 	pivot.add_child(camera)
+	equipped_tool = load("res://scripts/systems/EquippedTool.gd").new()
+	equipped_tool.name = "EquippedTool"
+	camera.add_child(equipped_tool)
 
 	rotation.y = yaw
 	pivot.rotation.x = pitch
@@ -70,6 +74,18 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	jump_buffer = max(0.0, jump_buffer - delta)
+	_recover_if_outside()
+	# Hold on spawn/teleport until local voxel data is available, not on a hidden floor.
+	if game != null and game.call("uses_world_voxels") and riding == null and not noclip:
+		var terrain_node = game.get("terrain_slice")
+		if terrain_node != null and not terrain_node.call("_is_editable", Vector3i(global_position)):
+			velocity = Vector3.ZERO
+			return
+		var floor_query := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 2.0, global_position - Vector3.UP * 24.0, 1)
+		var voxel_floor = terrain_node.get("voxel_tool").call("raycast", floor_query.from, Vector3.DOWN, 26.0)
+		if voxel_floor != null and get_world_3d().direct_space_state.intersect_ray(floor_query).is_empty():
+			velocity = Vector3.ZERO
+			return
 
 	if riding != null and is_instance_valid(riding):
 		_process_vehicle()
@@ -128,7 +144,29 @@ func _process_walk(input_vec: Vector2, delta: float) -> void:
 	elif velocity.y < 0.0:
 		velocity.y = 0.0
 
+	if game != null and game.call("uses_world_voxels"):
+		_try_voxel_step(delta)
 	move_and_slide()
+
+func _try_voxel_step(delta: float) -> void:
+	if not is_on_floor() or velocity.y > 0.0:
+		return
+	var forward := Vector3(velocity.x, 0, velocity.z) * delta
+	if forward.length_squared() < 0.0001 or not test_move(global_transform, forward):
+		return
+	var raised := global_transform
+	if test_move(raised, Vector3.UP * 1.05):
+		return
+	raised.origin.y += 1.05
+	if test_move(raised, forward):
+		return
+	raised.origin += forward
+	var landing := KinematicCollision3D.new()
+	if not test_move(raised, Vector3.DOWN * 1.10, landing):
+		return
+	if landing.get_normal().y < cos(floor_max_angle):
+		return
+	global_position = raised.origin + landing.get_travel()
 
 func _process_noclip(input_vec: Vector2, delta: float) -> void:
 	var flat_forward := -global_transform.basis.z
@@ -250,10 +288,14 @@ func _current_tool_definition() -> Dictionary:
 	return definition
 
 func _sync_tool_label() -> void:
+	if equipped_tool != null:
+		equipped_tool.call("equip", _current_tool_id())
 	if hud == null:
 		return
 	var definition := _current_tool_definition()
 	hud.call("set_tool_mode", str(definition.get("label", _current_tool_id().to_upper())))
+	if hud.has_method("set_tool_icon"):
+		hud.call("set_tool_icon", equipped_tool.get("icon"))
 
 func cycle_tool() -> void:
 	if held_body != null:
@@ -278,6 +320,8 @@ func toggle_noclip() -> void:
 		hud.call("flash", "NOCLIP ON" if noclip else "NOCLIP OFF")
 
 func use_tool() -> void:
+	if equipped_tool != null:
+		equipped_tool.call("use_animation")
 	if riding != null:
 		exit_vehicle()
 		return
@@ -330,7 +374,7 @@ func use_tool() -> void:
 	if target == null:
 		return
 
-	if target.is_in_group("vehicle"):
+	if target.is_in_group("vehicle") and action != "strike":
 		enter_vehicle(target)
 		return
 
@@ -384,7 +428,7 @@ func spiral_choice(target: Object, action: String) -> void:
 func _strike_target(target, direction: Vector3, definition: Dictionary) -> void:
 	var damage := float(definition.get("damage", 0.0))
 	var knockback := float(definition.get("knockback", 0.0))
-	if target.is_in_group("npc") and target.has_method("take_damage"):
+	if target.has_method("take_damage"):
 		var result := str(
 			target.call(
 				"take_damage",
@@ -470,7 +514,8 @@ func get_spawn_point() -> Vector3:
 
 func _recover_if_outside() -> void:
 	var limit: float = 480.0 + SAFE_MARGIN
-	var fell_below_world: bool = global_position.y < FALL_RECOVERY_Y
+	var recovery_y := -24.0 if game != null and game.call("uses_world_voxels") else FALL_RECOVERY_Y
+	var fell_below_world: bool = global_position.y < recovery_y
 	var escaped_bounds: bool = absf(global_position.x) > limit or absf(global_position.z) > limit
 
 	if not fell_below_world and not escaped_bounds:

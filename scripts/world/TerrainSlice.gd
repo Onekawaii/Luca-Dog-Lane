@@ -15,6 +15,9 @@ var player: CharacterBody3D
 var hud: CanvasLayer
 var save_path_override := ""
 var world_seed := 6060
+var world_voxels := false
+var height_scale := 1.0
+var active_bounds := SLICE_BOUNDS
 
 var terrain: Node
 var viewer: Node3D
@@ -22,8 +25,11 @@ var voxel_tool
 var persistence: Node
 var inventory: Node
 var replay_timer := 0.0
+var replay_queued := false
 
 func _ready() -> void:
+	if world_voxels:
+		active_bounds = AABB(Vector3(-480, -16, -480), Vector3(960, 128, 960))
 	if not _extension_ready():
 		push_error("ENG-003 terrain slice requires staged Voxel Tools")
 		return
@@ -31,7 +37,7 @@ func _ready() -> void:
 	_setup_inventory()
 	_setup_terrain()
 	_setup_viewer()
-	print("V013_TERRAIN_SLICE_READY bounds=", SLICE_BOUNDS)
+	print("V013_TERRAIN_SLICE_READY bounds=", active_bounds, " world_voxels=", world_voxels)
 
 func _process(delta: float) -> void:
 	replay_timer += delta
@@ -40,7 +46,7 @@ func _process(delta: float) -> void:
 	replay_timer = 0.0
 	if player == null:
 		return
-	if player.global_position.distance_to(MOUNTAIN_CENTER) <= 140.0:
+	if world_voxels or player.global_position.distance_to(MOUNTAIN_CENTER) <= 140.0:
 		_replay_saved_edits()
 
 func _exit_tree() -> void:
@@ -177,13 +183,26 @@ func _setup_persistence() -> void:
 	persistence = Node.new()
 	persistence.name = "SlicePersistence"
 	persistence.set_script(load("res://scripts/systems/SlicePersistence.gd"))
+	if world_voxels:
+		persistence.set("generator_version", 2)
+		persistence.set("deferred_saves", true)
 	add_child(persistence)
 	var selected_path := save_path_override
 	if selected_path.is_empty():
 		selected_path = OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
 	if selected_path.is_empty():
-		selected_path = "user://v016_terrain_slice_%d.json" % world_seed
+		selected_path = ("user://v020_world_voxels_%d.json" if world_voxels else "user://v016_terrain_slice_%d.json") % world_seed
 	persistence.call("configure", selected_path, world_seed)
+	# Copy compatible authored-quarry deltas/inventory once; never modify the old save.
+	if world_voxels and save_path_override.is_empty() and OS.get_environment("LUCA_V013_SLICE_SAVE_PATH").is_empty() and not FileAccess.file_exists(selected_path):
+		var legacy_path := "user://v016_terrain_slice_%d.json" % world_seed
+		if FileAccess.file_exists(legacy_path):
+			var legacy = JSON.parse_string(FileAccess.get_file_as_string(legacy_path))
+			if typeof(legacy) == TYPE_DICTIONARY and int(legacy.get("schema_version", -1)) == 1 and int(legacy.get("generator_version", -1)) == 1 and int(legacy.get("world_seed", -1)) == world_seed:
+				legacy["generator_version"] = 2
+				persistence.set("state", legacy)
+				persistence.call("save_now")
+				print("WORLD_SAVE_MIGRATION_COPY source=", legacy_path, " destination=", selected_path)
 
 func _setup_inventory() -> void:
 	inventory = Node.new()
@@ -213,13 +232,17 @@ func _setup_terrain() -> void:
 	mesher.set("library", library)
 
 	var generator = load("res://scripts/world/TerrainSliceGenerator.gd").new()
-	generator.call("configure", world_seed)
+	if world_voxels:
+		generator = load("res://scripts/world/WorldVoxelGenerator.gd").new()
+		generator.call("configure_world", world_seed, height_scale)
+	else:
+		generator.call("configure", world_seed)
 
 	terrain = ClassDB.instantiate("VoxelTerrain")
 	terrain.name = "V013VoxelTerrain"
 	terrain.set("generator", generator)
 	terrain.set("mesher", mesher)
-	terrain.set("bounds", SLICE_BOUNDS)
+	terrain.set("bounds", active_bounds)
 	terrain.set("max_view_distance", 96)
 	terrain.set("mesh_block_size", 16)
 	terrain.set("generate_collisions", true)
@@ -246,13 +269,25 @@ func _setup_viewer() -> void:
 func _cube_model(color: Color):
 	var model = ClassDB.instantiate("VoxelBlockyModelCube")
 	model.set("color", color)
+	model.set("atlas_size_in_tiles", Vector2i.ONE)
+	var kind := "stone"
+	if color.g > color.r * 1.3:
+		kind = "grass"
+	elif color.r > 0.5:
+		kind = "brick"
+	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make(kind, Color.WHITE)
+	material.vertex_color_use_as_albedo = true
+	model.call("set_material_override", 0, material)
 	model.set("collision_mask", 1)
 	return model
 
 func _on_block_loaded(_block_position: Vector3i) -> void:
-	call_deferred("_replay_saved_edits")
+	if not replay_queued:
+		replay_queued = true
+		call_deferred("_replay_saved_edits")
 
 func _replay_saved_edits() -> void:
+	replay_queued = false
 	if voxel_tool == null or persistence == null:
 		return
 	var edits: Dictionary = persistence.call("get_voxel_deltas")
@@ -260,7 +295,8 @@ func _replay_saved_edits() -> void:
 		var pos := _parse_voxel_key(str(key))
 		if not _inside_slice(pos) or not _is_editable(pos):
 			continue
-		voxel_tool.call("set_voxel", pos, int(edits[key]))
+		if int(voxel_tool.call("get_voxel", pos)) != int(edits[key]):
+			voxel_tool.call("set_voxel", pos, int(edits[key]))
 
 func _spawn_resource_pickup(pos: Vector3i, item_id: String, amount: int) -> void:
 	var pickup := RigidBody3D.new()
@@ -287,7 +323,7 @@ func _is_editable(pos: Vector3i) -> bool:
 	return bool(voxel_tool.call("is_area_editable", AABB(p - Vector3.ONE, Vector3(3.0, 3.0, 3.0))))
 
 func _inside_slice(pos: Vector3i) -> bool:
-	return SLICE_BOUNDS.has_point(Vector3(float(pos.x), float(pos.y), float(pos.z)))
+	return active_bounds.has_point(Vector3(float(pos.x), float(pos.y), float(pos.z)))
 
 func _voxel_world_center(pos: Vector3i) -> Vector3:
 	return terrain.to_global(Vector3(float(pos.x) + 0.5, float(pos.y) + 0.5, float(pos.z) + 0.5))

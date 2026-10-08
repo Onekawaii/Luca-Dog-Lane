@@ -3,6 +3,13 @@ class_name SpiralWorldDirector
 
 const SAVE_PATH := "user://spiral_field_state_v2.json"
 const LEGACY_SAVE_PATH := "user://spiral_field_state_v1.json"
+
+func state_save_path() -> String:
+	var override := OS.get_environment("SPIRAL_STATE_SAVE_PATH")
+	return SAVE_PATH if override.is_empty() else override
+
+func legacy_state_save_path() -> String:
+	return LEGACY_SAVE_PATH if OS.get_environment("SPIRAL_STATE_SAVE_PATH").is_empty() else state_save_path() + ".legacy"
 const WITNESS_POS := Vector3(-155.0, 0.0, -132.0)
 const WAIL_POS := Vector3(176.0, 0.0, 148.0)
 const TABBY_POS := Vector3(54.0, 0.0, -42.0)
@@ -303,12 +310,13 @@ func _spawn_spiral_site(site_id: String, base: Vector3, color: Color, witnessing
 	body.add_child(light)
 
 	add_child(body)
+	load("res://scripts/systems/EncounterVisuals.gd").rebuild_spiral(body, color, witnessing_site)
 	site_nodes[site_id] = body
 
 func _spawn_tabbytulhu(base: Vector3) -> void:
 	var body := StaticBody3D.new()
 	body.name = "Tabbytulhu"
-	body.position = _terrain_position(base, 0.85)
+	body.position = _terrain_position(base, 0.0)
 	body.add_to_group("spiral_interactable")
 	body.set_meta("spiral_id", "tabbytulhu")
 
@@ -395,6 +403,7 @@ func _spawn_tabbytulhu(base: Vector3) -> void:
 	body.add_child(light)
 
 	add_child(body)
+	load("res://scripts/systems/EncounterVisuals.gd").rebuild_cat(body)
 	site_nodes["tabbytulhu"] = body
 
 func _spawn_spawn_omens() -> void:
@@ -449,7 +458,7 @@ func _rebuild_infection_geometry() -> void:
 func _animate_encounters() -> void:
 	var tabby = site_nodes.get("tabbytulhu")
 	if tabby != null and is_instance_valid(tabby):
-		var base_y := _terrain_position(TABBY_POS, 0.85).y
+		var base_y := _terrain_position(TABBY_POS, 0.0).y
 		tabby.position.y = base_y + sin(animation_time * 1.15) * 0.06
 		tabby.rotation.y = sin(animation_time * 0.45) * 0.12
 
@@ -462,7 +471,7 @@ func _animate_encounters() -> void:
 			beacon.scale.y = 1.0 + sin(animation_time * 1.6 + (0.0 if site_id == "witnessing" else 1.2)) * 0.08
 		var light := site.get_node_or_null("FieldLight") as OmniLight3D
 		if light != null:
-			light.light_energy = 4.0 + sin(animation_time * 2.2) * 1.2 + pressure() * 0.025
+			light.light_energy = 1.5 + sin(animation_time * 2.2) * 0.2 + pressure() * 0.005
 
 func _update_guidance() -> void:
 	if hud == null or player == null or not hud.has_method("set_field_guidance"):
@@ -552,19 +561,19 @@ func _save_state() -> void:
 		"interaction_count": interaction_count,
 		"stage": stage,
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	var file := FileAccess.open(state_save_path(), FileAccess.WRITE)
 	if file != null:
 		file.store_string(JSON.stringify(payload, "  "))
 
 func _load_state() -> void:
-	if FileAccess.file_exists(SAVE_PATH):
-		var parsed = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
+	if FileAccess.file_exists(state_save_path()):
+		var parsed = JSON.parse_string(FileAccess.get_file_as_string(state_save_path()))
 		if typeof(parsed) == TYPE_DICTIONARY and int(parsed.get("schema_version", -1)) == 2:
 			_apply_loaded_state(parsed)
 			return
 
-	if FileAccess.file_exists(LEGACY_SAVE_PATH):
-		var legacy = JSON.parse_string(FileAccess.get_file_as_string(LEGACY_SAVE_PATH))
+	if FileAccess.file_exists(legacy_state_save_path()):
+		var legacy = JSON.parse_string(FileAccess.get_file_as_string(legacy_state_save_path()))
 		if typeof(legacy) == TYPE_DICTIONARY and int(legacy.get("schema_version", -1)) == 1:
 			_apply_loaded_state(legacy)
 			_save_state()
@@ -578,6 +587,6 @@ func _apply_loaded_state(parsed: Dictionary) -> void:
 	stage = str(parsed.get("stage", "DORMANT"))
 
 func clear_state_for_test() -> void:
-	for path in [SAVE_PATH, LEGACY_SAVE_PATH]:
+	for path in [state_save_path(), legacy_state_save_path()]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

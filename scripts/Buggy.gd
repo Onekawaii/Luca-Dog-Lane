@@ -12,6 +12,10 @@ const IMPACT_MIN_SPEED := 4.0
 var world_half := 480.0
 var drive_input := Vector2.ZERO
 var driver_active := false
+var health := 200.0
+var damage_feedback: Node3D
+var contact_damage_cooldown := 0.0
+var recent_linear_velocity := Vector3.ZERO
 var camera_mode := 0
 var impact_cooldowns: Dictionary = {}
 
@@ -39,6 +43,35 @@ func _ready() -> void:
 	_build_buggy()
 	_build_wheels()
 	_build_cameras()
+	damage_feedback = load("res://scripts/systems/DamageFeedback.gd").new()
+	add_child(damage_feedback)
+	add_to_group("damageable")
+
+func take_damage(amount: float, _impulse := Vector3.ZERO, _source := Vector3.ZERO) -> String:
+	var applied := minf(health, maxf(0.0, amount))
+	health = maxf(0.0, health - applied)
+	if applied > 0.0:
+		damage_feedback.call("hit", health, 200.0, true, _source)
+		var hood := get_node("Hood") as MeshInstance3D
+		hood.rotation.z = (1.0 - health / 200.0) * 0.18
+	return "BUGGY // -%d // %d/200 HP%s" % [int(applied), int(health), " // ENGINE DISABLED" if health == 0.0 else ""]
+
+func _integrate_forces(state: PhysicsDirectBodyState3D) -> void:
+	if contact_damage_cooldown > 0.0 or health <= 0.0:
+		return
+	var peak_impulse := 0.0
+	var source := Vector3.ZERO
+	for i in range(state.get_contact_count()):
+		var impulse := state.get_contact_impulse(i).length()
+		if impulse > peak_impulse:
+			peak_impulse = impulse
+			source = state.get_contact_collider_position(i)
+	# Ignore resting/suspension contacts. J/m is the measurable impact delta-v.
+	if peak_impulse / mass <= 4.0:
+		return
+	var energy := peak_impulse * peak_impulse / (2.0 * mass)
+	contact_damage_cooldown = 0.65
+	call_deferred("take_damage", clampf(energy / 1800.0, 1.0, 75.0), Vector3.ZERO, source)
 
 func set_driver_active(active: bool) -> void:
 	driver_active = active
@@ -81,9 +114,11 @@ func add_camera_look(delta_pixels: Vector2) -> void:
 	chase_arm.rotation_degrees = degrees
 
 func _physics_process(delta: float) -> void:
+	recent_linear_velocity = linear_velocity
+	contact_damage_cooldown = maxf(0.0, contact_damage_cooldown - delta)
 	_tick_impact_cooldowns(delta)
 
-	if driver_active:
+	if driver_active and health > 0.0:
 		var throttle := -drive_input.y
 		var target_force := 0.0
 		if throttle > 0.03:
@@ -132,11 +167,15 @@ func _on_body_entered(body: Node) -> void:
 	var id := body.get_instance_id()
 	if impact_cooldowns.has(id):
 		return
-	var speed := linear_velocity.length()
+	var relative_velocity := recent_linear_velocity
+	if body is CharacterBody3D:
+		relative_velocity -= body.velocity
+	var toward_body: Vector3 = (body.global_position - global_position).normalized()
+	var speed := maxf(0.0, relative_velocity.dot(toward_body))
 	if speed < IMPACT_MIN_SPEED:
 		return
 	var damage := clampf((speed - 3.0) * 7.5, 8.0, 80.0)
-	var direction := linear_velocity.normalized()
+	var direction := relative_velocity.normalized()
 	body.call(
 		"take_damage",
 		damage,
@@ -289,7 +328,7 @@ func _add_wheel(label: String, at: Vector3, steering_wheel: bool) -> void:
 	wheel_nodes.append(wheel)
 
 func _material(color: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color
+	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make("metal", color)
 	material.roughness = 0.78
+	material.metallic = 0.6
 	return material

@@ -18,6 +18,7 @@ var health := MAX_HEALTH
 var alive := true
 var knockback_velocity := Vector3.ZERO
 var visual_root: Node3D
+var damage_feedback: Node3D
 
 func _ready() -> void:
 	add_to_group("npc")
@@ -31,6 +32,8 @@ func _ready() -> void:
 
 	rng.seed = hash(name)
 	_build_person()
+	damage_feedback = load("res://scripts/systems/DamageFeedback.gd").new()
+	visual_root.add_child(damage_feedback)
 	_choose_direction()
 
 func _physics_process(delta: float) -> void:
@@ -108,6 +111,8 @@ func take_damage(amount: float, impulse := Vector3.ZERO, _source := Vector3.ZERO
 	if applied > 0.0:
 		knockback_velocity.y = maxf(knockback_velocity.y, 1.8)
 	health_changed.emit(health, MAX_HEALTH)
+	if applied > 0.0:
+		damage_feedback.call("hit", health, MAX_HEALTH, false, _source)
 
 	if health <= 0.0:
 		_die()
@@ -162,7 +167,7 @@ func _build_person() -> void:
 	visual_root.name = "Anatomy"
 	add_child(visual_root)
 
-	var outfit := _material(Color.from_hsv(rng.randf(), 0.44, 0.68))
+	var outfit: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make("fabric", Color.from_hsv(rng.randf(), 0.44, 0.68))
 	var accent := _material(Color.from_hsv(fposmod(rng.randf() + 0.18, 1.0), 0.38, 0.55))
 	var skin := _skin_material()
 	var boot := _material(Color(0.10, 0.09, 0.08))

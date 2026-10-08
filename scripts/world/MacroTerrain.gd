@@ -8,6 +8,7 @@ var world_plan: KimiWorldPlan
 var world_half := 480.0
 var height_scale := 1.0
 var terrain_body: StaticBody3D
+var voxel_preview := false
 
 func _ready() -> void:
 	if world_plan == null:
@@ -131,6 +132,12 @@ func _build_world_terrain() -> void:
 	material.vertex_color_use_as_albedo = true
 	material.roughness = 0.98
 	mesh.surface_set_material(0, material)
+	if voxel_preview:
+		var far_material := ShaderMaterial.new()
+		var shader := Shader.new()
+		shader.code = "shader_type spatial; varying vec3 world_pos; void vertex(){world_pos=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){if(distance(world_pos.xz,CAMERA_POSITION_WORLD.xz)<60.0){discard;} ALBEDO=COLOR.rgb; ROUGHNESS=0.98;}"
+		far_material.shader = shader
+		mesh.surface_set_material(0, far_material)
 
 	terrain_body = StaticBody3D.new()
 	terrain_body.name = "WorldTerrain"
@@ -141,12 +148,16 @@ func _build_world_terrain() -> void:
 	var visual := MeshInstance3D.new()
 	visual.name = "TerrainMesh"
 	visual.mesh = mesh
+	if voxel_preview:
+		visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	terrain_body.add_child(visual)
 
 	var collision := CollisionShape3D.new()
 	collision.name = "TerrainCollision"
 	collision.shape = mesh.create_trimesh_shape()
 	terrain_body.add_child(collision)
+	if voxel_preview:
+		collision.disabled = true
 
 	add_child(terrain_body)
 

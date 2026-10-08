@@ -7,6 +7,10 @@ const DEFAULT_SAVE_PATH := "user://v013_terrain_slice.json"
 
 var save_path := DEFAULT_SAVE_PATH
 var world_seed := DEFAULT_WORLD_SEED
+var generator_version := GENERATOR_VERSION
+var deferred_saves := false
+var save_pending := false
+var save_timer := 0.0
 var state: Dictionary = {}
 
 func configure(path_override := "", seed_override := DEFAULT_WORLD_SEED) -> void:
@@ -31,7 +35,7 @@ func load_state() -> void:
 	if int(parsed.get("schema_version", -1)) != SCHEMA_VERSION:
 		push_warning("Terrain slice save schema mismatch; using defaults")
 		return
-	if int(parsed.get("generator_version", -1)) != GENERATOR_VERSION:
+	if int(parsed.get("generator_version", -1)) != generator_version:
 		push_warning("Terrain slice generator version mismatch; using defaults")
 		return
 	if int(parsed.get("world_seed", -1)) != world_seed:
@@ -48,14 +52,33 @@ func set_voxel_delta(pos: Vector3i, value: int) -> void:
 	var edits: Dictionary = state.get("edits", {})
 	edits[_voxel_key(pos)] = value
 	state["edits"] = edits
-	save_now()
+	_request_save()
 
 func get_voxel_deltas() -> Dictionary:
 	return state.get("edits", {}).duplicate(true)
 
 func set_inventory_snapshot(snapshot: Dictionary) -> void:
 	state["inventory"] = snapshot.duplicate(true)
-	save_now()
+	_request_save()
+
+func _request_save() -> void:
+	if not deferred_saves:
+		save_now()
+		return
+	if not save_pending:
+		save_timer = 0.5
+	save_pending = true
+
+func _process(delta: float) -> void:
+	if not save_pending:
+		return
+	save_timer -= delta
+	if save_timer <= 0.0:
+		save_now()
+
+func _exit_tree() -> void:
+	if save_pending:
+		save_now()
 
 func get_inventory_snapshot() -> Dictionary:
 	return state.get(
@@ -69,6 +92,7 @@ func save_now() -> bool:
 		push_error("Terrain slice save write failed: " + save_path)
 		return false
 	file.store_string(JSON.stringify(state, "\t"))
+	save_pending = false
 	return true
 
 func clear_save() -> void:
@@ -79,7 +103,7 @@ func clear_save() -> void:
 func _default_state() -> Dictionary:
 	return {
 		"schema_version": SCHEMA_VERSION,
-		"generator_version": GENERATOR_VERSION,
+		"generator_version": generator_version,
 		"world_seed": world_seed,
 		"edits": {},
 		"inventory": {"stone": 0, "stone_brick": 0, "trail_beacon": 0},
