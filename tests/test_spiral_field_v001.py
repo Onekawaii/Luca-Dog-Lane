@@ -32,7 +32,7 @@ class SpiralFieldV02Contracts(unittest.TestCase):
 
     def test_desktop_and_debug_ui_are_separated(self):
         hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
-        self.assertIn('mobile_ui = OS.has_feature("mobile")', hud)
+        self.assertIn('mobile_ui = _is_mobile_platform()', hud)
         self.assertIn('event.keycode == KEY_F3', hud)
         self.assertIn('spawn_button.visible = developer_ui', hud)
         self.assertIn('move_base.visible = mobile_ui', hud)
@@ -56,6 +56,11 @@ class SpiralFieldV02Contracts(unittest.TestCase):
             "ProceduralSpiralInfection", "pressure()", "player_status_text",
         ):
             self.assertIn(token, director)
+
+    def test_spiral_landmarks_keep_camera_standoff(self):
+        director = (ROOT / "scripts" / "systems" / "SpiralWorldDirector.gd").read_text(encoding="utf-8")
+        self.assertIn("const SPIRAL_STANDOFF_RADIUS := 7.5", director)
+        self.assertIn("shape.radius = SPIRAL_STANDOFF_RADIUS", director)
 
     def test_world_state_drives_environment(self):
         game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
@@ -82,6 +87,12 @@ class SpiralFieldV02Contracts(unittest.TestCase):
         self.assertIn("RENDERER_READY", game)
         self.assertIn("get_current_rendering_method", game)
         self.assertIn("get_current_rendering_driver_name", game)
+
+    def test_mobile_hud_recognizes_authoritative_export_tags(self):
+        hud = (ROOT / "scripts" / "HUD.gd").read_text(encoding="utf-8")
+        self.assertIn('OS.has_feature("android")', hud)
+        self.assertIn('OS.has_feature("ios")', hud)
+        self.assertIn('OS.has_feature("mobile")', hud)
 
     def test_luca_open_world_substrate_remains_present(self):
         game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")

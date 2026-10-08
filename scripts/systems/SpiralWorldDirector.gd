@@ -6,6 +6,7 @@ const LEGACY_SAVE_PATH := "user://spiral_field_state_v1.json"
 const WITNESS_POS := Vector3(-155.0, 0.0, -132.0)
 const WAIL_POS := Vector3(176.0, 0.0, 148.0)
 const TABBY_POS := Vector3(54.0, 0.0, -42.0)
+const SPIRAL_STANDOFF_RADIUS := 7.5
 
 var game: Node
 var player: CharacterBody3D
@@ -221,7 +222,9 @@ func _spawn_spiral_site(site_id: String, base: Vector3, color: Color, witnessing
 
 	var collision := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
-	shape.radius = 5.5
+	# The outer ring reaches roughly 5.1 m. Leave enough clearance for the
+	# first-person camera instead of letting the glowing torus engulf the view.
+	shape.radius = SPIRAL_STANDOFF_RADIUS
 	shape.height = 4.0
 	collision.shape = shape
 	body.add_child(collision)

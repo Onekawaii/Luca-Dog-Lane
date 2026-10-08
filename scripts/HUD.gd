@@ -42,7 +42,7 @@ var interactive_controls: Array[Control] = []
 
 func _ready() -> void:
 	layer = 20
-	mobile_ui = OS.has_feature("mobile")
+	mobile_ui = _is_mobile_platform()
 	developer_ui = OS.get_environment("SPIRAL_DEV_UI") == "1"
 
 	root = Control.new()
@@ -69,6 +69,15 @@ func _ready() -> void:
 		"Find the two Spirals. E interacts." if not mobile_ui
 		else "Find the two Spirals // drag RIGHT side to look",
 		2.8
+	)
+
+func _is_mobile_platform() -> bool:
+	# Android and iOS are authoritative export tags. Keep the broader mobile
+	# tag as a compatibility fallback for editor/device configurations that add it.
+	return (
+		OS.has_feature("android")
+		or OS.has_feature("ios")
+		or OS.has_feature("mobile")
 	)
 
 func _build_header() -> void:

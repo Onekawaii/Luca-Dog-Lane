@@ -265,6 +265,13 @@ func _run() -> void:
 		else:
 			_fail("buggy four-view camera rig missing or driver inactive")
 
+		# The driver eye must remain outside the cab mesh. The previous y=1.78,
+		# z=-0.42 placement sat inside the cab and painted most of the viewport blue.
+		if driver_cam != null and driver_cam.position.y >= 2.30 and driver_cam.position.z <= -0.60:
+			_pass("buggy driver camera clears cab geometry")
+		else:
+			_fail("buggy driver camera still intersects cab geometry")
+
 		var mode := str(buggy.call("cycle_camera"))
 		if mode == "CHASE" and chase_cam.current and chase_arm.spring_length >= 7.0:
 			_pass("buggy switches to collision-safe chase camera")

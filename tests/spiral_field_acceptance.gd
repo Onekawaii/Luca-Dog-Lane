@@ -86,6 +86,49 @@ func _run() -> void:
 	else:
 		_fail("player or Tabby'tulhu missing for contextual raycast test")
 
+	# Reproduce the recording's Spiral engulfment path: approach under normal
+	# collision, prove the landmark stops the camera outside its outer rings,
+	# and prove USE still reaches the encounter from that stand-off distance.
+	if player != null and witness != null:
+		var witness_collision: CollisionShape3D = null
+		var witness_collisions := witness.find_children("*", "CollisionShape3D", false, false)
+		if not witness_collisions.is_empty():
+			witness_collision = witness_collisions[0] as CollisionShape3D
+		var witness_shape: CylinderShape3D = null
+		if witness_collision != null:
+			witness_shape = witness_collision.shape as CylinderShape3D
+		player.global_position = witness.global_position + Vector3(0.0, 0.0, 9.0)
+		player.rotation = Vector3.ZERO
+		player.set("yaw", 0.0)
+		var pivot = player.get("pivot") as Node3D
+		if pivot != null:
+			pivot.rotation.x = 0.0
+		player.call("set_touch_move", Vector2(0.0, -1.0))
+		for _i in range(90):
+			await physics_frame
+		player.call("set_touch_move", Vector2.ZERO)
+		var planar_delta: Vector3 = player.global_position - witness.global_position
+		planar_delta.y = 0.0
+		var look_target := Vector3(witness.global_position.x, player.global_position.y, witness.global_position.z)
+		player.look_at(look_target, Vector3.UP)
+		player.set("yaw", player.rotation.y)
+		var stand_off_ok: bool = (
+			witness_shape != null
+			and witness_shape.radius >= 7.5
+			and planar_delta.length() >= 7.75
+		)
+		var approach_hit: Dictionary = player.call("_raycast", 9.5)
+		var interaction_reaches: bool = approach_hit.get("collider") == witness
+		if stand_off_ok and interaction_reaches:
+			_pass("Spiral collision preserves camera stand-off and interaction reach")
+		else:
+			_fail(
+				"Spiral stand-off or retained interaction reach failed: distance=%s radius=%s hit=%s"
+				% [planar_delta.length(), witness_shape.radius if witness_shape != null else -1.0, approach_hit.get("collider")]
+			)
+	else:
+		_fail("player or Witnessing Spiral missing for stand-off test")
+
 	var tabby_options: Array = director.call("get_encounter_options", tabby)
 	if tabby_options.size() == 4 and str(tabby_options[0].get("action")) == "talk" and str(tabby_options[3].get("action")) == "mercy":
 		_pass("Tabby'tulhu exposes contextual TALK/PET/FEED/MERCY")

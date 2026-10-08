@@ -19,7 +19,17 @@ if (!(Test-Path $Keystore)) { throw "Debug keystore missing: $Keystore" }
 $env:JAVA_HOME = $JavaHome
 $env:ANDROID_HOME = $Sdk
 $env:ANDROID_SDK_ROOT = $Sdk
-$env:PATH = "$(Join-Path $JavaHome 'bin');$env:PATH"
+$System32 = Join-Path $env:SystemRoot "System32"
+$env:PATH = "$(Join-Path $JavaHome 'bin');$System32;$env:PATH"
+$JavaExecutable = Get-Item (Join-Path $JavaHome "bin\java.exe")
+$JavaProductVersion = $JavaExecutable.VersionInfo.ProductVersion
+if ($JavaProductVersion -notmatch '^17\.') {
+    throw "Pinned JDK 17 validation failed: $JavaProductVersion"
+}
+# Current apkanalyzer.bat shells through findstr for a redundant version check;
+# that helper is unavailable in some isolated build environments. We validate
+# the pinned JDK directly above, then bypass only apkanalyzer's wrapper check.
+$env:SKIP_JDK_VERSION_CHECK = "1"
 
 New-Item -ItemType Directory -Force -Path $WinDir, $AndroidDir | Out-Null
 Remove-Item $Win, $Apk, "$Win.sha256", "$Apk.sha256" -ErrorAction SilentlyContinue
@@ -86,8 +96,8 @@ foreach ($Dir in $BuildTools) {
     }
 }
 if (!$Signer) { throw "No working apksigner found" }
-$ApkAnalyzer = Join-Path $Sdk "cmdline-tools\latest\bin\apkanalyzer.bat"
-if (!(Test-Path $ApkAnalyzer)) { throw "apkanalyzer.bat not found: $ApkAnalyzer" }
+$ApkAnalyzerJar = Join-Path $Sdk "cmdline-tools\latest\lib\apkanalyzer-classpath.jar"
+if (!(Test-Path $ApkAnalyzerJar)) { throw "apkanalyzer classpath not found: $ApkAnalyzerJar" }
 
 & $Signer verify --verbose $Apk *> $null
 if ($LASTEXITCODE -ne 0) {
@@ -98,11 +108,12 @@ $VerifyOutput = & $Signer verify --verbose --print-certs $Apk 2>&1
 if ($LASTEXITCODE -ne 0) { $VerifyOutput | Write-Host; throw "APK signature verify failed" }
 $VerifyOutput | Select-Object -First 10 | ForEach-Object { Write-Host $_ }
 
-$PackageId = (& $ApkAnalyzer manifest application-id $Apk).Trim()
+$AnalyzerMain = "com.android.tools.apk.analyzer.ApkAnalyzerCli"
+$PackageId = (& $JavaExecutable.FullName -classpath $ApkAnalyzerJar $AnalyzerMain manifest application-id $Apk).Trim()
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer application-id failed" }
-$VersionCode = (& $ApkAnalyzer manifest version-code $Apk).Trim()
+$VersionCode = (& $JavaExecutable.FullName -classpath $ApkAnalyzerJar $AnalyzerMain manifest version-code $Apk).Trim()
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-code failed" }
-$VersionName = (& $ApkAnalyzer manifest version-name $Apk).Trim()
+$VersionName = (& $JavaExecutable.FullName -classpath $ApkAnalyzerJar $AnalyzerMain manifest version-name $Apk).Trim()
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-name failed" }
 Write-Host "package=$PackageId versionCode=$VersionCode versionName=$VersionName"
 if ($PackageId -ne "com.onekawaii.spiralfield") { throw "Wrong package ID: $PackageId" }
@@ -136,7 +147,7 @@ $Receipt = [ordered]@{
     git_status = @($Status)
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
     gates = @(
-        "44 Python tests",
+        "46 Python tests",
         "Kimi deterministic acceptance",
         "runtime playability acceptance",
         "v0.16 systems acceptance",

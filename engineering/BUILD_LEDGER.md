@@ -255,3 +255,21 @@ Every entry must contain:
 - **Visual review:** GTX 1650 captures verify anatomical NPC silhouettes, map selector UI, Red Pine Highlands world profile, and physical buggy placement on terrain.
 - **Known limitation:** v0.16 establishes data-driven content authoring and runtime map selection, not a full in-game visual item/tool/map editor. Physical Android v0.16 performance/touch playtest remains pending.
 - **Status:** release candidate pending exact-commit dual-platform export.
+
+---
+
+## ENG-011 — Spiral Field v0.2 Android recording repair pass
+
+- **Date:** 2026-10-08
+- **Branch / base:** `newgame/spiral-field-v0.2-experience`, base HEAD `95f436101f129fdd5ffe7fd4ac0203b6b3259d70`, dirty candidate state.
+- **Evidence:** Frame review of `20261008-1155-33.0674158.mp4` (160.6 s) and `20261008-1200-49.4056543.mp4` (143.0 s), both 1920×1032 at 30 FPS. Full timecoded assessment and reproduction steps are in `engineering/PLAYTEST_REVIEW_2026-10-08.md`.
+- **Observed failures:** Android touch controls absent for both complete recordings; DRIVER camera rendered from inside the buggy cab and left a large blue obstruction; large Spiral torus geometry engulfed the first-person view at interaction distance; actor/terrain close-up occlusion remains observable but requires a separate collision/presentation design or device-state reproduction.
+- **Invariant:** Preserve four vehicle cameras, encounter ray/verbs, save schema, deterministic terrain, map transitions, NPC collision policy, and desktop/debug HUD separation.
+- **Falsifiers:** Static contracts require Android/iOS/mobile platform recognition and a 7.5 m Spiral stand-off; live runtime requires DRIVER camera position above/ahead of the cab envelope; non-headless capture must show an unobstructed DRIVER viewport.
+- **Implementation:** `HUD.gd` recognizes authoritative Android/iOS export tags with the generic mobile tag as fallback. `Buggy.gd` moves the driver eye to `(-0.58, 2.42, -0.72)`. Spiral landmark collision radius increases from 5.5 m to 7.5 m while retaining the 9.5 m interaction ray. The release script validates the pinned JDK 17 directly and bypasses only `apkanalyzer.bat`'s broken `findstr` wrapper check.
+- **Automated verification:** 46/46 Python contracts PASS; Godot 4.7.2 import PASS; Kimi deterministic acceptance PASS; `runtime_playability.gd` PASS including new cab-clearance gate; `v016_systems_acceptance.gd` PASS; `spiral_field_acceptance.gd` PASS; exported Windows TerrainSlice/VoxelTool probe PASS.
+- **Visual verification:** Non-headless OpenGL 3.3 render on NVIDIA GTX 1650 saved `dist/verification/driver-camera.png`; inspected frame shows no buggy chassis/hood occluding the DRIVER view.
+- **Release verification:** `BUILD_SPIRAL_FIELD.ps1` returned RC=0. Android APK signature schemes v2/v3 verify. Manifest is `com.onekawaii.spiralfield`, versionCode 2, versionName 0.2.0. APK contains Voxel Tools libraries for arm64-v8a and x86_64.
+- **Artifacts:** Windows EXE `dist/windows/Spiral-Field-v0.2.0-windows.exe`, SHA-256 `e1aa04cdcfe8f2dd60420c9ccecba8beb52f43e3969ea8855219a2a46fabc836`; Android APK `dist/android/Spiral-Field-v0.2.0-android.apk`, SHA-256 `d30f5d74493ea5fa38c80825352cdc630aa4af4097abb41a42f51e1d8309892a`; receipt `dist/RELEASE_RECEIPT_Spiral-Field-v0.2.0.json`; build log `dist/full-build-latest.log`.
+- **Demolition / blockers:** Android Debug Bridge sees only `emulator-5554 offline`; APK install, Android runtime input verification, physical-device performance, and repaired on-device screenshots are therefore not claimed. Recording audio was not transcribed because the local transcription API credential is absent. Close-up non-blocking actors and ambiguous steep-terrain occlusion remain documented, unchanged limitations.
+- **Status:** PARTIAL — desktop/runtime/export/signature gates pass; physical Android acceptance remains blocked by the offline device.

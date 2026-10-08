@@ -167,7 +167,9 @@ func _update_camera_fov() -> void:
 func _build_cameras() -> void:
 	driver_camera = Camera3D.new()
 	driver_camera.name = "DriverCamera"
-	driver_camera.position = Vector3(-0.58, 1.78, -0.42)
+	# The cab reaches y=1.79 and z=-0.49. Keep the driver eye above and ahead
+	# of that volume so the chassis cannot cover the Android viewport.
+	driver_camera.position = Vector3(-0.58, 2.42, -0.72)
 	driver_camera.fov = 82.0
 	driver_camera.near = 0.08
 	add_child(driver_camera)
