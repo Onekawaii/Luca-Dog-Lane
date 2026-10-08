@@ -136,6 +136,9 @@ func run() -> void:
 	click(button_named(menu, "Back to Game").get_global_rect().get_center())
 	await get_tree().process_frame
 	check(not get_tree().paused and not menu.is_open() and player.riding == buggy and buggy.camera_mode == 1, "GUI resume preserves car/current view without leaked click")
+	var old_orbit: float = buggy.chase_arm.rotation_degrees.y
+	player.add_look_delta(Vector2(10, 0))
+	check(absf(buggy.chase_arm.rotation_degrees.y - (old_orbit - 1.2 * player.look_sensitivity / 0.0032)) < 0.001, "options sensitivity reaches actual chase camera orbit")
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	click(hud.view_button.get_global_rect().get_center())
 	check(buggy.camera_mode == 2, "PC VIEW button actually cycles camera")

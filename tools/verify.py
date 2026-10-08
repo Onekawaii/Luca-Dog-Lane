@@ -75,7 +75,7 @@ def check_sandbox_contract() -> None:
     game = (ROOT / "scripts" / "Game.gd").read_text(encoding="utf-8")
     tools_doc = json.loads((ROOT / "data" / "tools_v016.json").read_text(encoding="utf-8"))
     actions = {spec["action"] for spec in tools_doc["tools"].values()}
-    for token in ("DEVELOPER SPAWN", "NOCLIP", "TOOL", "FIELD TRANSITIONS", "open_encounter"):
+    for token in ("DEVELOPER SPAWN", "NOCLIP", "TOOL", "WORLD MAP & TRANSITIONS", "open_encounter", "get_map_options", "request_map"):
         if token not in hud:
             fail(f"HUD missing {token}")
     for action in ("grab", "remove", "duplicate", "inspect", "strike", "mine", "place", "craft"):

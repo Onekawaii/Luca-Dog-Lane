@@ -51,7 +51,8 @@ class ContinuousTerrainPassTests(unittest.TestCase):
         self.assertIn('chase_arm.name = "ChaseSpringArm"', buggy)
         self.assertIn("chase_arm.spring_length = 7.4", buggy)
         self.assertIn("func add_camera_look", buggy)
-        self.assertIn('riding.call("add_camera_look", delta_pixels)', player)
+        self.assertIn('riding.call("add_camera_look", delta_pixels, look_sensitivity / 0.0032)', player)
+        self.assertIn('var sensitivity := 0.12 * sensitivity_scale', buggy)
 
     def test_underworld_recovery_is_tightened(self):
         player = (ROOT / "scripts" / "Player.gd").read_text(encoding="utf-8")

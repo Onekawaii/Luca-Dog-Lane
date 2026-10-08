@@ -261,9 +261,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		select_hotbar_slot(9)
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
 		toggle_lantern()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_Q:
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q:
 		cycle_tool()
-	elif event is InputEventKey and event.pressed and event.keycode == KEY_V:
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_V:
 		# Noclip is a universal PC navigation/debugging shortcut, not a hidden developer unlock.
 		toggle_noclip()
 	elif event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_R or event.keycode == KEY_F5) and riding != null:
