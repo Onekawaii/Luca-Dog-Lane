@@ -12,6 +12,7 @@ const MAX_TOOL_DISTANCE := 8.0
 const REPLAY_INTERVAL := 0.75
 
 var player: CharacterBody3D
+var macro_terrain: MacroTerrain
 var hud: CanvasLayer
 var save_path_override := ""
 var world_seed := 6060
@@ -35,6 +36,8 @@ func _ready() -> void:
 		push_error("ENG-003 terrain slice requires staged Voxel Tools")
 		return
 	_setup_persistence()
+	if world_voxels and macro_terrain != null:
+		macro_terrain.sync_voxel_edit_columns(persistence.call("get_voxel_deltas"))
 	_setup_inventory()
 	_setup_terrain()
 	_setup_viewer()
@@ -80,6 +83,8 @@ func mine_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOOL
 
 	voxel_tool.call("set_voxel", pos, AIR)
 	persistence.call("set_voxel_delta", pos, AIR)
+	if macro_terrain != null:
+		macro_terrain.mark_voxel_edit(pos)
 	var drop_id := "grass_block" if current == SURFACE else ("stone_brick" if current == BRICK else "stone")
 	_spawn_resource_pickup(pos, drop_id, 1)
 	return "MINED // " + drop_id.replace("_", " ") + " dropped"
@@ -109,6 +114,8 @@ func place_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOO
 	var voxel_id := STONE if selected_place_item == "stone" else (SURFACE if selected_place_item == "grass_block" else BRICK)
 	voxel_tool.call("set_voxel", pos, voxel_id)
 	persistence.call("set_voxel_delta", pos, voxel_id)
+	if macro_terrain != null:
+		macro_terrain.mark_voxel_edit(pos)
 	inventory.call("consume", selected_place_item, 1)
 	return "PLACED " + selected_place_item.replace("_", " ").to_upper() + " // " + str(inventory.call("summary"))
 

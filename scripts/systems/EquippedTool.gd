@@ -5,7 +5,7 @@ var tool_id := ""
 var swing := 0.0
 var icon: ImageTexture
 
-func equip(id: String) -> void:
+func equip(id: String, selected_material := "stone_brick") -> void:
 	tool_id = id
 	for child in get_children():
 		remove_child(child)
@@ -24,7 +24,12 @@ func equip(id: String) -> void:
 			_piece("WoodHandle", Vector3.ZERO, Vector3(0.055, 0.44, 0.055), wood)
 			_piece("PickHead", Vector3(0, 0.23, 0), Vector3(0.43, 0.06, 0.065), steel, true)
 		"place":
-			_piece("StoneBrick", Vector3(0, 0.05, 0), Vector3(0.24, 0.18, 0.16), Color(0.49, 0.46, 0.40))
+			var block_color := Color(0.55, 0.53, 0.49)
+			if selected_material == "grass_block":
+				block_color = Color(0.30, 0.48, 0.25)
+			elif selected_material == "stone":
+				block_color = Color(0.39, 0.42, 0.40)
+			_piece("Place_" + selected_material, Vector3(0, 0.05, 0), Vector3(0.24, 0.18, 0.16), block_color)
 		"inspect":
 			_piece("Scanner", Vector3(0, 0.06, 0), Vector3(0.16, 0.24, 0.06), steel, true)
 			_piece("Screen", Vector3(0, 0.10, 0.034), Vector3(0.12, 0.12, 0.01), Color(0.10, 0.72, 0.63))
@@ -59,8 +64,8 @@ func _piece(label: String, at: Vector3, size: Vector3, color: Color, metallic :=
 	part.mesh = mesh
 	part.position = at
 	var kind := "metal" if metallic else ("wood" if label == "WoodHandle" or label == "Stamp" else "fabric")
-	if label == "StoneBrick":
-		kind = "brick"
+	if label.begins_with("Place_"):
+		kind = "grass" if label == "Place_grass_block" else ("brick" if label == "Place_stone_brick" else "stone")
 	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make(kind, color)
 	material.metallic = 0.85 if metallic else 0.0
 	material.roughness = 0.35 if metallic else 0.82

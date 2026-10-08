@@ -510,6 +510,7 @@ func _spawn_terrain_slice() -> void:
 	node.set("world_seed", world_seed)
 	node.set("world_voxels", uses_world_voxels())
 	node.set("height_scale", terrain_scale)
+	node.set("macro_terrain", macro_terrain)
 	add_child(node)
 	terrain_slice = node
 

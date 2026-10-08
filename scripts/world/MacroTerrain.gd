@@ -10,6 +10,52 @@ var height_scale := 1.0
 var terrain_body: StaticBody3D
 var voxel_preview := false
 
+# Hide the smooth distance terrain only where a player can edit or has edited.
+# A compact 2D column mask preserves all persistent edits without per-pixel loops.
+const EDIT_MASK_SIDE := 960
+var edit_mask_image: Image
+var edit_mask_texture: ImageTexture
+var preview_shader: ShaderMaterial
+var edit_mask_dirty := false
+var edit_mask_timer := 0.0
+
+func _process(delta: float) -> void:
+	if not edit_mask_dirty or edit_mask_texture == null:
+		return
+	edit_mask_timer -= delta
+	if edit_mask_timer <= 0.0:
+		edit_mask_texture.update(edit_mask_image)
+		edit_mask_timer = 0.15
+		edit_mask_dirty = false
+
+func sync_voxel_edit_columns(edits: Dictionary) -> void:
+	if edit_mask_image == null:
+		return
+	edit_mask_image.fill(Color.BLACK)
+	for key in edits:
+		var parts := str(key).split(",")
+		if parts.size() == 3:
+			_stamp_voxel_edit(Vector3i(int(parts[0]), int(parts[1]), int(parts[2])))
+	edit_mask_texture.update(edit_mask_image)
+	edit_mask_dirty = false
+
+func mark_voxel_edit(pos: Vector3i) -> void:
+	if edit_mask_image == null:
+		return
+	_stamp_voxel_edit(pos)
+	edit_mask_dirty = true
+
+func _stamp_voxel_edit(pos: Vector3i) -> void:
+	var x := pos.x + EDIT_MASK_SIDE / 2
+	var z := pos.z + EDIT_MASK_SIDE / 2
+	# Two-column margin hides smooth triangles which would otherwise cap a mined cavity.
+	for dz in range(-2, 3):
+		for dx in range(-2, 3):
+			var px := x + dx
+			var pz := z + dz
+			if px >= 0 and px < EDIT_MASK_SIDE and pz >= 0 and pz < EDIT_MASK_SIDE:
+				edit_mask_image.set_pixel(px, pz, Color.WHITE)
+
 func _ready() -> void:
 	if world_plan == null:
 		world_plan = KimiWorldPlan.new(6060)
@@ -133,11 +179,15 @@ func _build_world_terrain() -> void:
 	material.roughness = 0.98
 	mesh.surface_set_material(0, material)
 	if voxel_preview:
-		var far_material := ShaderMaterial.new()
+		edit_mask_image = Image.create(EDIT_MASK_SIDE, EDIT_MASK_SIDE, false, Image.FORMAT_L8)
+		edit_mask_image.fill(Color.BLACK)
+		edit_mask_texture = ImageTexture.create_from_image(edit_mask_image)
+		preview_shader = ShaderMaterial.new()
 		var shader := Shader.new()
-		shader.code = "shader_type spatial; varying vec3 world_pos; void vertex(){world_pos=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){if(distance(world_pos.xz,CAMERA_POSITION_WORLD.xz)<60.0){discard;} ALBEDO=COLOR.rgb; ROUGHNESS=0.98;}"
-		far_material.shader = shader
-		mesh.surface_set_material(0, far_material)
+		shader.code = "shader_type spatial; render_mode shadows_disabled; varying vec3 world_pos; uniform sampler2D edited_columns : filter_nearest, repeat_disable; void vertex(){world_pos=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){vec2 uv=(world_pos.xz+vec2(480.0))/960.0; if(texture(edited_columns,clamp(uv,vec2(0.0),vec2(1.0))).r>0.5){discard;} ALBEDO=COLOR.rgb; ROUGHNESS=0.98;}"
+		preview_shader.shader = shader
+		preview_shader.set_shader_parameter("edited_columns", edit_mask_texture)
+		mesh.surface_set_material(0, preview_shader)
 
 	terrain_body = StaticBody3D.new()
 	terrain_body.name = "WorldTerrain"

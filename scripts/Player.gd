@@ -235,8 +235,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_Q:
 		cycle_tool()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_V:
-		if hud != null and hud.has_method("developer_mode_enabled") and bool(hud.call("developer_mode_enabled")):
-			toggle_noclip()
+		# Noclip is a universal PC navigation/debugging shortcut, not a hidden developer unlock.
+		toggle_noclip()
 	elif event is InputEventKey and event.pressed and event.keycode == KEY_R and riding != null:
 		toggle_vehicle_view()
 
@@ -289,11 +289,15 @@ func _current_tool_definition() -> Dictionary:
 
 func _sync_tool_label() -> void:
 	if equipped_tool != null:
-		equipped_tool.call("equip", _current_tool_id())
+		var material := str(game.call("get_selected_build_material")) if game != null else "stone_brick"
+		equipped_tool.call("equip", _current_tool_id(), material)
 	if hud == null:
 		return
 	var definition := _current_tool_definition()
-	hud.call("set_tool_mode", str(definition.get("label", _current_tool_id().to_upper())))
+	var label_text := str(definition.get("label", _current_tool_id().to_upper()))
+	if _current_tool_id() == "place" and game != null:
+		label_text += " // " + str(game.call("get_selected_build_material")).replace("_", " ").to_upper()
+	hud.call("set_tool_mode", label_text)
 	if hud.has_method("set_tool_icon"):
 		hud.call("set_tool_icon", equipped_tool.get("icon"))
 

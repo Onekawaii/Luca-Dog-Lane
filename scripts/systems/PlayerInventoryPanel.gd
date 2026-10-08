@@ -80,6 +80,13 @@ func refresh() -> void:
 		var item_id := str(entry)
 		var spec: Dictionary = items[item_id]
 		var amount := int(inventory.get(item_id, 0))
+		var kind := str(spec.get("kind", "resource"))
+		# The field hammer is an unlimited equipped tool, not a zero-count resource.
+		if kind == "tool_item":
+			continue
+		# Future utility content is not presented as obtainable until it really is.
+		if kind == "utility" and amount <= 0:
+			continue
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 12)
 		stock_list.add_child(row)
