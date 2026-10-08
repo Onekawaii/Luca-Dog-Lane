@@ -121,6 +121,11 @@ APK signature verification passed v2 and v3, one signer. APK manifest reports
 native libraries are present. This is packaging evidence, not Android playtesting.
 Original v0.2 Windows and Android release hashes were reconfirmed unchanged.
 
-Status: PARTIAL pending final independent judgment and Android device acceptance.
+Final independent Demander review: qualified development candidate, not completed
+release. Latest captures and reconstructed-world/runtime receipts independently
+accepted; car scar contrast remains weak. No further certain implementation
+blocker established. Android and stress qualification remain outstanding.
+
+Status: PARTIAL pending Android device acceptance and remaining scope below.
 Full object voxelization, realistic animal art, literal frame-by-frame recording
 review and streaming/edit stress qualification remain incomplete. No completed-release claim.
