@@ -66,30 +66,53 @@ func set_hud(hud_node: CanvasLayer) -> void:
 		inventory.connect("changed", callback)
 	_on_inventory_changed(str(inventory.call("summary")))
 
-func mine_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOOL_DISTANCE) -> String:
+func mine_from_ray(
+	origin: Vector3,
+	direction: Vector3,
+	max_distance := MAX_TOOL_DISTANCE,
+	brush_radius := 0.75
+) -> String:
 	if voxel_tool == null:
 		return "Voxel terrain unavailable"
 	var result = voxel_tool.call("raycast", origin, direction.normalized(), max_distance)
 	if result == null:
 		return "No mineable voxel in reach"
 
-	var pos: Vector3i = result.call("get_position")
-	if not _is_editable(pos):
+	var center: Vector3i = result.call("get_position")
+	if not _is_editable(center):
 		return "Terrain chunk is still streaming"
+	var recovered := {"stone": 0, "grass_block": 0, "stone_brick": 0}
+	var changed := 0
+	for offset in _brush_offsets(brush_radius):
+		var pos := center + offset
+		if not _is_editable(pos):
+			continue
+		var current := int(voxel_tool.call("get_voxel", pos))
+		if current == AIR:
+			continue
+		voxel_tool.call("set_voxel", pos, AIR)
+		persistence.call("set_voxel_delta", pos, AIR)
+		if macro_terrain != null:
+			macro_terrain.mark_voxel_edit(pos)
+		var drop_id := "grass_block" if current == SURFACE else ("stone_brick" if current == BRICK else "stone")
+		recovered[drop_id] = int(recovered[drop_id]) + 1
+		changed += 1
+	if changed == 0:
+		return "No mineable terrain inside brush"
+	for item_id in recovered:
+		var amount := int(recovered[item_id])
+		if amount > 0:
+			_spawn_resource_pickup(center, str(item_id), amount)
+			if changed == 1:
+				return "MINED // " + str(item_id).replace("_", " ") + " dropped"
+	return "SCULPTED // %d VOXELS // resources dropped" % changed
 
-	var current := int(voxel_tool.call("get_voxel", pos))
-	if current == AIR:
-		return "That voxel is already air"
-
-	voxel_tool.call("set_voxel", pos, AIR)
-	persistence.call("set_voxel_delta", pos, AIR)
-	if macro_terrain != null:
-		macro_terrain.mark_voxel_edit(pos)
-	var drop_id := "grass_block" if current == SURFACE else ("stone_brick" if current == BRICK else "stone")
-	_spawn_resource_pickup(pos, drop_id, 1)
-	return "MINED // " + drop_id.replace("_", " ") + " dropped"
-
-func place_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOOL_DISTANCE) -> String:
+func place_from_ray(
+	origin: Vector3,
+	direction: Vector3,
+	max_distance := MAX_TOOL_DISTANCE,
+	brush_radius := 0.75
+) -> String:
 	if voxel_tool == null:
 		return "Voxel terrain unavailable"
 	if int(inventory.call("count_item", selected_place_item)) < 1:
@@ -99,25 +122,53 @@ func place_from_ray(origin: Vector3, direction: Vector3, max_distance := MAX_TOO
 	if result == null:
 		return "Aim at voxel terrain to place"
 
-	var pos: Vector3i = result.call("get_previous_position")
-	if not _inside_slice(pos):
+	var center: Vector3i = result.call("get_previous_position")
+	if not _inside_slice(center):
 		return "Placement outside the terrain slice"
-	if not _is_editable(pos):
+	if not _is_editable(center):
 		return "Terrain chunk is still streaming"
-	if int(voxel_tool.call("get_voxel", pos)) != AIR:
-		return "Placement cell is occupied"
-
-	var world_center := _voxel_world_center(pos)
-	if player != null and world_center.distance_to(player.global_position + Vector3.UP * 0.9) < 1.35:
-		return "Placement rejected // player overlap"
-
+	var available := int(inventory.call("count_item", selected_place_item))
 	var voxel_id := STONE if selected_place_item == "stone" else (SURFACE if selected_place_item == "grass_block" else BRICK)
-	voxel_tool.call("set_voxel", pos, voxel_id)
-	persistence.call("set_voxel_delta", pos, voxel_id)
-	if macro_terrain != null:
-		macro_terrain.mark_voxel_edit(pos)
-	inventory.call("consume", selected_place_item, 1)
-	return "PLACED " + selected_place_item.replace("_", " ").to_upper() + " // " + str(inventory.call("summary"))
+	var placed := 0
+	var rejected_for_overlap := false
+	for offset in _brush_offsets(brush_radius):
+		if placed >= available:
+			break
+		var pos := center + offset
+		if not _is_editable(pos) or int(voxel_tool.call("get_voxel", pos)) != AIR:
+			continue
+		var world_center := _voxel_world_center(pos)
+		if player != null and world_center.distance_to(player.global_position + Vector3.UP * 0.9) < 1.45:
+			rejected_for_overlap = true
+			continue
+		voxel_tool.call("set_voxel", pos, voxel_id)
+		persistence.call("set_voxel_delta", pos, voxel_id)
+		if macro_terrain != null:
+			macro_terrain.mark_voxel_edit(pos)
+		placed += 1
+	if placed == 0:
+		return "Placement rejected // player overlap" if rejected_for_overlap else "No empty terrain inside brush"
+	inventory.call("consume", selected_place_item, placed)
+	if placed == 1:
+		return "PLACED " + selected_place_item.replace("_", " ").to_upper() + " // " + str(inventory.call("summary"))
+	return "FORMED %d %s // %s" % [placed, selected_place_item.replace("_", " ").to_upper(), str(inventory.call("summary"))]
+
+func _brush_offsets(radius: float) -> Array[Vector3i]:
+	var bounded := clampf(radius, 0.5, 2.0)
+	var extent := ceili(bounded)
+	var weighted: Array[Dictionary] = []
+	for z in range(-extent, extent + 1):
+		for y in range(-extent, extent + 1):
+			for x in range(-extent, extent + 1):
+				var offset := Vector3i(x, y, z)
+				var distance := Vector3(offset).length()
+				if distance <= bounded + 0.001:
+					weighted.append({"offset": offset, "distance": distance})
+	weighted.sort_custom(func(a: Dictionary, b: Dictionary): return float(a.distance) < float(b.distance))
+	var result: Array[Vector3i] = []
+	for entry in weighted:
+		result.append(entry.offset)
+	return result
 
 func select_place_item(item_id: String) -> bool:
 	if item_id not in ["stone", "grass_block", "stone_brick"]:

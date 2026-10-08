@@ -9,7 +9,7 @@ var summary_label: Label
 
 func _ready() -> void:
 	name = "InventoryPanel"
-	size = Vector2(636, 504)
+	size = Vector2(540, 420)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var shell := StyleBoxFlat.new()
 	shell.bg_color = Color(0.035, 0.032, 0.048, 0.975)
@@ -18,23 +18,23 @@ func _ready() -> void:
 	shell.set_corner_radius_all(14)
 	add_theme_stylebox_override("panel", shell)
 
-	_label(self, "FIELD SATCHEL", Vector2(24, 16), Vector2(570, 38), 26, Color(1, 0.88, 0.98))
-	_label(self, "FOUND MATERIALS  /  RECIPES  /  CRAFTING", Vector2(24, 54), Vector2(570, 26), 13, Color(0.7, 0.64, 0.76))
-	summary_label = _label(self, "", Vector2(24, 82), Vector2(590, 28), 13, Color(0.92, 0.79, 0.57))
+	_label(self, "FIELD SATCHEL", Vector2(20, 12), Vector2(500, 30), 21, Color(1, 0.88, 0.98))
+	_label(self, "MATERIALS  /  RECIPES  /  CRAFTING", Vector2(20, 42), Vector2(500, 22), 11, Color(0.7, 0.64, 0.76))
+	summary_label = _label(self, "", Vector2(20, 66), Vector2(500, 24), 11, Color(0.92, 0.79, 0.57))
 
 	var scroll := ScrollContainer.new()
-	scroll.position = Vector2(22, 122)
-	scroll.size = Vector2(592, 316)
+	scroll.position = Vector2(18, 98)
+	scroll.size = Vector2(504, 262)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_theme_constant_override("separation", 12)
+	column.add_theme_constant_override("separation", 8)
 	scroll.add_child(column)
 
 	var resources := Label.new()
 	resources.text = "MATERIALS  -  CLOSE INVENTORY TO EQUIP FROM HOTBAR"
-	resources.add_theme_font_size_override("font_size", 14)
+	resources.add_theme_font_size_override("font_size", 11)
 	column.add_child(resources)
 	stock_list = VBoxContainer.new()
 	stock_list.add_theme_constant_override("separation", 6)
@@ -42,16 +42,16 @@ func _ready() -> void:
 
 	var recipes := Label.new()
 	recipes.text = "CRAFTING BENCH  —  RECIPES USE ACTUAL INVENTORY"
-	recipes.add_theme_font_size_override("font_size", 14)
+	recipes.add_theme_font_size_override("font_size", 11)
 	column.add_child(recipes)
 	recipe_list = VBoxContainer.new()
 	recipe_list.add_theme_constant_override("separation", 7)
 	column.add_child(recipe_list)
-	_label(self, "ESC / RETURN = CLOSE   |   RECIPES USE REAL STOCK", Vector2(24, 448), Vector2(430, 33), 13, Color(0.72, 0.65, 0.77))
+	_label(self, "ESC / RETURN = CLOSE", Vector2(20, 372), Vector2(310, 28), 11, Color(0.72, 0.65, 0.77))
 	var close := Button.new()
 	close.text = "RETURN"
-	close.position = Vector2(488, 450)
-	close.size = Vector2(126, 38)
+	close.position = Vector2(410, 370)
+	close.size = Vector2(112, 34)
 	close.pressed.connect(func(): visible = false)
 	add_child(close)
 	refresh()
@@ -97,8 +97,8 @@ func refresh() -> void:
 		row_style.set_corner_radius_all(7)
 		row_style.content_margin_left = 12
 		row_style.content_margin_right = 12
-		row_style.content_margin_top = 7
-		row_style.content_margin_bottom = 7
+		row_style.content_margin_top = 5
+		row_style.content_margin_bottom = 5
 		row.add_theme_stylebox_override("panel", row_style)
 		stock_list.add_child(row)
 		var line := HBoxContainer.new()
@@ -121,7 +121,7 @@ func refresh() -> void:
 		line.add_child(name_label)
 		var qty := Label.new()
 		qty.text = "× %d" % count
-		qty.add_theme_font_size_override("font_size", 19)
+		qty.add_theme_font_size_override("font_size", 15)
 		qty.add_theme_color_override("font_color", Color(1, 0.81, 0.47))
 		line.add_child(qty)
 	var recipe_catalog: Dictionary = game.call("get_recipe_catalog_for_ui")
@@ -140,7 +140,7 @@ func refresh() -> void:
 			if available < need:
 				can_craft = false
 		var button := Button.new()
-		button.custom_minimum_size.y = 46
+		button.custom_minimum_size.y = 38
 		button.text = "MAKE %s   •   %s" % [str(recipe.get("label", recipe_id)).to_upper(), "  |  ".join(requirements)]
 		button.disabled = not can_craft
 		button.pressed.connect(_craft.bind(recipe_id))

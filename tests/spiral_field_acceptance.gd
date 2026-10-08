@@ -195,7 +195,7 @@ func _run() -> void:
 
 	director.call("_save_state")
 	if FileAccess.file_exists(save_v2):
-		_pass("Spiral v2 state persisted to versioned save")
+		_pass("Spiral v3 state persisted to versioned save")
 	else:
 		_fail("Spiral v2 save file missing")
 

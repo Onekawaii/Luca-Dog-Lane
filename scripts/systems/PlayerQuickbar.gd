@@ -37,15 +37,15 @@ func _slot_pressed(index: int) -> void:
 func layout_for_viewport(viewport_size: Vector2) -> void:
 	# Leave independent touch zones clear: move stick <230, USE starts at W-198.
 	var safe_width := maxf(460.0, viewport_size.x - 488.0)
-	var width_per := clampf(floorf((safe_width - 11.0 * 5.0) / 10.0), 42.0, 78.0)
-	var total := width_per * 10.0 + 5.0 * 9.0
+	var width_per := clampf(floorf((safe_width - 9.0 * 4.0) / 10.0), 38.0, 66.0)
+	var total := width_per * 10.0 + 4.0 * 9.0
 	var left := (viewport_size.x - total) * 0.5
-	position = Vector2(left, viewport_size.y - 82.0)
-	size = Vector2(total, 66)
+	position = Vector2(left, viewport_size.y - 62.0)
+	size = Vector2(total, 50)
 	for i in range(buttons.size()):
-		buttons[i].position = Vector2(i * (width_per + 5.0), 0)
-		buttons[i].size = Vector2(width_per, 64)
-		buttons[i].add_theme_font_size_override("font_size", 10 if width_per < 66 else 12)
+		buttons[i].position = Vector2(i * (width_per + 4.0), 0)
+		buttons[i].size = Vector2(width_per, 48)
+		buttons[i].add_theme_font_size_override("font_size", 9 if width_per < 58 else 10)
 
 func _process(delta: float) -> void:
 	refresh_clock -= delta

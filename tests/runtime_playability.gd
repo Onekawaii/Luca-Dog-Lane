@@ -3,6 +3,9 @@ extends SceneTree
 var failures: Array[String] = []
 
 func _initialize() -> void:
+	OS.set_environment("LUCA_V013_SLICE_SAVE_PATH", "user://qa_runtime_playability_%d.json" % Time.get_ticks_usec())
+	OS.set_environment("SPIRAL_STATE_SAVE_PATH", "user://qa_runtime_playability_story_%d.json" % Time.get_ticks_usec())
+	OS.set_environment("SPIRAL_SKIP_TITLE", "1")
 	call_deferred("_run")
 
 func _fail(message: String) -> void:
@@ -22,7 +25,9 @@ func _run() -> void:
 	var world := packed.instantiate()
 	root.add_child(world)
 
-	for i in range(36):
+	# The finer 8 m terrain sample grid performs more deterministic startup work.
+	# Wait for streamed collision instead of racing the first generated block.
+	for i in range(120):
 		await physics_frame
 
 	var player := world.get_node_or_null("Player") as CharacterBody3D
@@ -300,8 +305,7 @@ func _run() -> void:
 		player.call("enter_vehicle", buggy)
 		await process_frame
 		var view_button = hud.get("view_button") as Button
-		var mobile_ui := bool(hud.get("mobile_ui"))
-		var view_visibility_ok: bool = view_button.visible if mobile_ui else not view_button.visible
+		var view_visibility_ok: bool = view_button.visible
 		if player_camera != null and not player_camera.current and driver_cam.current and view_visibility_ok:
 			_pass("entering buggy activates driver camera with platform-appropriate HUD")
 		else:
@@ -333,7 +337,7 @@ func _run() -> void:
 
 	# Reproduce the cyan-underworld failure from physical playtest screenshots.
 	var recovery_xz := Vector2(player.global_position.x, player.global_position.z)
-	player.global_position.y = -2.0
+	player.global_position.y = -25.0
 	player.velocity = Vector3.ZERO
 	for _i in range(3):
 		await physics_frame

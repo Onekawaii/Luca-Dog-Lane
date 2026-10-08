@@ -30,6 +30,7 @@ var status_label: Label
 var inventory_label: Label
 var spiral_label: Label
 var guidance_label: Label
+var vitals_label: Label
 var crosshair: Label
 var encounter_title: Label
 var encounter_hint: Label
@@ -49,6 +50,11 @@ var noclip_active := false
 var interactive_controls: Array[Control] = []
 var reset_armed := false
 var reset_button: Button
+var player_health := 100.0
+var player_max_health := 100.0
+var threat_count := 0
+var boss_active := false
+var boss_health_ratio := 1.0
 
 func _ready() -> void:
 	layer = 20
@@ -64,19 +70,19 @@ func _ready() -> void:
 	_build_header()
 	tool_icon = TextureRect.new()
 	tool_icon.name = "EquippedToolIcon"
-	tool_icon.position = Vector2(16, 154)
-	tool_icon.size = Vector2(48, 48)
+	tool_icon.position = Vector2(16, 122)
+	tool_icon.size = Vector2(34, 34)
 	tool_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(tool_icon)
 	equipped_label = Label.new()
-	equipped_label.position = Vector2(74, 165)
-	equipped_label.add_theme_font_size_override("font_size", 16)
+	equipped_label.position = Vector2(58, 129)
+	equipped_label.add_theme_font_size_override("font_size", 13)
 	equipped_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(equipped_label)
 	controls_label = Label.new()
-	controls_label.position = Vector2(20, 242)
+	controls_label.position = Vector2(20, 168)
 	controls_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	controls_label.add_theme_font_size_override("font_size", 14)
+	controls_label.add_theme_font_size_override("font_size", 11)
 	controls_label.add_theme_constant_override("outline_size", 4)
 	controls_label.add_theme_color_override("font_outline_color", Color.BLACK)
 	root.add_child(controls_label)
@@ -120,7 +126,7 @@ func _build_header() -> void:
 	header_panel = Panel.new()
 	header_panel.name = "HeaderBackdrop"
 	header_panel.position = Vector2(18, 16)
-	header_panel.size = Vector2(590, 126)
+	header_panel.size = Vector2(470, 110)
 	header_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header_panel.add_theme_stylebox_override(
 		"panel",
@@ -130,11 +136,11 @@ func _build_header() -> void:
 
 	var title := Label.new()
 	title.name = "Title"
-	title.position = Vector2(18, 10)
-	title.size = Vector2(540, 34)
-	title.text = "SPIRAL FIELD  //  v0.2.1"
+	title.position = Vector2(14, 6)
+	title.size = Vector2(438, 26)
+	title.text = "SPIRAL FIELD  //  v0.2.2"
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", Color(0.96, 0.91, 1.0))
 	title.add_theme_constant_override("outline_size", 5)
 	title.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.07, 0.95))
@@ -142,53 +148,63 @@ func _build_header() -> void:
 
 	var hint := Label.new()
 	hint.name = "Hint"
-	hint.position = Vector2(18, 42)
-	hint.size = Vector2(540, 24)
+	hint.position = Vector2(14, 30)
+	hint.size = Vector2(438, 18)
 	var map_label := str(game.call("get_active_map_label")) if game != null else "THE FIRST FIELD"
 	hint.text = map_label + "  //  FIND WHAT IS WATCHING"
 	hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	hint.add_theme_font_size_override("font_size", 15)
+	hint.add_theme_font_size_override("font_size", 11)
 	hint.add_theme_color_override("font_color", Color(0.84, 0.80, 0.86))
 	header_panel.add_child(hint)
 
 	spiral_label = Label.new()
 	spiral_label.name = "SpiralStatus"
-	spiral_label.position = Vector2(18, 68)
-	spiral_label.size = Vector2(540, 24)
+	spiral_label.position = Vector2(14, 49)
+	spiral_label.size = Vector2(438, 18)
 	spiral_label.text = "THE FIELD IS DORMANT"
 	spiral_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	spiral_label.add_theme_font_size_override("font_size", 16)
+	spiral_label.add_theme_font_size_override("font_size", 12)
 	spiral_label.add_theme_color_override("font_color", Color(1.0, 0.54, 0.30))
 	header_panel.add_child(spiral_label)
 
 	guidance_label = Label.new()
 	guidance_label.name = "FieldGuidance"
-	guidance_label.position = Vector2(18, 94)
-	guidance_label.size = Vector2(540, 24)
+	guidance_label.position = Vector2(14, 67)
+	guidance_label.size = Vector2(438, 17)
 	guidance_label.text = "WITNESSING --  //  WAILING --"
 	guidance_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	guidance_label.add_theme_font_size_override("font_size", 14)
+	guidance_label.add_theme_font_size_override("font_size", 10)
 	guidance_label.add_theme_color_override("font_color", Color(0.74, 0.70, 0.78))
 	header_panel.add_child(guidance_label)
 
+	vitals_label = Label.new()
+	vitals_label.name = "VitalsAndThreats"
+	vitals_label.position = Vector2(14, 86)
+	vitals_label.size = Vector2(438, 18)
+	vitals_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vitals_label.add_theme_font_size_override("font_size", 11)
+	vitals_label.add_theme_color_override("font_color", Color(1.0, 0.70, 0.66))
+	header_panel.add_child(vitals_label)
+	_refresh_vitals()
+
 	inventory_label = Label.new()
 	inventory_label.name = "InventoryStatus"
-	inventory_label.position = Vector2(20, 212)
+	inventory_label.position = Vector2(20, 148)
 	inventory_label.size = Vector2(520, 26)
 	inventory_label.text = "STONE 0  //  BRICK 0"
 	inventory_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	inventory_label.add_theme_font_size_override("font_size", 15)
+	inventory_label.add_theme_font_size_override("font_size", 11)
 	inventory_label.add_theme_color_override("font_color", Color(0.82, 0.86, 0.83))
 	root.add_child(inventory_label)
 
 	status_label = Label.new()
 	status_label.name = "Status"
-	status_label.size = Vector2(840, 58)
+	status_label.size = Vector2(600, 44)
 	status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	status_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	status_label.add_theme_font_size_override("font_size", 18)
+	status_label.add_theme_font_size_override("font_size", 15)
 	status_label.add_theme_color_override("font_color", Color.WHITE)
 	status_label.add_theme_constant_override("outline_size", 8)
 	status_label.add_theme_color_override("font_outline_color", Color(0.04, 0.02, 0.05, 0.96))
@@ -232,23 +248,23 @@ func _build_joystick() -> void:
 	move_base.add_child(move_knob)
 
 func _build_action_buttons() -> void:
-	spawn_button = _button("SPAWN", Vector2.ZERO, Vector2(154, 52))
+	spawn_button = _button("SPAWN", Vector2.ZERO, Vector2(118, 38))
 	spawn_button.pressed.connect(_toggle_spawn_menu)
 	_register_interactive(spawn_button)
 
-	map_button = _button("MAP", Vector2.ZERO, Vector2(154, 52))
+	map_button = _button("MAP", Vector2.ZERO, Vector2(118, 38))
 	map_button.pressed.connect(_toggle_map_menu)
 	_register_interactive(map_button)
 
-	tool_button = _button("TOOL", Vector2.ZERO, Vector2(154, 52))
+	tool_button = _button("TOOL", Vector2.ZERO, Vector2(118, 38))
 	tool_button.pressed.connect(func(): player.call("cycle_tool"))
 	_register_interactive(tool_button)
 
-	inventory_button = _button("INVENTORY", Vector2.ZERO, Vector2(154, 52))
+	inventory_button = _button("INVENTORY", Vector2.ZERO, Vector2(118, 38))
 	inventory_button.pressed.connect(_toggle_inventory_menu)
 	_register_interactive(inventory_button)
 
-	noclip_button = _button("NOCLIP", Vector2.ZERO, Vector2(154, 52))
+	noclip_button = _button("NOCLIP", Vector2.ZERO, Vector2(118, 38))
 	noclip_button.pressed.connect(func(): player.call("toggle_noclip"))
 	_register_interactive(noclip_button)
 
@@ -269,7 +285,7 @@ func _build_action_buttons() -> void:
 	view_button = _button("VIEW: DRIVER", Vector2.ZERO, Vector2(150, 56))
 	view_button.pressed.connect(func(): player.call("toggle_vehicle_view"))
 	_register_interactive(view_button)
-	menu_button = _button("MENU", Vector2.ZERO, Vector2(154, 52))
+	menu_button = _button("MENU", Vector2.ZERO, Vector2(118, 38))
 	menu_button.pressed.connect(func(): game.session_menu.call("open", "pause"))
 	_register_interactive(menu_button)
 
@@ -326,7 +342,7 @@ func _build_spawn_menu() -> void:
 func _build_map_menu() -> void:
 	map_panel = Panel.new()
 	map_panel.name = "MapPanel"
-	map_panel.size = Vector2(860, 578)
+	map_panel.size = Vector2(700, 470)
 	map_panel.add_theme_stylebox_override(
 		"panel",
 		_round_style(Color(0.03, 0.02, 0.04, 0.96), Color(0.55, 0.24, 0.63), 18, 2)
@@ -336,11 +352,11 @@ func _build_map_menu() -> void:
 
 	var header := Label.new()
 	header.position = Vector2(20, 14)
-	header.size = Vector2(810, 34)
+	header.size = Vector2(660, 30)
 	header.text = "FIELD SURVEY  //  WORLD MAP & TRANSITIONS"
 	header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	header.add_theme_font_size_override("font_size", 20)
+	header.add_theme_font_size_override("font_size", 17)
 	header.add_theme_color_override("font_color", Color(0.94, 0.82, 1.0))
 	map_panel.add_child(header)
 
@@ -348,6 +364,7 @@ func _build_map_menu() -> void:
 	map_chart.set_script(load("res://scripts/systems/WorldMapChart.gd"))
 	map_chart.set("game", game)
 	map_chart.position = Vector2(20, 62)
+	map_chart.scale = Vector2(0.78, 0.78)
 	map_panel.add_child(map_chart)
 
 	var options: Array = game.call("get_map_options") if game != null else []
@@ -357,24 +374,24 @@ func _build_map_menu() -> void:
 		var map_id := str(option.get("id", ""))
 		var button := _button(
 			label,
-			Vector2(504, 58 + i * 68),
-			Vector2(332, 54),
+			Vector2(390, 52 + i * 54),
+			Vector2(286, 42),
 			map_panel
 		)
 		button.pressed.connect(_map_pressed.bind(map_id, label))
 		interactive_controls.append(button)
 
-	var restart := _button("RESTART FIELD", Vector2(504, 268), Vector2(332, 38), map_panel)
+	var restart := _button("RESTART FIELD", Vector2(390, 222), Vector2(286, 34), map_panel)
 	restart.pressed.connect(func(): game.call("restart_field"))
 	interactive_controls.append(restart)
-	var reset := _button("NEW WORLD (BACKUP)", Vector2(504, 320), Vector2(332, 38), map_panel)
+	var reset := _button("NEW WORLD (BACKUP)", Vector2(390, 264), Vector2(286, 34), map_panel)
 	reset.pressed.connect(_reset_pressed.bind(reset))
 	reset_button = reset
 	interactive_controls.append(reset)
-	var companion := _button("LUCA: STAY / FOLLOW", Vector2(504, 442), Vector2(332, 40), map_panel)
+	var companion := _button("LUCA: STAY / FOLLOW", Vector2(390, 356), Vector2(286, 34), map_panel)
 	companion.pressed.connect(func(): flash(str(game.call("toggle_companion_stay")), 2.0))
 	interactive_controls.append(companion)
-	var close := _button("CLOSE", Vector2(598, 504), Vector2(142, 38), map_panel)
+	var close := _button("CLOSE", Vector2(462, 410), Vector2(142, 34), map_panel)
 	close.pressed.connect(_toggle_map_menu)
 	interactive_controls.append(close)
 
@@ -404,7 +421,7 @@ func _toggle_inventory_menu() -> void:
 func _build_encounter_panel() -> void:
 	encounter_panel = Panel.new()
 	encounter_panel.name = "EncounterPanel"
-	encounter_panel.size = Vector2(760, 176)
+	encounter_panel.size = Vector2(620, 144)
 	encounter_panel.mouse_filter = Control.MOUSE_FILTER_STOP
 	encounter_panel.add_theme_stylebox_override(
 		"panel",
@@ -414,27 +431,27 @@ func _build_encounter_panel() -> void:
 	encounter_panel.visible = false
 
 	encounter_title = Label.new()
-	encounter_title.position = Vector2(24, 14)
-	encounter_title.size = Vector2(712, 34)
+	encounter_title.position = Vector2(18, 10)
+	encounter_title.size = Vector2(584, 28)
 	encounter_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	encounter_title.add_theme_font_size_override("font_size", 22)
+	encounter_title.add_theme_font_size_override("font_size", 17)
 	encounter_title.add_theme_color_override("font_color", Color(1.0, 0.86, 1.0))
 	encounter_panel.add_child(encounter_title)
 
 	encounter_hint = Label.new()
-	encounter_hint.position = Vector2(24, 46)
-	encounter_hint.size = Vector2(712, 26)
+	encounter_hint.position = Vector2(18, 38)
+	encounter_hint.size = Vector2(584, 22)
 	encounter_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	encounter_hint.text = "Choose what you do. The field remembers."
-	encounter_hint.add_theme_font_size_override("font_size", 14)
+	encounter_hint.add_theme_font_size_override("font_size", 11)
 	encounter_hint.add_theme_color_override("font_color", Color(0.72, 0.66, 0.76))
 	encounter_panel.add_child(encounter_hint)
 
 	for i in range(4):
 		var button := _button(
 			"--",
-			Vector2(22 + i * 184, 86),
-			Vector2(170, 66),
+			Vector2(16 + i * 150, 72),
+			Vector2(140, 52),
 			encounter_panel
 		)
 		button.pressed.connect(_encounter_button_pressed.bind(i))
@@ -454,13 +471,20 @@ func _layout_for_viewport() -> void:
 	move_base.position = Vector2(42.0, maxf(110.0, size.y - 196.0))
 	move_center = move_base.position + move_base.size * 0.5
 
-	var right_x := maxf(880.0, size.x - 174.0)
-	spawn_button.position = Vector2(right_x, 20.0)
-	map_button.position = Vector2(right_x, 78.0)
-	tool_button.position = Vector2(right_x, 136.0)
-	inventory_button.position = Vector2(right_x, 194.0)
-	noclip_button.position = Vector2(right_x, 252.0)
-	menu_button.position = Vector2(right_x, 310.0 if developer_ui else 20.0)
+	var right_x := maxf(880.0, size.x - 130.0)
+	if mobile_ui:
+		menu_button.position = Vector2(right_x, 12.0)
+		map_button.position = Vector2(right_x, 54.0)
+		tool_button.position = Vector2(right_x, 96.0)
+		inventory_button.position = Vector2(right_x, 138.0)
+		noclip_button.position = Vector2(right_x, 180.0)
+	else:
+		spawn_button.position = Vector2(right_x, 12.0)
+		map_button.position = Vector2(right_x, 54.0)
+		tool_button.position = Vector2(right_x, 96.0)
+		inventory_button.position = Vector2(right_x, 54.0 if not developer_ui else 138.0)
+		noclip_button.position = Vector2(right_x, 180.0)
+		menu_button.position = Vector2(right_x, 12.0 if not developer_ui else 222.0)
 
 	use_button.position = Vector2(maxf(790.0, size.x - 198.0), maxf(500.0, size.y - 88.0))
 	jump_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
@@ -468,18 +492,21 @@ func _layout_for_viewport() -> void:
 	view_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
 
 	# Don't render gameplay toasts through the ten-slot hotbar.
-	status_label.position = Vector2(size.x * 0.5 - 420.0, maxf(280.0, size.y - 152.0))
+	status_label.position = Vector2(size.x * 0.5 - 300.0, maxf(280.0, size.y - 124.0))
 	crosshair.position = Vector2(size.x * 0.5 - 16.0, size.y * 0.5 - 16.0)
-	encounter_panel.position = Vector2(size.x * 0.5 - 380.0, maxf(300.0, size.y - 260.0))
+	encounter_panel.position = Vector2(size.x * 0.5 - 310.0, maxf(300.0, size.y - 224.0))
 	spawn_panel.position = Vector2(maxf(500.0, size.x - 540.0), 100.0)
-	map_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 430.0), maxf(0.0, size.y * 0.5 - 289.0))
-	inventory_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 318.0), maxf(8.0, size.y * 0.5 - 252.0))
+	map_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 350.0), maxf(0.0, size.y * 0.5 - 235.0))
+	inventory_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 270.0), maxf(8.0, size.y * 0.5 - 210.0))
 	if quickbar != null:
 		quickbar.call("layout_for_viewport", size)
 
 func _apply_mode_visibility() -> void:
 	if move_base == null:
 		return
+	# The UI mode can change at runtime in QA and on platform handoff; keep the
+	# compact right rail spatially exclusive before exposing its controls.
+	_layout_for_viewport()
 	move_base.visible = mobile_ui
 	use_button.visible = mobile_ui or vehicle_active
 	jump_button.visible = mobile_ui and not vehicle_active
@@ -491,7 +518,7 @@ func _apply_mode_visibility() -> void:
 	menu_button.visible = true
 	noclip_button.visible = (mobile_ui or developer_ui) and not vehicle_active
 	inventory_button.visible = true
-	inventory_label.visible = true
+	inventory_label.visible = developer_ui
 	crosshair.visible = not mobile_ui
 	if quickbar != null:
 		quickbar.visible = not vehicle_active
@@ -513,7 +540,7 @@ func has_modal() -> bool:
 func _update_controls_label() -> void:
 	if controls_label == null:
 		return
-	controls_label.text = "NOCLIP ON // V returns to walking" if noclip_active else "LMB USE // I INVENTORY // ESC MENU"
+	controls_label.text = "NOCLIP ON // V WALK" if noclip_active else "LMB USE / HOLD TERRAIN // RMB BRUSH // I PACK // ESC"
 	if vehicle_active:
 		controls_label.text = "CAR " + str(player.riding.call("get_camera_mode_name")) + " // R / F5 VIEW // E EXIT // ESC MENU"
 	controls_label.visible = not mobile_ui
@@ -732,6 +759,23 @@ func set_spiral_status(summary: String) -> void:
 func set_field_guidance(summary: String) -> void:
 	if guidance_label != null:
 		guidance_label.text = summary
+
+func set_player_health(current: float, maximum: float) -> void:
+	player_health = current
+	player_max_health = maximum
+	_refresh_vitals()
+
+func set_threat_status(alive: int, boss_is_active: bool, boss_ratio := 1.0) -> void:
+	threat_count = alive
+	boss_active = boss_is_active
+	boss_health_ratio = boss_ratio
+	_refresh_vitals()
+
+func _refresh_vitals() -> void:
+	if vitals_label == null:
+		return
+	var boss_text := "COIL %.0f%%" % (boss_health_ratio * 100.0) if boss_active else "COIL DORMANT"
+	vitals_label.text = "VITAL %.0f/%.0f  //  THREATS %d  //  %s" % [player_health, player_max_health, threat_count, boss_text]
 
 func set_noclip(enabled: bool) -> void:
 	noclip_active = enabled

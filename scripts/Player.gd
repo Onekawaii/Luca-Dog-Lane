@@ -9,6 +9,8 @@ const SAFE_MARGIN := 16.0
 const JUMP_BUFFER_TIME := 0.22
 const COYOTE_TIME := 0.14
 const FALL_RECOVERY_Y := -1.25
+const TERRAIN_TOOL_INTERVAL := 0.18
+const BRUSH_RADII := [0.75, 1.25, 1.75]
 
 var game: Node
 var hud: CanvasLayer
@@ -21,6 +23,13 @@ var hotbar_index := 0
 var gameplay_blocked := false
 var look_sensitivity := 0.0032
 var body_collision: CollisionShape3D
+var max_health := 100.0
+var health := 100.0
+var defeated := false
+var damage_cooldown := 0.0
+var tool_use_held := false
+var tool_repeat_cooldown := 0.0
+var terrain_brush_radius := 0.75
 
 var touch_move := Vector2.ZERO
 var vertical_axis := 0.0
@@ -89,10 +98,17 @@ func _ready() -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta: float) -> void:
+	damage_cooldown = maxf(0.0, damage_cooldown - delta)
+	tool_repeat_cooldown = maxf(0.0, tool_repeat_cooldown - delta)
 	if gameplay_blocked:
 		if riding != null and is_instance_valid(riding):
 			riding.call("set_drive_input", Vector2.ZERO)
 		return
+	if tool_use_held and riding == null and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var held_action := str(_current_tool_definition().get("action", ""))
+		if held_action in ["mine", "place"] and tool_repeat_cooldown <= 0.0:
+			tool_repeat_cooldown = TERRAIN_TOOL_INTERVAL
+			use_tool()
 	jump_buffer = max(0.0, jump_buffer - delta)
 	_recover_if_outside()
 	# Hold on spawn/teleport until local voxel data is available, not on a hidden floor.
@@ -247,12 +263,22 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		add_look_delta(event.relative)
-	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		elif riding == null:
-			use_tool()
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed:
+			if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			elif riding == null:
+				tool_use_held = true
+				tool_repeat_cooldown = TERRAIN_TOOL_INTERVAL
+				use_tool()
+		else:
+			tool_use_held = false
 		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
+		var action := str(_current_tool_definition().get("action", ""))
+		if action in ["mine", "place"]:
+			cycle_terrain_brush()
+			get_viewport().set_input_as_handled()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E:
 		use_tool()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode >= KEY_1 and event.keycode <= KEY_9:
@@ -276,6 +302,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func set_gameplay_blocked(blocked: bool) -> void:
 	gameplay_blocked = blocked
+	tool_use_held = false
+	tool_repeat_cooldown = 0.0
 	touch_move = Vector2.ZERO
 	vertical_axis = 0.0
 	jump_buffer = 0.0
@@ -342,6 +370,8 @@ func _sync_tool_label() -> void:
 	var label_text := str(definition.get("label", _current_tool_id().to_upper()))
 	if _current_tool_id() == "place" and game != null:
 		label_text += " // " + str(game.call("get_selected_build_material")).replace("_", " ").to_upper()
+	if str(definition.get("action", "")) in ["mine", "place"]:
+		label_text += " // BRUSH %.2fm" % terrain_brush_radius
 	hud.call("set_tool_mode", label_text)
 	if hud.has_method("set_tool_icon"):
 		hud.call("set_tool_icon", equipped_tool.get("icon"))
@@ -351,6 +381,13 @@ func toggle_lantern() -> void:
 	lantern_light.visible = lantern_enabled
 	if hud != null:
 		hud.call("flash", "LANTERN // " + ("ON" if lantern_enabled else "OFF"), 1.4)
+
+func cycle_terrain_brush() -> void:
+	var current := BRUSH_RADII.find(terrain_brush_radius)
+	terrain_brush_radius = BRUSH_RADII[(current + 1) % BRUSH_RADII.size()] if current >= 0 else BRUSH_RADII[1]
+	_sync_tool_label()
+	if hud != null:
+		hud.call("flash", "TERRAIN BRUSH // %.2fm" % terrain_brush_radius, 1.2)
 
 func select_hotbar_slot(index: int) -> void:
 	if index < 0 or index >= 10:
@@ -458,9 +495,9 @@ func use_tool() -> void:
 	if action == "mine" or action == "place":
 		var result := ""
 		if action == "mine":
-			result = str(game.call("terrain_mine", camera.global_position, direction, reach))
+			result = str(game.call("terrain_mine", camera.global_position, direction, reach, terrain_brush_radius))
 		else:
-			result = str(game.call("terrain_place", camera.global_position, direction, reach))
+			result = str(game.call("terrain_place", camera.global_position, direction, reach, terrain_brush_radius))
 		if hud != null:
 			hud.call("flash", result, 1.8)
 		return
@@ -615,6 +652,35 @@ func exit_vehicle() -> void:
 	if hud != null:
 		hud.call("set_vehicle_mode", false)
 		hud.call("flash", "Exited buggy", 1.2)
+
+func take_spiral_damage(amount: float, source_name: String) -> String:
+	if defeated or damage_cooldown > 0.0:
+		return ""
+	damage_cooldown = 0.55
+	health = maxf(0.0, health - maxf(0.0, amount))
+	_sync_vitals()
+	if health <= 0.0:
+		defeated = true
+		tool_use_held = false
+		if hud != null:
+			hud.call("flash", "THE FIELD TOOK YOU // RETURNING TO SAFE GROUND", 2.2)
+		call_deferred("_recover_from_defeat")
+		return "Player defeated by " + source_name
+	if hud != null:
+		hud.call("flash", "%s STRIKES // VITAL %.0f" % [source_name, health], 1.1)
+	return "Player damaged by " + source_name
+
+func _recover_from_defeat() -> void:
+	global_position = last_safe_ground_position + Vector3.UP * 0.45
+	velocity = Vector3.ZERO
+	health = max_health
+	defeated = false
+	damage_cooldown = 1.5
+	_sync_vitals()
+
+func _sync_vitals() -> void:
+	if hud != null and hud.has_method("set_player_health"):
+		hud.call("set_player_health", health, max_health)
 
 func get_spawn_point() -> Vector3:
 	return camera.global_position - camera.global_transform.basis.z * 6.0 + Vector3.UP * 0.5

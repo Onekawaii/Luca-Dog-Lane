@@ -8,8 +8,8 @@ $Keystore = "$env:USERPROFILE\.android\debug.keystore"
 $Dist = Join-Path $Repo "dist"
 $WinDir = Join-Path $Dist "windows"
 $AndroidDir = Join-Path $Dist "android"
-$Win = Join-Path $WinDir "Spiral-Field-v0.2.0-windows.exe"
-$Apk = Join-Path $AndroidDir "Spiral-Field-v0.2.0-android.apk"
+$Win = Join-Path $WinDir "Spiral-Field-v0.2.2-windows.exe"
+$Apk = Join-Path $AndroidDir "Spiral-Field-v0.2.2-android.apk"
 
 if (!(Test-Path $Godot)) { throw "Godot 4.7.2 missing: $Godot" }
 if (!(Test-Path $Sdk)) { throw "Android SDK missing: $Sdk" }
@@ -59,6 +59,8 @@ if ($LASTEXITCODE -ne 0) { throw "v0.16 systems acceptance failed" }
 Write-Host "[6/10] Spiral Field acceptance"
 & $Godot --headless --path $Repo --script res://tests/spiral_field_acceptance.gd
 if ($LASTEXITCODE -ne 0) { throw "Spiral Field acceptance failed" }
+& $Godot --headless --path $Repo --script res://tests/spiral_threat_terraform_hud_acceptance.gd
+if ($LASTEXITCODE -ne 0) { throw "Spiral threat/terraform/HUD acceptance failed" }
 
 Write-Host "[7/10] Export Windows release"
 & $Godot --headless --path $Repo --export-release "Windows Desktop" $Win
@@ -118,8 +120,8 @@ $VersionName = (& $JavaExecutable.FullName $AnalyzerToolsProperty -classpath $Ap
 if ($LASTEXITCODE -ne 0) { throw "apkanalyzer version-name failed" }
 Write-Host "package=$PackageId versionCode=$VersionCode versionName=$VersionName"
 if ($PackageId -ne "com.onekawaii.spiralfield") { throw "Wrong package ID: $PackageId" }
-if ($VersionCode -ne "2") { throw "Wrong versionCode: $VersionCode" }
-if ($VersionName -ne "0.2.0") { throw "Wrong versionName: $VersionName" }
+if ($VersionCode -ne "4") { throw "Wrong versionCode: $VersionCode" }
+if ($VersionName -ne "0.2.2") { throw "Wrong versionName: $VersionName" }
 
 Write-Host "[10/10] Hash + release receipt"
 $WinHash = (Get-FileHash $Win -Algorithm SHA256).Hash.ToLower()
@@ -141,9 +143,9 @@ $Head = (git -C $Repo rev-parse HEAD 2>$null)
 $Status = (git -C $Repo status --short)
 $Receipt = [ordered]@{
     product = "Spiral Field"
-    version = "0.2.0"
+    version = "0.2.2"
     donor = "Luca Dog World v0.16 world systems"
-    architecture = "luca-v016-donor+kimi+macroterrain+voxeltools+vehiclebody3d+companion+spiral-world-director-v2+contextual-encounters+world-pressure+persistence-v2"
+    architecture = "luca-v016-donor+kimi+macroterrain+voxeltools+vehiclebody3d+companion+spiral-world-director-v3+bounded-threats+terraform-brush+persistence-v3"
     git_head = $Head
     git_status = @($Status)
     generated_utc = (Get-Date).ToUniversalTime().ToString("o")
@@ -153,6 +155,7 @@ $Receipt = [ordered]@{
         "runtime playability acceptance",
         "v0.16 systems acceptance",
         "Spiral Field ACT/MERCY persistence acceptance",
+        "Spiral threat budget/boss persistence/terraform/HUD acceptance",
         "Windows exported player TerrainSlice/VoxelTool probe",
         "Android signature/apkanalyzer package/native-lib verification"
     )
@@ -166,12 +169,12 @@ $Receipt = [ordered]@{
         bytes = (Get-Item $Apk).Length
         sha256 = $ApkHash
         package = "com.onekawaii.spiralfield"
-        version_code = 2
-        version_name = "0.2.0"
+        version_code = 4
+        version_name = "0.2.2"
         signed = $true
     }
 }
-$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_Spiral-Field-v0.2.0.json"
+$ReceiptPath = Join-Path $Dist "RELEASE_RECEIPT_Spiral-Field-v0.2.2.json"
 $Receipt | ConvertTo-Json -Depth 6 | Set-Content $ReceiptPath -Encoding utf8
 
 Write-Host "WINDOWS=$Win"
@@ -179,4 +182,4 @@ Write-Host "WINDOWS_SHA256=$WinHash"
 Write-Host "ANDROID=$Apk"
 Write-Host "ANDROID_SHA256=$ApkHash"
 Write-Host "RECEIPT=$ReceiptPath"
-Write-Host "[DONE] Spiral Field v0.2.0"
+Write-Host "[DONE] Spiral Field v0.2.2"

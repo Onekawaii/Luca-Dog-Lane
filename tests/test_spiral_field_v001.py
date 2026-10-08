@@ -9,11 +9,11 @@ class SpiralFieldV02Contracts(unittest.TestCase):
         project = (ROOT / "project.godot").read_text(encoding="utf-8")
         presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
         self.assertIn('config/name="Spiral Field"', project)
-        self.assertIn('config/version="0.2.0"', project)
-        self.assertIn("Spiral-Field-v0.2.0-windows.exe", presets)
-        self.assertIn("Spiral-Field-v0.2.0-android.apk", presets)
+        self.assertIn('config/version="0.2.2"', project)
+        self.assertIn("Spiral-Field-v0.2.2-windows.exe", presets)
+        self.assertIn("Spiral-Field-v0.2.2-android.apk", presets)
         self.assertIn('package/unique_name="com.onekawaii.spiralfield"', presets)
-        self.assertIn("version/code=2", presets)
+        self.assertIn("version/code=4", presets)
 
     def test_encounter_verbs_are_contextual_not_tool_belt(self):
         tools = json.loads((ROOT / "data" / "tools_v016.json").read_text(encoding="utf-8"))
@@ -51,7 +51,7 @@ class SpiralFieldV02Contracts(unittest.TestCase):
     def test_spiral_world_has_visible_identity_and_versioned_persistence(self):
         director = (ROOT / "scripts" / "systems" / "SpiralWorldDirector.gd").read_text(encoding="utf-8")
         for token in (
-            "spiral_field_state_v2.json", "LEGACY_SAVE_PATH", '"schema_version": 2',
+            "spiral_field_state_v2.json", "LEGACY_SAVE_PATH", '"schema_version": 3',
             "DistantBeacon", "WhiskerTentacle", "Ear_", "Leg_", "Tail_",
             "ProceduralSpiralInfection", "pressure()", "player_status_text",
         ):

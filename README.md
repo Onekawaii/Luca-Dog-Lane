@@ -2,7 +2,7 @@
 
 **Open-world nightmare sandbox built from the verified Luca Dog World v0.26 substrate.**
 
-Working title: **Spiral Field v0.2.0**.
+Working title: **Spiral Field v0.2.2**.
 
 This is a separate game branch. Luca Dog World is preserved as the donor baseline; this project does not replace it.
 
@@ -68,7 +68,7 @@ Release gates include Python contracts, Kimi determinism, live movement/mobile/v
 ## Outputs
 
 ```text
-dist/windows/Spiral-Field-v0.2.0-windows.exe
-dist/android/Spiral-Field-v0.2.0-android.apk
-dist/RELEASE_RECEIPT_Spiral-Field-v0.2.0.json
+dist/windows/Spiral-Field-v0.2.2-windows.exe
+dist/android/Spiral-Field-v0.2.2-android.apk
+dist/RELEASE_RECEIPT_Spiral-Field-v0.2.2.json
 ```

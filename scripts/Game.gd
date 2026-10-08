@@ -585,6 +585,7 @@ func _spawn_hud() -> void:
 	hud = layer
 	player.set("hud", hud)
 	player.call("_sync_tool_label")
+	player.call("_sync_vitals")
 	if terrain_slice != null:
 		terrain_slice.call("set_hud", hud)
 	if quarry_expedition != null:
@@ -626,15 +627,15 @@ func terrain_craft_recipe(recipe_id: String) -> String:
 		return "Terrain slice unavailable"
 	return str(terrain_slice.call("craft_recipe", recipe_id))
 
-func terrain_mine(origin: Vector3, direction: Vector3, max_distance := 8.0) -> String:
+func terrain_mine(origin: Vector3, direction: Vector3, max_distance := 8.0, brush_radius := 0.75) -> String:
 	if terrain_slice == null:
 		return "Terrain slice unavailable"
-	return str(terrain_slice.call("mine_from_ray", origin, direction, max_distance))
+	return str(terrain_slice.call("mine_from_ray", origin, direction, max_distance, brush_radius))
 
-func terrain_place(origin: Vector3, direction: Vector3, max_distance := 8.0) -> String:
+func terrain_place(origin: Vector3, direction: Vector3, max_distance := 8.0, brush_radius := 0.75) -> String:
 	if terrain_slice == null:
 		return "Terrain slice unavailable"
-	return str(terrain_slice.call("place_from_ray", origin, direction, max_distance))
+	return str(terrain_slice.call("place_from_ray", origin, direction, max_distance, brush_radius))
 
 func terrain_craft() -> String:
 	if terrain_slice == null:

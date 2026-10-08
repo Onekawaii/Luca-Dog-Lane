@@ -32,6 +32,9 @@ var guidance_timer := 0.0
 var animation_time := 0.0
 var cat_reaction_remaining := 0.0
 var cat_reaction_action := ""
+var threat_root: Node3D
+var boss_defeated := false
+var defeated_threats := 0
 
 func _ready() -> void:
 	name = "SpiralWorldDirector"
@@ -54,6 +57,7 @@ func _process(delta: float) -> void:
 	if guidance_timer >= 0.20:
 		guidance_timer = 0.0
 		_update_guidance()
+		_update_threat_hud()
 
 func get_encounter_title(target: Object) -> String:
 	if target == null or not target.has_meta("spiral_id"):
@@ -210,12 +214,105 @@ func _refresh_world_state() -> void:
 	if game != null and game.has_method("apply_spiral_world_state"):
 		game.call("apply_spiral_world_state", p, affection, stage, witnessing, wailing)
 	_rebuild_infection_geometry()
+	_sync_threats()
 
 func _build_sites() -> void:
 	_spawn_spiral_site("witnessing", WITNESS_POS, Color(1.0, 0.23, 0.06), true)
 	_spawn_spiral_site("wailing", WAIL_POS, Color(0.48, 0.08, 0.62), false)
 	_spawn_tabbytulhu(TABBY_POS)
 	_spawn_spawn_omens()
+	threat_root = Node3D.new()
+	threat_root.name = "SpiralThreats"
+	add_child(threat_root)
+
+func _sync_threats() -> void:
+	if threat_root == null or not is_instance_valid(threat_root):
+		return
+	var desired_minors := 0
+	match stage:
+		"AWAKE": desired_minors = 2
+		"INFECTED": desired_minors = 4
+		"VELVET BREACH": desired_minors = 6
+	var minors: Array[Node] = []
+	var active_boss: Node
+	for child in threat_root.get_children():
+		if child.is_in_group("spiral_boss"):
+			active_boss = child
+		else:
+			minors.append(child)
+	while minors.size() < desired_minors:
+		var spawned: Node = _spawn_minor_threat(minors.size())
+		minors.append(spawned)
+	while minors.size() > desired_minors:
+		var extra: Node = minors.pop_back()
+		extra.queue_free()
+	var wants_boss := stage == "VELVET BREACH" and not boss_defeated
+	if wants_boss and active_boss == null:
+		active_boss = _spawn_boss()
+	elif not wants_boss and active_boss != null:
+		active_boss.queue_free()
+	call_deferred("_update_threat_hud")
+
+func _spawn_minor_threat(index: int) -> Node:
+	var kind := "witness" if index % 2 == 0 else "wailing"
+	var base := WITNESS_POS if kind == "witness" else WAIL_POS
+	var ring_index := int(index / 2)
+	var angle := float(index) * 2.17 + (0.35 if kind == "witness" else 1.05)
+	var radius := 11.0 + ring_index * 4.0
+	var at := _terrain_position(base + Vector3(cos(angle) * radius, 0.0, sin(angle) * radius), 0.35)
+	var enemy = load("res://scripts/systems/SpiralEnemy.gd").new()
+	enemy.call("configure", player, kind, false, at)
+	enemy.position = to_local(at)
+	threat_root.add_child(enemy)
+	enemy.defeated.connect(_on_threat_defeated)
+	return enemy
+
+func _spawn_boss() -> Node:
+	var base := WITNESS_POS.lerp(WAIL_POS, 0.5) + Vector3(0.0, 0.0, 22.0)
+	var at := _terrain_position(base, 0.55)
+	var enemy = load("res://scripts/systems/SpiralEnemy.gd").new()
+	enemy.call("configure", player, "wailing", true, at)
+	enemy.position = to_local(at)
+	threat_root.add_child(enemy)
+	enemy.defeated.connect(_on_threat_defeated)
+	return enemy
+
+func _on_threat_defeated(_enemy: Node, was_boss: bool) -> void:
+	defeated_threats += 1
+	if was_boss:
+		boss_defeated = true
+		if hud != null:
+			hud.call("flash", "THE COIL MAW IS SILENT // THE BREACH REMAINS", 4.0)
+	_save_state()
+	call_deferred("_update_threat_hud")
+
+func _update_threat_hud() -> void:
+	if hud == null or not hud.has_method("set_threat_status"):
+		return
+	var alive := 0
+	var boss_active := false
+	var boss_ratio := 1.0
+	if threat_root != null:
+		for child in threat_root.get_children():
+			if child.is_queued_for_deletion():
+				continue
+			alive += 1
+			if child.is_in_group("spiral_boss"):
+				boss_active = true
+				boss_ratio = float(child.call("health_ratio"))
+	hud.call("set_threat_status", alive, boss_active, boss_ratio)
+
+func get_threat_snapshot_for_test() -> Dictionary:
+	var snapshot := {"minor": 0, "boss": 0, "boss_defeated": boss_defeated, "defeated": defeated_threats}
+	if threat_root != null:
+		for child in threat_root.get_children():
+			if child.is_queued_for_deletion():
+				continue
+			if child.is_in_group("spiral_boss"):
+				snapshot.boss = int(snapshot.boss) + 1
+			else:
+				snapshot.minor = int(snapshot.minor) + 1
+	return snapshot
 
 func _terrain_position(base: Vector3, lift: float) -> Vector3:
 	var p := base
@@ -576,13 +673,15 @@ func _save_state() -> void:
 
 func save_state_now() -> bool:
 	var payload := {
-		"schema_version": 2,
+		"schema_version": 3,
 		"affection": affection,
 		"corruption": corruption,
 		"witnessing": witnessing,
 		"wailing": wailing,
 		"interaction_count": interaction_count,
 		"stage": stage,
+		"boss_defeated": boss_defeated,
+		"defeated_threats": defeated_threats,
 	}
 	var file := FileAccess.open(state_save_path(), FileAccess.WRITE)
 	if file != null:
@@ -596,8 +695,10 @@ func save_state_now() -> bool:
 func _load_state() -> void:
 	if FileAccess.file_exists(state_save_path()):
 		var parsed = JSON.parse_string(FileAccess.get_file_as_string(state_save_path()))
-		if typeof(parsed) == TYPE_DICTIONARY and int(parsed.get("schema_version", -1)) == 2:
+		if typeof(parsed) == TYPE_DICTIONARY and int(parsed.get("schema_version", -1)) in [2, 3]:
 			_apply_loaded_state(parsed)
+			if int(parsed.get("schema_version", -1)) == 2:
+				_save_state()
 			return
 
 	if FileAccess.file_exists(legacy_state_save_path()):
@@ -613,6 +714,8 @@ func _apply_loaded_state(parsed: Dictionary) -> void:
 	wailing = float(parsed.get("wailing", 0.0))
 	interaction_count = int(parsed.get("interaction_count", 0))
 	stage = str(parsed.get("stage", "DORMANT"))
+	boss_defeated = bool(parsed.get("boss_defeated", false))
+	defeated_threats = int(parsed.get("defeated_threats", 0))
 
 func clear_state_for_test() -> void:
 	for path in [state_save_path(), legacy_state_save_path()]:

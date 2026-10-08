@@ -1,8 +1,8 @@
 extends "res://scripts/world/TerrainSliceGenerator.gd"
 
 const HALF := 480
-const GRID_STEP := 12
-const GRID_WIDTH := 81
+const GRID_STEP := 8
+const GRID_WIDTH := 121
 var heights := PackedFloat32Array()
 
 func configure_world(seed: int, scale_value: float) -> void:
@@ -17,8 +17,8 @@ func configure_world(seed: int, scale_value: float) -> void:
 	source.free()
 
 func height_at(x: float, z: float) -> float:
-	var gx := clampf((x + HALF) / GRID_STEP, 0.0, 79.999)
-	var gz := clampf((z + HALF) / GRID_STEP, 0.0, 79.999)
+	var gx := clampf((x + HALF) / GRID_STEP, 0.0, float(GRID_WIDTH - 1) - 0.001)
+	var gz := clampf((z + HALF) / GRID_STEP, 0.0, float(GRID_WIDTH - 1) - 0.001)
 	var ix := floori(gx)
 	var iz := floori(gz)
 	var a := lerpf(heights[iz * GRID_WIDTH + ix], heights[iz * GRID_WIDTH + ix + 1], gx - ix)

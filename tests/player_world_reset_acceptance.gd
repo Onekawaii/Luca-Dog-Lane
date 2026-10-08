@@ -3,6 +3,9 @@ extends SceneTree
 var failures: Array[String] = []
 
 func _initialize() -> void:
+	OS.set_environment("SPIRAL_SKIP_TITLE", "1")
+	OS.set_environment("LUCA_V013_SLICE_SAVE_PATH", "user://repair_reset_voxels_%d_{seed}.json" % Time.get_ticks_usec())
+	OS.set_environment("SPIRAL_STATE_SAVE_PATH", "user://repair_reset_spiral_%d.json" % Time.get_ticks_usec())
 	call_deferred("_verify")
 
 func _check(condition: bool, detail: String) -> void:

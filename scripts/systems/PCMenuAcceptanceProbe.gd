@@ -40,8 +40,9 @@ func touch(at: Vector2, pressed: bool, index := 3) -> void:
 	event.position = at
 	event.index = index
 	event.pressed = pressed
-	Input.parse_input_event(event)
-	Input.flush_buffered_events()
+	# Route through the tested viewport, as a platform touch does. Global input
+	# parsing is not delivered to a headless test viewport on Godot 4.7.
+	get_viewport().push_input(event, true)
 
 func button_named(menu: Node, label: String) -> Button:
 	for child in menu.column.get_children():
@@ -52,8 +53,10 @@ func button_named(menu: Node, label: String) -> Button:
 func capture(label: String) -> void:
 	if DisplayServer.get_name() == "headless":
 		return
-	await RenderingServer.frame_post_draw
-	await RenderingServer.frame_post_draw
+	# Frame-post-draw can stop emitting while the session tree is paused.
+	# Process-frame waits keep menu captures deterministic in that state.
+	await get_tree().process_frame
+	await get_tree().process_frame
 	var folder := OS.get_environment("SPIRAL_PC_CAPTURE_DIR")
 	if folder.is_empty():
 		folder = ProjectSettings.globalize_path("res://dist/pc-review-20261008")

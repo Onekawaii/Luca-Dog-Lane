@@ -1,7 +1,7 @@
 class_name MacroTerrain
 extends Node3D
 
-const TERRAIN_CELL_M := 12.0
+const TERRAIN_CELL_M := 8.0
 const MAX_HEIGHT_M := 54.0
 
 var world_plan: KimiWorldPlan
@@ -194,6 +194,10 @@ func _build_world_terrain() -> void:
 			_add_vertex(surface, p11)
 			_add_vertex(surface, p01)
 
+	# Share exact boundary vertices before generating normals. The previous order
+	# left every 12 m triangle with an isolated flat normal, which made otherwise
+	# continuous mountains read as broken facets during the v0.2.1 playthrough.
+	surface.index()
 	surface.generate_normals()
 	var mesh := surface.commit() as ArrayMesh
 	var material := StandardMaterial3D.new()

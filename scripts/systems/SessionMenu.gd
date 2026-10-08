@@ -24,8 +24,8 @@ func _ready() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.add_child(center)
 	column = VBoxContainer.new()
-	column.custom_minimum_size.x = 460
-	column.add_theme_constant_override("separation", 12)
+	column.custom_minimum_size.x = 360
+	column.add_theme_constant_override("separation", 8)
 	center.add_child(column)
 	overlay.hide()
 	# Test harnesses/headless probes opt out; ordinary desktop launches get a title.
@@ -80,7 +80,7 @@ func open(kind: String) -> void:
 	for child in column.get_children():
 		column.remove_child(child)
 		child.queue_free()
-	_heading("SPIRAL FIELD" if kind == "title" else ("OPTIONS" if kind == "options" else "GAME PAUSED"))
+	_heading("SPIRAL FIELD" if kind == "title" else ("OPTIONS" if kind == "options" else "GAME PAUSED"), 24)
 	if kind == "options":
 		_heading("Mouse sensitivity", 16)
 		sensitivity_slider = _slider(0.001, 0.008, player.look_sensitivity)
@@ -139,7 +139,7 @@ func _heading(value: String, font_size := 30) -> Label:
 func _button(value: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = value
-	button.custom_minimum_size.y = 48
+	button.custom_minimum_size.y = 40
 	button.focus_mode = Control.FOCUS_NONE
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.30, 0.32, 0.29)

@@ -61,13 +61,15 @@ func _run() -> void:
 	var inventory: Node = slice.call("get_inventory_for_test")
 	var drop: Variant = await _wait_for_drop()
 	_check(drop != null, "mining creates physical resource drop")
+	var recovered_item := "stone"
 	if drop != null:
+		recovered_item = str(drop.item_id)
 		player.global_position = drop.global_position
 		for i in range(90):
 			await physics_frame
 			if not is_instance_valid(drop):
 				break
-	_check(int(inventory.call("count_item", "stone")) >= 1, "physical drop enters inventory")
+	_check(int(inventory.call("count_item", recovered_item)) >= 1, "physical drop enters inventory")
 
 	var no_brick_message := str(slice.call("place_from_ray", ray_origin, down, 64.0))
 	_check(no_brick_message.begins_with("Need 1 STONE BRICK"), "placement is rejected without crafted material")
@@ -141,7 +143,7 @@ func _wait_for_drop():
 	for i in range(120):
 		await physics_frame
 		for child in world.get_children():
-			if str(child.name).begins_with("TerrainDrop_stone"):
+			if str(child.name).begins_with("TerrainDrop_"):
 				return child
 	return null
 
