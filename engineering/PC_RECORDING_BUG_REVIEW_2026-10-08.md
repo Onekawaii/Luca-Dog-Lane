@@ -140,5 +140,8 @@ requires a reproducer before claiming fixed. No physical Android evidence from P
 ## Milestone disposition
 
 Control/menu/drop repairs are undergoing exact-state runtime and Demander gates.
+Final update: tested control/menu/drop scope accepted at game source `766ae884`;
+exported Windows input, startup and regressions passed. Exact commands, artifact
+hashes, failures retained and limits are in M-PC-03 milestone and BUILD_LEDGER.
 Presentation/art/grounded-LOD stress findings remain named follow-ups, not silently
 closed. Final gate receipts and artifact hashes belong in BUILD_LEDGER and M-PC-03.
