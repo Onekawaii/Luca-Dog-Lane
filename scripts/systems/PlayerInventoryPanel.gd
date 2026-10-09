@@ -9,7 +9,7 @@ var summary_label: Label
 
 func _ready() -> void:
 	name = "InventoryPanel"
-	size = Vector2(540, 420)
+	size = Vector2(540, 468)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	var shell := StyleBoxFlat.new()
 	shell.bg_color = Color(0.035, 0.032, 0.048, 0.975)
@@ -24,7 +24,7 @@ func _ready() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.position = Vector2(18, 98)
-	scroll.size = Vector2(504, 262)
+	scroll.size = Vector2(504, 250)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	add_child(scroll)
 	var column := VBoxContainer.new()
@@ -47,10 +47,20 @@ func _ready() -> void:
 	recipe_list = VBoxContainer.new()
 	recipe_list.add_theme_constant_override("separation", 7)
 	column.add_child(recipe_list)
-	_label(self, "ESC / RETURN = CLOSE", Vector2(20, 372), Vector2(310, 28), 11, Color(0.72, 0.65, 0.77))
+	_label(self, "F BUILD / G MATERIAL / H BARREL  //  HAMMER IGNITES", Vector2(20, 362), Vector2(500, 18), 10, Color(0.90, 0.71, 0.48))
+	for index in range(3):
+		var label_text: String = ["BUILD MODE", "NEXT BLOCK", "EXPLOSIVE"][index]
+		var action: String = ["toggle_build_mode", "cycle_build_material", "place_explosive_barrel"][index]
+		var action_button := Button.new()
+		action_button.text = label_text
+		action_button.position = Vector2(20 + index * 128, 383)
+		action_button.size = Vector2(120, 32)
+		action_button.pressed.connect(_construction_action.bind(action))
+		add_child(action_button)
+	_label(self, "RETURN = CLOSE", Vector2(20, 423), Vector2(200, 22), 11, Color(0.72, 0.65, 0.77))
 	var close := Button.new()
 	close.text = "RETURN"
-	close.position = Vector2(410, 370)
+	close.position = Vector2(410, 420)
 	close.size = Vector2(112, 34)
 	close.pressed.connect(func(): visible = false)
 	add_child(close)
@@ -145,6 +155,13 @@ func refresh() -> void:
 		button.disabled = not can_craft
 		button.pressed.connect(_craft.bind(recipe_id))
 		recipe_list.add_child(button)
+
+func _construction_action(action: String) -> void:
+	if game == null:
+		return
+	var response := str(game.call(action))
+	get_parent().get_parent().call("flash", response, 1.8)
+	refresh()
 
 func _craft(recipe_id: String) -> void:
 	var response := str(game.call("terrain_craft_recipe", recipe_id))

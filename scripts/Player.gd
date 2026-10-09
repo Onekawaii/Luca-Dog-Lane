@@ -287,6 +287,16 @@ func _unhandled_input(event: InputEvent) -> void:
 		select_hotbar_slot(9)
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
 		toggle_lantern()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
+		if game != null:
+			hud.call("flash", str(game.call("toggle_build_mode")), 1.6)
+			_sync_tool_label()
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_G:
+		if game != null:
+			hud.call("flash", str(game.call("cycle_build_material")), 1.5)
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_H:
+		if game != null:
+			hud.call("flash", str(game.call("place_explosive_barrel")), 1.8)
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_Q:
 		cycle_tool()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_V:
@@ -372,6 +382,10 @@ func _sync_tool_label() -> void:
 		label_text += " // " + str(game.call("get_selected_build_material")).replace("_", " ").to_upper()
 	if str(definition.get("action", "")) in ["mine", "place"]:
 		label_text += " // BRUSH %.2fm" % terrain_brush_radius
+	if _current_tool_id() == "place" and game != null:
+		var terrain_node = game.get("terrain_slice")
+		if terrain_node != null and bool(terrain_node.get("creative_build")):
+			label_text += " // FREE BUILD"
 	hud.call("set_tool_mode", label_text)
 	if hud.has_method("set_tool_icon"):
 		hud.call("set_tool_icon", equipped_tool.get("icon"))

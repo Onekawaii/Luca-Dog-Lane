@@ -5,6 +5,14 @@ const AIR := 0
 const STONE := 1
 const SURFACE := 2
 const BRICK := 3
+const WOOD := 4
+const GLASS := 5
+const METAL := 6
+const CONCRETE := 7
+const BUILD_PALETTE := ["stone", "grass_block", "stone_brick", "wood_plank", "glass_block", "metal_block", "concrete_block"]
+const ITEM_TO_VOXEL := {"stone": STONE, "grass_block": SURFACE, "stone_brick": BRICK, "wood_plank": WOOD, "glass_block": GLASS, "metal_block": METAL, "concrete_block": CONCRETE}
+const VOXEL_TO_ITEM := {STONE: "stone", SURFACE: "grass_block", BRICK: "stone_brick", WOOD: "wood_plank", GLASS: "glass_block", METAL: "metal_block", CONCRETE: "concrete_block"}
+const BLAST_RESISTANCE := {STONE: 2.2, SURFACE: 1.0, BRICK: 2.0, WOOD: 0.7, GLASS: 0.2, METAL: 3.3, CONCRETE: 2.8}
 
 const SLICE_BOUNDS := AABB(Vector3(256.0, -2.0, 228.0), Vector3(112.0, 54.0, 108.0))
 const MOUNTAIN_CENTER := Vector3(310.0, 0.0, 282.0)
@@ -28,6 +36,7 @@ var inventory: Node
 var replay_timer := 0.0
 var replay_queued := false
 var selected_place_item := "stone_brick"
+var creative_build := false
 
 func _ready() -> void:
 	if world_voxels:
@@ -81,7 +90,7 @@ func mine_from_ray(
 	var center: Vector3i = result.call("get_position")
 	if not _is_editable(center):
 		return "Terrain chunk is still streaming"
-	var recovered := {"stone": 0, "grass_block": 0, "stone_brick": 0}
+	var recovered := {"stone": 0, "grass_block": 0, "stone_brick": 0, "wood_plank": 0, "glass_block": 0, "metal_block": 0, "concrete_block": 0}
 	var changed := 0
 	for offset in _brush_offsets(brush_radius):
 		var pos := center + offset
@@ -94,7 +103,7 @@ func mine_from_ray(
 		persistence.call("set_voxel_delta", pos, AIR)
 		if macro_terrain != null:
 			macro_terrain.mark_voxel_edit(pos)
-		var drop_id := "grass_block" if current == SURFACE else ("stone_brick" if current == BRICK else "stone")
+		var drop_id := str(VOXEL_TO_ITEM.get(current, "stone"))
 		recovered[drop_id] = int(recovered[drop_id]) + 1
 		changed += 1
 	if changed == 0:
@@ -115,7 +124,7 @@ func place_from_ray(
 ) -> String:
 	if voxel_tool == null:
 		return "Voxel terrain unavailable"
-	if int(inventory.call("count_item", selected_place_item)) < 1:
+	if not creative_build and int(inventory.call("count_item", selected_place_item)) < 1:
 		return "Need 1 " + selected_place_item.replace("_", " ").to_upper() + " // open INVENTORY"
 
 	var result = voxel_tool.call("raycast", origin, direction.normalized(), max_distance)
@@ -127,8 +136,8 @@ func place_from_ray(
 		return "Placement outside the terrain slice"
 	if not _is_editable(center):
 		return "Terrain chunk is still streaming"
-	var available := int(inventory.call("count_item", selected_place_item))
-	var voxel_id := STONE if selected_place_item == "stone" else (SURFACE if selected_place_item == "grass_block" else BRICK)
+	var available := 999 if creative_build else int(inventory.call("count_item", selected_place_item))
+	var voxel_id := int(ITEM_TO_VOXEL.get(selected_place_item, BRICK))
 	var placed := 0
 	var rejected_for_overlap := false
 	for offset in _brush_offsets(brush_radius):
@@ -148,7 +157,8 @@ func place_from_ray(
 		placed += 1
 	if placed == 0:
 		return "Placement rejected // player overlap" if rejected_for_overlap else "No empty terrain inside brush"
-	inventory.call("consume", selected_place_item, placed)
+	if not creative_build:
+		inventory.call("consume", selected_place_item, placed)
 	if placed == 1:
 		return "PLACED " + selected_place_item.replace("_", " ").to_upper() + " // " + str(inventory.call("summary"))
 	return "FORMED %d %s // %s" % [placed, selected_place_item.replace("_", " ").to_upper(), str(inventory.call("summary"))]
@@ -171,10 +181,51 @@ func _brush_offsets(radius: float) -> Array[Vector3i]:
 	return result
 
 func select_place_item(item_id: String) -> bool:
-	if item_id not in ["stone", "grass_block", "stone_brick"]:
+	if item_id not in BUILD_PALETTE:
 		return false
 	selected_place_item = item_id
 	return true
+
+func cycle_place_item() -> String:
+	var index := BUILD_PALETTE.find(selected_place_item)
+	selected_place_item = BUILD_PALETTE[(index + 1) % BUILD_PALETTE.size()]
+	return selected_place_item
+
+func toggle_creative_build() -> bool:
+	creative_build = not creative_build
+	return creative_build
+
+func blast_placed_blocks(world_position: Vector3, radius: float, power: float) -> int:
+	if voxel_tool == null or persistence == null:
+		return 0
+	var edits: Dictionary = persistence.call("get_voxel_deltas")
+	var center := Vector3i(floori(world_position.x), floori(world_position.y), floori(world_position.z))
+	var extent := ceili(clampf(radius, 0.5, 5.0))
+	var destroyed := 0
+	for x in range(center.x - extent, center.x + extent + 1):
+		for y in range(center.y - extent, center.y + extent + 1):
+			for z in range(center.z - extent, center.z + extent + 1):
+				if destroyed >= 256:
+					return destroyed
+				var pos := Vector3i(x, y, z)
+				var distance := _voxel_world_center(pos).distance_to(world_position)
+				if distance >= radius or not _is_editable(pos):
+					continue
+				var key := "%d,%d,%d" % [x, y, z]
+				if not edits.has(key):
+					continue # Native geology and landmarks are NOT demolished.
+				var value := int(voxel_tool.call("get_voxel", pos))
+				if value == AIR or value != int(edits[key]):
+					continue
+				var impact := power * (1.0 - distance / radius)
+				if impact < float(BLAST_RESISTANCE.get(value, 2.0)):
+					continue
+				voxel_tool.call("set_voxel", pos, AIR)
+				persistence.call("set_voxel_delta", pos, AIR)
+				if macro_terrain != null:
+					macro_terrain.mark_voxel_edit(pos)
+				destroyed += 1
+	return destroyed
 
 func craft_recipe(recipe_id: String) -> String:
 	if inventory == null:
@@ -264,21 +315,29 @@ func _setup_persistence() -> void:
 	if selected_path.is_empty():
 		selected_path = OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
 	if selected_path.is_empty():
-		selected_path = ("user://v020_world_voxels_%d.json" if world_voxels else "user://v016_terrain_slice_%d.json") % world_seed
+		selected_path = ("user://v023_world_voxels_%d.json" if world_voxels else "user://v016_terrain_slice_%d.json") % world_seed
 	else:
 		# Seeded test namespaces prevent maps sharing one override file.
 		selected_path = selected_path.replace("{seed}", str(world_seed))
 	persistence.call("configure", selected_path, world_seed)
 	# Copy compatible authored-quarry deltas/inventory once; never modify the old save.
 	if world_voxels and save_path_override.is_empty() and OS.get_environment("LUCA_V013_SLICE_SAVE_PATH").is_empty() and not FileAccess.file_exists(selected_path):
-		var legacy_path := "user://v016_terrain_slice_%d.json" % world_seed
-		if FileAccess.file_exists(legacy_path):
+		# Always migrate by copy. A rollback to v0.2.2 must retain its original file.
+		for legacy_path in ["user://v020_world_voxels_%d.json" % world_seed, "user://v016_terrain_slice_%d.json" % world_seed]:
+			if not FileAccess.file_exists(legacy_path):
+				continue
 			var legacy = JSON.parse_string(FileAccess.get_file_as_string(legacy_path))
-			if typeof(legacy) == TYPE_DICTIONARY and int(legacy.get("schema_version", -1)) == 1 and int(legacy.get("generator_version", -1)) == 1 and int(legacy.get("world_seed", -1)) == world_seed:
-				legacy["generator_version"] = 2
-				persistence.set("state", legacy)
-				persistence.call("save_now")
-				print("WORLD_SAVE_MIGRATION_COPY source=", legacy_path, " destination=", selected_path)
+			if typeof(legacy) != TYPE_DICTIONARY:
+				continue
+			if int(legacy.get("schema_version", -1)) != 1 or int(legacy.get("world_seed", -1)) != world_seed:
+				continue
+			if int(legacy.get("generator_version", -1)) not in [1, 2]:
+				continue
+			legacy["generator_version"] = 2
+			persistence.set("state", legacy)
+			persistence.call("save_now")
+			print("WORLD_SAVE_MIGRATION_COPY source=", legacy_path, " destination=", selected_path)
+			break
 
 func _setup_inventory() -> void:
 	inventory = Node.new()
@@ -293,14 +352,22 @@ func _setup_terrain() -> void:
 	var stone_model = _cube_model(Color(0.39, 0.42, 0.40))
 	var surface_model = _cube_model(Color(0.30, 0.48, 0.25))
 	var brick_model = _cube_model(Color(0.55, 0.53, 0.49))
+	var wood_model = _cube_model(Color(0.62, 0.38, 0.19), "wood")
+	var glass_model = _cube_model(Color(0.63, 0.82, 0.90), "glass")
+	var metal_model = _cube_model(Color(0.46, 0.55, 0.62), "metal")
+	var concrete_model = _cube_model(Color(0.62, 0.61, 0.57), "stone")
 
 	var air_id := int(library.call("add_model", empty_model))
 	var stone_id := int(library.call("add_model", stone_model))
 	var surface_id := int(library.call("add_model", surface_model))
 	var brick_id := int(library.call("add_model", brick_model))
+	var wood_id := int(library.call("add_model", wood_model))
+	var glass_id := int(library.call("add_model", glass_model))
+	var metal_id := int(library.call("add_model", metal_model))
+	var concrete_id := int(library.call("add_model", concrete_model))
 	library.call("bake")
 
-	if [air_id, stone_id, surface_id, brick_id] != [AIR, STONE, SURFACE, BRICK]:
+	if [air_id, stone_id, surface_id, brick_id, wood_id, glass_id, metal_id, concrete_id] != [AIR, STONE, SURFACE, BRICK, WOOD, GLASS, METAL, CONCRETE]:
 		push_error("Voxel model IDs changed; terrain contract invalid")
 		return
 
@@ -342,14 +409,14 @@ func _setup_viewer() -> void:
 	viewer.position = Vector3(0.0, 1.2, 0.0)
 	player.add_child(viewer)
 
-func _cube_model(color: Color):
+func _cube_model(color: Color, preferred_kind := ""):
 	var model = ClassDB.instantiate("VoxelBlockyModelCube")
 	model.set("color", color)
 	model.set("atlas_size_in_tiles", Vector2i.ONE)
-	var kind := "stone"
-	if color.g > color.r * 1.3:
+	var kind := preferred_kind if not preferred_kind.is_empty() else "stone"
+	if preferred_kind.is_empty() and color.g > color.r * 1.3:
 		kind = "grass"
-	elif color.r > 0.5:
+	elif preferred_kind.is_empty() and color.r > 0.5:
 		kind = "brick"
 	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make(kind, Color.WHITE)
 	material.vertex_color_use_as_albedo = true

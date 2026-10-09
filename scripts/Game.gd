@@ -14,6 +14,8 @@ var quarry_expedition: Node3D
 var macro_terrain: MacroTerrain
 var egg_hunt: EggHunt
 var prop_serial := 0
+var active_blasts: Array[Dictionary] = []
+var processing_blasts := false
 var spawn_menu_serial := 0
 var spawned_npc_serial := 0
 var world_plan: KimiWorldPlan
@@ -155,6 +157,7 @@ func reset_field(all_maps := false) -> String:
 	var custom_save := OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
 	if custom_save.is_empty():
 		for seed in seeds:
+			paths.append("user://v023_world_voxels_%d.json" % seed)
 			paths.append("user://v020_world_voxels_%d.json" % seed)
 			paths.append("user://v016_terrain_slice_%d.json" % seed)
 	else:
@@ -572,6 +575,7 @@ func _spawn_starter_props() -> void:
 	for i in range(4):
 		spawn_prop("crate", Vector3(42 + i * 3.0, 1.3, 45))
 	spawn_prop("barrel", Vector3(53, 1.2, 45))
+	spawn_prop("explosive_barrel", Vector3(55.5, 1.2, 45))
 	spawn_prop("ball", Vector3(58, 1.0, 48))
 	spawn_prop("cone", Vector3(62, 1.0, 44))
 
@@ -621,6 +625,120 @@ func select_build_material(item_id: String) -> bool:
 	if player != null:
 		player.call("select_tool", "place")
 	return true
+
+func toggle_build_mode() -> String:
+	if terrain_slice == null:
+		return "No editable terrain"
+	var active := bool(terrain_slice.call("toggle_creative_build"))
+	return "BUILD // CREATIVE MATERIALS ON" if active else "BUILD // RESOURCE MODE"
+
+func cycle_build_material() -> String:
+	if terrain_slice == null:
+		return "No editable terrain"
+	var material := str(terrain_slice.call("cycle_place_item"))
+	if player != null:
+		player.call("select_tool", "place")
+		player.call("_sync_tool_label")
+	return "BUILD // " + material.replace("_", " ").to_upper()
+
+func place_explosive_barrel() -> String:
+	if player == null or terrain_slice == null:
+		return "World not ready"
+	if not bool(terrain_slice.get("creative_build")):
+		return "Enable BUILD mode first (F)"
+	var camera_node: Camera3D = player.get("camera")
+	if camera_node == null:
+		return "No active camera"
+	var aim := camera_node.global_position - camera_node.global_transform.basis.z * 4.5
+	var query := PhysicsRayQueryParameters3D.create(aim + Vector3.UP * 5.0, aim - Vector3.UP * 12.0, 1)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return "No solid foundation below barrel"
+	var point: Vector3 = hit.position + Vector3.UP * 1.08
+	if point.distance_to(player.global_position) < 2.0:
+		return "Move back before placing barrel"
+	for prop in get_tree().get_nodes_in_group("sandbox_prop"):
+		if prop is Node3D and prop.global_position.distance_to(point) < 1.5:
+			return "Barrel placement obstructed"
+	spawn_prop("explosive_barrel", point)
+	return "EXPLOSIVE BARREL PLACED // HAMMER TO DETONATE"
+
+func trigger_build_explosion(location: Vector3, radius: float, damage: float, source: Node) -> void:
+	active_blasts.append({"point": location, "radius": radius, "damage": damage, "source": source})
+	if processing_blasts:
+		return
+	processing_blasts = true
+	var triggered := 0
+	while not active_blasts.is_empty() and triggered < 16:
+		var blast: Dictionary = active_blasts.pop_front()
+		_execute_build_explosion(blast)
+		triggered += 1
+	active_blasts.clear()
+	processing_blasts = false
+
+func _execute_build_explosion(blast: Dictionary) -> void:
+	var center: Vector3 = blast.point
+	var radius := float(blast.radius)
+	var damage := float(blast.damage)
+	var source: Node = blast.source
+	var blocks := 0
+	if terrain_slice != null:
+		blocks = int(terrain_slice.call("blast_placed_blocks", center, radius, 6.5))
+	for enemy in get_tree().get_nodes_in_group("spiral_enemy"):
+		if not is_instance_valid(enemy) or not enemy is Node3D:
+			continue
+		var delta: Vector3 = enemy.global_position - center
+		if delta.length() < radius and enemy.has_method("take_damage"):
+			enemy.call("take_damage", damage * (1.0 - delta.length() / radius), delta.normalized() * 9.0, center)
+	for body in get_tree().get_nodes_in_group("sandbox_prop"):
+		if not is_instance_valid(body) or body == source or not body is RigidBody3D:
+			continue
+		var delta: Vector3 = body.global_position - center
+		if delta.length() >= radius:
+			continue
+		var impulse := delta.normalized() * (radius - delta.length()) * 5.0 + Vector3.UP * 5.0
+		if body.is_in_group("explosive_barrel") and body.has_method("take_damage"):
+			body.call("take_damage", damage, impulse, center)
+		elif not body.freeze:
+			body.apply_central_impulse(impulse)
+	if player != null:
+		var player_distance := player.global_position.distance_to(center)
+		if player_distance < radius and player.has_method("take_spiral_damage"):
+			player.call("take_spiral_damage", damage * (1.0 - player_distance / radius), "EXPLOSIVE BARREL")
+	_spawn_blast_visual(center, radius)
+	if hud != null:
+		hud.call("flash", "BOOM // %d BUILT BLOCKS DESTROYED" % blocks, 2.0)
+	print("SPIRAL_BUILD_BLAST radius=", radius, " blocks=", blocks)
+
+func _spawn_blast_visual(point: Vector3, radius: float) -> void:
+	var sfx := AudioStreamPlayer3D.new()
+	sfx.name = "ExplosionSound"
+	sfx.stream = load("res://assets/audio/explosion.wav")
+	sfx.position = point
+	sfx.volume_db = -5.0
+	sfx.max_distance = 65.0
+	add_child(sfx)
+	sfx.finished.connect(sfx.queue_free)
+	sfx.play()
+	var flash := MeshInstance3D.new()
+	flash.name = "ExplosionFlash"
+	var sphere := SphereMesh.new()
+	sphere.radius = 1.0
+	sphere.height = 2.0
+	flash.mesh = sphere
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = Color(1.0, 0.65, 0.13, 0.65)
+	material.no_depth_test = true
+	flash.material_override = material
+	flash.position = point
+	flash.scale = Vector3.ONE * 0.25
+	add_child(flash)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(flash, "scale", Vector3.ONE * radius, 0.4)
+	tween.tween_property(material, "albedo_color", Color(0.95, 0.2, 0.04, 0.0), 0.4)
+	tween.chain().tween_callback(flash.queue_free)
 
 func terrain_craft_recipe(recipe_id: String) -> String:
 	if terrain_slice == null:
@@ -684,6 +802,10 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 	body.name = "Prop_%s_%04d" % [kind, prop_serial]
 	body.position = Vector3(clamp(at.x, -450.0, 450.0), max(at.y, 1.0), clamp(at.z, -450.0, 450.0))
 	body.mass = 2.0
+	if kind == "explosive_barrel":
+		body.set_script(load("res://scripts/systems/ExplosiveBarrel.gd"))
+		body.set("game", self)
+		body.mass = 12.0
 	body.add_to_group("sandbox_prop")
 	body.set_meta("prop_kind", kind)
 	body.set_meta("spawned_by_sandbox", true)
@@ -701,7 +823,7 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 			sphere_shape.radius = 0.75
 			collision.shape = sphere_shape
 			color = Color(0.92, 0.72, 0.18)
-		"barrel":
+		"barrel", "explosive_barrel":
 			var cylinder := CylinderMesh.new()
 			cylinder.top_radius = 0.7
 			cylinder.bottom_radius = 0.7
@@ -711,7 +833,7 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 			cylinder_shape.radius = 0.7
 			cylinder_shape.height = 1.8
 			collision.shape = cylinder_shape
-			color = Color(0.25, 0.45, 0.62)
+			color = Color(0.85, 0.16, 0.10) if kind == "explosive_barrel" else Color(0.25, 0.45, 0.62)
 		"cone":
 			var cone := CylinderMesh.new()
 			cone.top_radius = 0.05
@@ -743,7 +865,7 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 
 	mesh_instance.material_override = _material(color, 0.78)
 	var prop_material: StandardMaterial3D = mesh_instance.material_override
-	if kind == "crate" or kind == "barrel":
+	if kind == "crate" or kind == "barrel" or kind == "explosive_barrel":
 		prop_material = load("res://scripts/systems/ObjectMaterials.gd").make("wood" if kind == "crate" else "metal", color)
 		mesh_instance.material_override = prop_material
 	body.add_child(mesh_instance)

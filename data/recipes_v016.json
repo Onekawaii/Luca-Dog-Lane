@@ -19,6 +19,43 @@
       "outputs": {
         "trail_beacon": 1
       }
+    },
+    "wood_plank": {
+      "label": "Wood Planks",
+      "ingredients": {
+        "grass_block": 2
+      },
+      "outputs": {
+        "wood_plank": 4
+      }
+    },
+    "glass_block": {
+      "label": "Glass Blocks",
+      "ingredients": {
+        "stone": 2
+      },
+      "outputs": {
+        "glass_block": 2
+      }
+    },
+    "metal_block": {
+      "label": "Steel Blocks",
+      "ingredients": {
+        "stone": 4
+      },
+      "outputs": {
+        "metal_block": 2
+      }
+    },
+    "concrete_block": {
+      "label": "Concrete Blocks",
+      "ingredients": {
+        "stone": 2,
+        "stone_brick": 1
+      },
+      "outputs": {
+        "concrete_block": 3
+      }
     }
   }
 }

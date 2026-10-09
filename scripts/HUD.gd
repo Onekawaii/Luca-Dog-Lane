@@ -540,7 +540,7 @@ func has_modal() -> bool:
 func _update_controls_label() -> void:
 	if controls_label == null:
 		return
-	controls_label.text = "NOCLIP ON // V WALK" if noclip_active else "LMB USE / HOLD TERRAIN // RMB BRUSH // I PACK // ESC"
+	controls_label.text = "NOCLIP ON // V WALK" if noclip_active else "LMB USE // RMB BRUSH // F BUILD // G BLOCK // H BARREL // I PACK // ESC"
 	if vehicle_active:
 		controls_label.text = "CAR " + str(player.riding.call("get_camera_mode_name")) + " // R / F5 VIEW // E EXIT // ESC MENU"
 	controls_label.visible = not mobile_ui

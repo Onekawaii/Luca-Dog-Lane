@@ -30,6 +30,30 @@
       "kind": "utility",
       "stack_max": 32,
       "description": "Placeable navigation marker reserved for the map/content pipeline."
+    },
+    "wood_plank": {
+      "label": "Wood Planks",
+      "kind": "building",
+      "stack_max": 999,
+      "description": "Lightweight timber construction blocks."
+    },
+    "glass_block": {
+      "label": "Glass Blocks",
+      "kind": "building",
+      "stack_max": 999,
+      "description": "Fragile transparent-looking construction glass."
+    },
+    "metal_block": {
+      "label": "Steel Blocks",
+      "kind": "building",
+      "stack_max": 999,
+      "description": "Reinforced metal for sturdy structures."
+    },
+    "concrete_block": {
+      "label": "Concrete Blocks",
+      "kind": "building",
+      "stack_max": 999,
+      "description": "Heavy blast-resistant walls and foundations."
     }
   }
 }
