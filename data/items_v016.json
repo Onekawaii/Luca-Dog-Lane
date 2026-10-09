@@ -54,6 +54,12 @@
       "kind": "building",
       "stack_max": 999,
       "description": "Heavy blast-resistant walls and foundations."
+    },
+    "apple": {
+      "label": "Apple",
+      "kind": "consumable",
+      "stack_max": 99,
+      "description": "A collected food item carried in the satchel."
     }
   }
 }

@@ -15,6 +15,10 @@ var spawn_button: Button
 var map_button: Button
 var tool_button: Button
 var inventory_button: Button
+var build_button: Button
+var loadout_button: Button
+var build_panel: Panel
+var loadout_panel: Panel
 var inventory_panel: Panel
 var quickbar: Control
 var tool_icon: TextureRect
@@ -92,9 +96,10 @@ func _ready() -> void:
 	_build_spawn_menu()
 	_build_map_menu()
 	_build_inventory_menu()
+	_build_catalog_and_loadout()
 	_build_quickbar()
 	_build_encounter_panel()
-	for panel in [spawn_panel, map_panel, inventory_panel, encounter_panel]:
+	for panel in [spawn_panel, map_panel, inventory_panel, build_panel, loadout_panel, encounter_panel]:
 		panel.visibility_changed.connect(sync_modal_input)
 
 	root.resized.connect(_layout_for_viewport)
@@ -263,6 +268,12 @@ func _build_action_buttons() -> void:
 	inventory_button = _button("INVENTORY", Vector2.ZERO, Vector2(118, 38))
 	inventory_button.pressed.connect(_toggle_inventory_menu)
 	_register_interactive(inventory_button)
+	build_button = _button("BUILD",Vector2.ZERO,Vector2(126,38))
+	build_button.pressed.connect(_toggle_build_menu)
+	_register_interactive(build_button)
+	loadout_button = _button("1–9 SLOTS",Vector2.ZERO,Vector2(126,38))
+	loadout_button.pressed.connect(_toggle_loadout_menu)
+	_register_interactive(loadout_button)
 
 	noclip_button = _button("NOCLIP", Vector2.ZERO, Vector2(118, 38))
 	noclip_button.pressed.connect(func(): player.call("toggle_noclip"))
@@ -411,12 +422,41 @@ func _build_inventory_menu() -> void:
 	root.add_child(inventory_panel)
 	inventory_panel.visible = false
 
+func _build_catalog_and_loadout() -> void:
+	build_panel = Panel.new()
+	build_panel.set_script(load("res://scripts/systems/BuildCatalogPanel.gd"))
+	build_panel.set("game",game)
+	root.add_child(build_panel)
+	build_panel.visible = false
+	loadout_panel = Panel.new()
+	loadout_panel.set_script(load("res://scripts/systems/HotbarLoadoutPanel.gd"))
+	loadout_panel.set("game",game)
+	root.add_child(loadout_panel)
+	loadout_panel.visible = false
+
 func _toggle_inventory_menu() -> void:
-	inventory_panel.visible = not inventory_panel.visible
-	if inventory_panel.visible:
-		spawn_panel.visible = false
-		map_panel.visible = false
+	var opening := not inventory_panel.visible
+	close_modals(false)
+	inventory_panel.visible = opening
+	if opening:
 		inventory_panel.call("refresh")
+	sync_modal_input()
+
+func _toggle_build_menu() -> void:
+	var opening := not build_panel.visible
+	close_modals(false)
+	build_panel.visible = opening
+	if opening:
+		build_panel.call("refresh")
+	sync_modal_input()
+
+func _toggle_loadout_menu() -> void:
+	var opening := not loadout_panel.visible
+	close_modals(false)
+	loadout_panel.visible = opening
+	if opening:
+		loadout_panel.call("refresh")
+	sync_modal_input()
 
 func _build_encounter_panel() -> void:
 	encounter_panel = Panel.new()
@@ -472,32 +512,36 @@ func _layout_for_viewport() -> void:
 	move_center = move_base.position + move_base.size * 0.5
 
 	var right_x := maxf(880.0, size.x - 130.0)
-	if mobile_ui:
-		menu_button.position = Vector2(right_x, 12.0)
-		map_button.position = Vector2(right_x, 54.0)
-		tool_button.position = Vector2(right_x, 96.0)
-		inventory_button.position = Vector2(right_x, 138.0)
-		noclip_button.position = Vector2(right_x, 180.0)
+	if mobile_ui or developer_ui:
+		menu_button.position=Vector2(right_x,12.0)
+		map_button.position=Vector2(right_x,54.0)
+		tool_button.position=Vector2(right_x,96.0)
+		inventory_button.position=Vector2(right_x,138.0)
+		build_button.position=Vector2(right_x,180.0)
+		loadout_button.position=Vector2(right_x,222.0)
+		noclip_button.position=Vector2(right_x,264.0)
+		spawn_button.position=Vector2(right_x,306.0)
 	else:
-		spawn_button.position = Vector2(right_x, 12.0)
-		map_button.position = Vector2(right_x, 54.0)
-		tool_button.position = Vector2(right_x, 96.0)
-		inventory_button.position = Vector2(right_x, 54.0 if not developer_ui else 138.0)
-		noclip_button.position = Vector2(right_x, 180.0)
-		menu_button.position = Vector2(right_x, 12.0 if not developer_ui else 222.0)
+		menu_button.position=Vector2(right_x,12.0)
+		inventory_button.position=Vector2(right_x,54.0)
+		build_button.position=Vector2(right_x,96.0)
+		loadout_button.position=Vector2(right_x,138.0)
+		noclip_button.position=Vector2(right_x,180.0)
 
 	use_button.position = Vector2(maxf(790.0, size.x - 198.0), maxf(500.0, size.y - 88.0))
 	jump_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
 	down_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(500.0, size.y - 88.0))
 	view_button.position = Vector2(maxf(680.0, size.x - 318.0), maxf(420.0, size.y - 164.0))
 
-	# Don't render gameplay toasts through the ten-slot hotbar.
+	# Don't render gameplay toasts through the nine-slot hotbar.
 	status_label.position = Vector2(size.x * 0.5 - 300.0, maxf(280.0, size.y - 124.0))
 	crosshair.position = Vector2(size.x * 0.5 - 16.0, size.y * 0.5 - 16.0)
 	encounter_panel.position = Vector2(size.x * 0.5 - 310.0, maxf(300.0, size.y - 224.0))
 	spawn_panel.position = Vector2(maxf(500.0, size.x - 540.0), 100.0)
 	map_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 350.0), maxf(0.0, size.y * 0.5 - 235.0))
-	inventory_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 270.0), maxf(8.0, size.y * 0.5 - 210.0))
+	inventory_panel.position = Vector2(maxf(0.0, size.x * 0.5 - 270.0), maxf(8.0, size.y * 0.5 - 234.0))
+	build_panel.position = Vector2(maxf(0.0,size.x*0.5-270.0),maxf(8.0,size.y*0.5-245.0))
+	loadout_panel.position = build_panel.position
 	if quickbar != null:
 		quickbar.call("layout_for_viewport", size)
 
@@ -518,6 +562,8 @@ func _apply_mode_visibility() -> void:
 	menu_button.visible = true
 	noclip_button.visible = (mobile_ui or developer_ui) and not vehicle_active
 	inventory_button.visible = true
+	build_button.visible = true
+	loadout_button.visible = true
 	inventory_label.visible = developer_ui
 	crosshair.visible = not mobile_ui
 	if quickbar != null:
@@ -535,12 +581,12 @@ func _process(delta: float) -> void:
 			status_label.visible = false
 
 func has_modal() -> bool:
-	return spawn_panel.visible or map_panel.visible or inventory_panel.visible or encounter_panel.visible
+	return spawn_panel.visible or map_panel.visible or inventory_panel.visible or build_panel.visible or loadout_panel.visible or encounter_panel.visible
 
 func _update_controls_label() -> void:
 	if controls_label == null:
 		return
-	controls_label.text = "NOCLIP ON // V WALK" if noclip_active else "LMB USE // RMB BRUSH // F BUILD // G BLOCK // H BARREL // I PACK // ESC"
+	controls_label.text = "NOCLIP ON // V WALK" if noclip_active else "LMB USE // RMB BRUSH // F BUILD // G BLOCK // H BARREL // I PACK // B BUILD // O SLOTS // ESC"
 	if vehicle_active:
 		controls_label.text = "CAR " + str(player.riding.call("get_camera_mode_name")) + " // R / F5 VIEW // E EXIT // ESC MENU"
 	controls_label.visible = not mobile_ui
@@ -549,6 +595,8 @@ func close_modals(sync := true) -> void:
 	spawn_panel.hide()
 	map_panel.hide()
 	inventory_panel.hide()
+	build_panel.hide()
+	loadout_panel.hide()
 	close_encounter()
 	if sync:
 		sync_modal_input()
@@ -574,8 +622,16 @@ func _input(event: InputEvent) -> void:
 			flash("DEVELOPER UI ON" if developer_ui else "DEVELOPER UI OFF", 1.2)
 			get_viewport().set_input_as_handled()
 			return
-		if event.keycode == KEY_I or event.keycode == KEY_B:
+		if event.keycode == KEY_I:
 			_toggle_inventory_menu()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_B:
+			_toggle_build_menu()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_O:
+			_toggle_loadout_menu()
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_M:
@@ -636,6 +692,10 @@ func _touch_in_ui(position: Vector2) -> bool:
 	if spawn_panel.visible and spawn_panel.get_global_rect().has_point(position):
 		return true
 	if inventory_panel.visible and inventory_panel.get_global_rect().has_point(position):
+		return true
+	if build_panel.visible and build_panel.get_global_rect().has_point(position):
+		return true
+	if loadout_panel.visible and loadout_panel.get_global_rect().has_point(position):
 		return true
 	if map_panel.visible and map_panel.get_global_rect().has_point(position):
 		return true

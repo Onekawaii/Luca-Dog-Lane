@@ -81,7 +81,8 @@ func _stamp_voxel_edit(pos: Vector3i) -> void:
 func _ready() -> void:
 	if world_plan == null:
 		world_plan = KimiWorldPlan.new(6060)
-	_build_world_terrain()
+	if not voxel_preview:
+		_build_world_terrain()  # Legacy mesh-only adapter; NEVER render over voxel terrain.
 	print(
 		"MACRO_TERRAIN_READY continuous=true cells=",
 		ceili((world_half * 2.0) / TERRAIN_CELL_M),

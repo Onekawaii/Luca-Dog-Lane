@@ -5,6 +5,7 @@ var failures: Array[String] = []
 func _initialize() -> void:
 	OS.set_environment("LUCA_V013_SLICE_SAVE_PATH", "user://qa_lantern_%d_{seed}.json" % Time.get_ticks_usec())
 	OS.set_environment("SPIRAL_STATE_SAVE_PATH", "user://qa_lantern_story_%d.json" % Time.get_ticks_usec())
+	OS.set_environment("SPIRAL_LOADOUT_SAVE_PATH", "user://qa_lantern_loadout_%d.json" % Time.get_ticks_usec())
 	call_deferred("_verify")
 
 func check(truth: bool, description: String) -> void:
@@ -24,8 +25,8 @@ func _verify() -> void:
 	var quickbar = hud.get("quickbar")
 	var inventory_panel = hud.get("inventory_panel")
 	var inventory = world.get("terrain_slice").get("inventory")
-	check(quickbar != null and quickbar.get("buttons").size() == 10, "ten interactive hotbar slots")
-	check(quickbar.get("buttons")[9].text.begins_with("0 "), "slot ten uses 0 shortcut")
+	check(quickbar != null and quickbar.get("buttons").size() == 9, "nine assignable hotbar slots")
+	check(quickbar.get("buttons")[8].text.begins_with("9 "), "slot nine uses 9 shortcut")
 	check(not player.get("lantern_enabled"), "lantern defaults off, respecting darkness")
 	var event := InputEventKey.new()
 	event.keycode = KEY_5
@@ -67,12 +68,9 @@ func _verify() -> void:
 			if descendant is Button and descendant.text == "PLACE":
 				has_place_button = true
 	check(not has_place_button, "satchel no longer duplicates PLACE/SELECTED controls")
-	check(inventory_panel.get("summary_label").text.contains("STONE 5"), "satchel displays authoritative inventory")
-	var materials: Array[ShaderMaterial] = world.get("macro_terrain").get("voxel_materials")
-	check(materials.size() == 3, "all voxel materials use visibility controls")
-	var shader_code: String = materials[0].shader.code
-	check(shader_code.contains("underground_view") and shader_code.contains("edited_columns"), "voxel shader suppresses untouched outdoor surface")
-	check(shader_code.contains("quarry"), "authored quarry remains visible even before mining")
+	check(inventory_panel.get("summary_label").text.contains("1 TYPES ON HAND"), "satchel counts stocked categories only")
+	check(world.get("macro_terrain").get("terrain_body") == null, "no visual mesh hides voxel road destruction")
+	check(world.get("terrain_slice").get("voxel_tool") != null, "actual voxel faces and collision are authoritative")
 	world.queue_free()
 	await process_frame
 	if failures.is_empty():

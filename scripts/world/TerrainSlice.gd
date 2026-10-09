@@ -9,6 +9,8 @@ const WOOD := 4
 const GLASS := 5
 const METAL := 6
 const CONCRETE := 7
+const ROAD := 8
+const ROAD_LINE := 9
 const BUILD_PALETTE := ["stone", "grass_block", "stone_brick", "wood_plank", "glass_block", "metal_block", "concrete_block"]
 const ITEM_TO_VOXEL := {"stone": STONE, "grass_block": SURFACE, "stone_brick": BRICK, "wood_plank": WOOD, "glass_block": GLASS, "metal_block": METAL, "concrete_block": CONCRETE}
 const VOXEL_TO_ITEM := {STONE: "stone", SURFACE: "grass_block", BRICK: "stone_brick", WOOD: "wood_plank", GLASS: "glass_block", METAL: "metal_block", CONCRETE: "concrete_block"}
@@ -370,6 +372,8 @@ func _setup_terrain() -> void:
 	var glass_model = _cube_model(Color(0.63, 0.82, 0.90), "glass")
 	var metal_model = _cube_model(Color(0.46, 0.55, 0.62), "metal")
 	var concrete_model = _cube_model(Color(0.62, 0.61, 0.57), "stone")
+	var road_model = _cube_model(Color(0.34, 0.37, 0.39), "metal")
+	var line_model = _cube_model(Color(0.94, 0.75, 0.20), "metal")
 
 	var air_id := int(library.call("add_model", empty_model))
 	var stone_id := int(library.call("add_model", stone_model))
@@ -379,9 +383,11 @@ func _setup_terrain() -> void:
 	var glass_id := int(library.call("add_model", glass_model))
 	var metal_id := int(library.call("add_model", metal_model))
 	var concrete_id := int(library.call("add_model", concrete_model))
+	var road_id := int(library.call("add_model", road_model))
+	var line_id := int(library.call("add_model", line_model))
 	library.call("bake")
 
-	if [air_id, stone_id, surface_id, brick_id, wood_id, glass_id, metal_id, concrete_id] != [AIR, STONE, SURFACE, BRICK, WOOD, GLASS, METAL, CONCRETE]:
+	if [air_id, stone_id, surface_id, brick_id, wood_id, glass_id, metal_id, concrete_id, road_id, line_id] != [AIR, STONE, SURFACE, BRICK, WOOD, GLASS, METAL, CONCRETE, ROAD, ROAD_LINE]:
 		push_error("Voxel model IDs changed; terrain contract invalid")
 		return
 
@@ -434,12 +440,8 @@ func _cube_model(color: Color, preferred_kind := ""):
 		kind = "brick"
 	var material: StandardMaterial3D = load("res://scripts/systems/ObjectMaterials.gd").make(kind, Color.WHITE)
 	material.vertex_color_use_as_albedo = true
-	if world_voxels and macro_terrain != null:
-		# Render the voxel mesh only at authored quarry, edits and underground.
-		# Voxel collision/data remains authoritative and unchanged.
-		model.call("set_material_override", 0, macro_terrain.make_voxel_visibility_material(kind, color))
-	else:
-		model.call("set_material_override", 0, material)
+	# One visible and collidable terrain authority: same block library drives both.
+	model.call("set_material_override", 0, material)
 	model.set("collision_mask", 1)
 	return model
 

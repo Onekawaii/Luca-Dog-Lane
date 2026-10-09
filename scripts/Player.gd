@@ -283,8 +283,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		use_tool()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode >= KEY_1 and event.keycode <= KEY_9:
 		select_hotbar_slot(event.keycode - KEY_1)
-	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_0:
-		select_hotbar_slot(9)
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_L:
 		toggle_lantern()
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
@@ -306,9 +304,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		toggle_vehicle_view()
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			select_hotbar_slot(posmod(hotbar_index - 1, 10))
+			select_hotbar_slot(posmod(hotbar_index - 1, 9))
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			select_hotbar_slot(posmod(hotbar_index + 1, 10))
+			select_hotbar_slot(posmod(hotbar_index + 1, 9))
 
 func set_gameplay_blocked(blocked: bool) -> void:
 	gameplay_blocked = blocked
@@ -404,30 +402,27 @@ func cycle_terrain_brush() -> void:
 		hud.call("flash", "TERRAIN BRUSH // %.2fm" % terrain_brush_radius, 1.2)
 
 func select_hotbar_slot(index: int) -> void:
-	if index < 0 or index >= 10:
+	if game == null or index < 0 or index >= 9:
 		return
-	var tool := ""
-	match index:
-		0: tool = "grab"
-		1: tool = "inspect"
-		2: tool = "mine"
-		3, 4, 5:
-			var material: String = ["stone", "grass_block", "stone_brick"][index - 3]
-			if game != null:
-				game.call("select_build_material", material)
-		6: tool = "field_hammer"
-		7:
-			if _current_tool_id() == "lantern":
+	var assignments: Array[Dictionary] = game.call("get_hotbar_slots")
+	if assignments.size() != 9:
+		return
+	var entry: Dictionary = assignments[index]
+	var item_id := str(entry.get("id",""))
+	if str(entry.get("type","")) == "item":
+		if not bool(game.call("select_build_material", item_id)):
+			return
+	elif item_id == "lantern":
+		if _current_tool_id() == "lantern":
+			toggle_lantern()
+		else:
+			select_tool("lantern")
+			if not lantern_enabled:
 				toggle_lantern()
-			else:
-				tool = "lantern"
-				if not lantern_enabled:
-					toggle_lantern()
-		8: tool = "craft"
-		9: tool = "remove"
-	if not tool.is_empty():
-		select_tool(tool)
+	else:
+		select_tool(item_id)
 	hotbar_index = index
+	_sync_tool_label()
 	if hud != null and hud.get("quickbar") != null:
 		hud.get("quickbar").call("refresh", true)
 
@@ -437,17 +432,13 @@ func select_tool(tool_id: String) -> void:
 	if held_body != null:
 		_release_held()
 	tool_index = tool_ids.find(tool_id)
-	match tool_id:
-		"grab": hotbar_index = 0
-		"inspect": hotbar_index = 1
-		"mine": hotbar_index = 2
-		"place":
-			var selected_material := str(game.call("get_selected_build_material")) if game != null else "stone_brick"
-			hotbar_index = 3 if selected_material == "stone" else (4 if selected_material == "grass_block" else 5)
-		"field_hammer": hotbar_index = 6
-		"lantern": hotbar_index = 7
-		"craft": hotbar_index = 8
-		"remove": hotbar_index = 9
+	if game != null:
+		var slots: Array[Dictionary] = game.call("get_hotbar_slots")
+		for index in range(slots.size()):
+			var entry: Dictionary = slots[index]
+			if str(entry.get("type","")) == "tool" and str(entry.get("id","")) == tool_id:
+				hotbar_index = index
+				break
 	_sync_tool_label()
 
 func cycle_tool() -> void:

@@ -88,9 +88,7 @@ func _run() -> void:
 	var large_brush: Array = terrain.call("_brush_offsets", 1.75)
 	check(small_brush.size() == 1 and medium_brush.size() == 7 and large_brush.size() == 27, "terraform brush is spherical, bounded and deterministic")
 
-	var terrain_mesh: ArrayMesh = macro.get("terrain_body").get_node("TerrainMesh").mesh
-	var arrays := terrain_mesh.surface_get_arrays(0)
-	check((arrays[Mesh.ARRAY_INDEX] as PackedInt32Array).size() > 0, "macro mountains use indexed shared geometry for smooth normals")
+	check(macro.get("terrain_body") == null and terrain.get("voxel_tool") != null, "voxel terrain is the sole world surface; smooth macro mesh disabled")
 
 	var inventory_panel = hud.get("inventory_panel")
 	var quickbar = hud.get("quickbar")

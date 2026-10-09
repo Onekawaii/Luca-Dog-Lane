@@ -96,10 +96,12 @@ func _run() -> void:
 	var road := world.get_node_or_null("MainRoadNS")
 	var pad := world.get_node_or_null("SandboxPad")
 	var skate := world.get_node_or_null("SkateFloor")
-	if road is MeshInstance3D and pad is MeshInstance3D and skate is MeshInstance3D:
-		_pass("roads/pad/skate floor are visual skins, not collision curbs")
+	if world.call("uses_world_voxels") and road == null and pad == null and skate == null:
+		_pass("roads/pad/skate are voxel surfaces, never floating non-collidable skins")
+	elif not world.call("uses_world_voxels") and road is MeshInstance3D and pad is MeshInstance3D and skate is MeshInstance3D:
+		_pass("legacy nonvoxel scene retains surface skins")
 	else:
-		_fail("one or more flat surfaces still create collision curbs")
+		_fail("duplicated road/pad overlay in voxel mode")
 
 	var north := world.get_node_or_null("NorthBoundary")
 	if north is StaticBody3D and north.get_child_count() == 1 and north.get_child(0) is CollisionShape3D:
@@ -152,16 +154,9 @@ func _run() -> void:
 			_fail("mountain shoulder still cliffs between samples: " + str(max_step))
 
 		var terrain_bodies := get_nodes_in_group("macro_terrain")
-		var collision_ready := terrain_bodies.size() == 1
+		var collision_ready := terrain_bodies.is_empty() and macro.get("terrain_body") == null if world.call("uses_world_voxels") else terrain_bodies.size() == 1
 		if collision_ready:
-			var terrain_body = terrain_bodies[0]
-			collision_ready = (
-				terrain_body.name == "WorldTerrain"
-				and terrain_body.get_node_or_null("TerrainMesh") is MeshInstance3D
-				and terrain_body.get_node_or_null("TerrainCollision") is CollisionShape3D
-			)
-		if collision_ready:
-			_pass("one continuous visible/collidable terrain owns the world surface")
+			_pass("single voxel terrain authority without parallel smooth collision/visual mesh")
 		else:
 			_fail("continuous terrain ownership contract failed")
 
