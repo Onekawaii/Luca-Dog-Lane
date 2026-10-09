@@ -138,7 +138,7 @@ func _build_header() -> void:
 	title.name = "Title"
 	title.position = Vector2(14, 6)
 	title.size = Vector2(438, 26)
-	title.text = "SPIRAL FIELD  //  v0.2.2"
+	title.text = "SPIRAL FIELD  //  v" + str(ProjectSettings.get_setting("application/config/version", "unknown"))
 	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	title.add_theme_font_size_override("font_size", 18)
 	title.add_theme_color_override("font_color", Color(0.96, 0.91, 1.0))
@@ -311,7 +311,7 @@ func _build_spawn_menu() -> void:
 	spawn_panel.add_child(header)
 
 	var kinds := [
-		["CRATE", "crate"], ["BARREL", "barrel"], ["BALL", "ball"], ["CONE", "cone"],
+		["CRATE", "crate"], ["EXPLOSIVE", "explosive_barrel"], ["BALL", "ball"], ["CONE", "cone"],
 		["RAMP", "ramp"], ["NPC", "npc"], ["BUGGY", "buggy"]
 	]
 	for i in range(kinds.size()):

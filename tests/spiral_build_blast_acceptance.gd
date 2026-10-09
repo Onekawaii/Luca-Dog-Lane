@@ -46,6 +46,50 @@ func _run() -> void:
     if not ready:
         _finish()
         return
+    # Previously the acceptance suite only demolished blocks it had just authored.
+    # This regression starts on pristine generator output with no saved edit key.
+    var native := Vector3i(31, -1, 31)
+    player.global_position = Vector3(26.5, 3.5, 31.5)
+    player.velocity = Vector3.ZERO
+    var native_ready := false
+    for _stream_tick in range(500):
+        await physics_frame
+        if bool(slice.call("_is_editable", native)):
+            native_ready = true
+            break
+    check(native_ready, "pristine ground chunk is loaded before blasting")
+    var native_before := int(tool.call("get_voxel", native)) if native_ready else 0
+    var edits_before: Dictionary = slice.get("persistence").call("get_voxel_deltas")
+    var native_key := "31,-1,31"
+    check(native_before != 0 and not edits_before.has(native_key), "target is untouched generated terrain, not player-built voxels")
+    if native_before != 0 and native_ready:
+        var ray := PhysicsRayQueryParameters3D.create(Vector3(31.5, 7.0, 31.5), Vector3(31.5, -8, 31.5), 1)
+        var collision_before: Dictionary = {}
+        for _collision_tick in range(140):
+            await physics_frame
+            collision_before = player.get_world_3d().direct_space_state.intersect_ray(ray)
+            if not collision_before.is_empty():
+                break
+        var ground_barrel = world.call("spawn_prop", "explosive_barrel", Vector3(31.5, 1.0, 31.5))
+        ground_barrel.call("take_damage", 25.0, Vector3.ZERO, player.global_position)
+        var native_after := int(tool.call("get_voxel", native))
+        var native_delta: Dictionary = slice.get("persistence").call("get_voxel_deltas")
+        check(native_after == 0 and native_delta.has(native_key) and int(native_delta[native_key]) == 0, "barrel carves crater in untouched generated ground")
+        var native_air := 0
+        for x in range(29, 34):
+            for z in range(29, 34):
+                if native_before != 0 and int(tool.call("get_voxel", Vector3i(x,-1,z))) == 0:
+                    native_air += 1
+        check(native_air >= 8, "explosion carves a visible multi-cell ground crater, not an FX overlay")
+        for _frame in range(180):
+            await physics_frame
+        var collision_after: Dictionary = player.get_world_3d().direct_space_state.intersect_ray(ray)
+        print("CRATER_COLLISION_DEBUG before=", collision_before, " after=", collision_after)
+        check(not collision_before.is_empty() and not collision_after.is_empty() and float(collision_after.position.y) < float(collision_before.position.y) - 0.75, "terrain collision rebuild follows destruction")
+        slice.get("persistence").call("save_now")
+        var disk = JSON.parse_string(FileAccess.get_file_as_string(slice.get("persistence").get("save_path")))
+        check(typeof(disk) == TYPE_DICTIONARY and int(disk.get("edits", {}).get(native_key, -1)) == 0, "pristine terrain crater persists in world save")
+    check(str(world.get("hud").get("header_panel").get_node("Title").text).contains("0.2.4"), "HUD release version agrees with installed build")
     var spawned := 0
     for x in range(16, 22):
         for z in range(25, 31):
@@ -95,6 +139,21 @@ func _run() -> void:
     check(inventory.call("count_item", "wood_plank") == 0, "creative building does not fabricate survival inventory")
     world.queue_free()
     for _i in range(4):
+        await process_frame
+    var reloaded_world = (load("res://scenes/Main.tscn") as PackedScene).instantiate()
+    root.add_child(reloaded_world)
+    var reloaded_player = reloaded_world.get("player")
+    reloaded_player.global_position = Vector3(26.5, 4.0, 31.5)
+    var reloaded_slice = reloaded_world.get("terrain_slice")
+    var reload_ready := false
+    for _reload_tick in range(620):
+        await physics_frame
+        if bool(reloaded_slice.call("_is_editable", Vector3i(31,-1,31))):
+            reload_ready = true
+            break
+    check(reload_ready and int(reloaded_slice.get("voxel_tool").call("get_voxel", Vector3i(31,-1,31))) == 0, "destroyed generated terrain stays destroyed after world reload")
+    reloaded_world.queue_free()
+    for _i in range(5):
         await process_frame
     _check_copy_migration()
     _finish()

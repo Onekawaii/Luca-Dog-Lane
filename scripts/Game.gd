@@ -13,6 +13,7 @@ var terrain_slice: Node3D
 var quarry_expedition: Node3D
 var macro_terrain: MacroTerrain
 var egg_hunt: EggHunt
+const MAX_LIVE_EXPLOSIVE_BARRELS := 14
 var prop_serial := 0
 var active_blasts: Array[Dictionary] = []
 var processing_blasts := false
@@ -654,11 +655,13 @@ func place_explosive_barrel() -> String:
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	if hit.is_empty():
 		return "No solid foundation below barrel"
-	var point: Vector3 = hit.position + Vector3.UP * 1.08
+	var point: Vector3 = hit.position + Vector3.UP * 0.80
+	if get_tree().get_nodes_in_group("explosive_barrel").size() >= MAX_LIVE_EXPLOSIVE_BARRELS:
+		return "Barrel limit reached // detonate existing barrels"
 	if point.distance_to(player.global_position) < 2.0:
 		return "Move back before placing barrel"
 	for prop in get_tree().get_nodes_in_group("sandbox_prop"):
-		if prop is Node3D and prop.global_position.distance_to(point) < 1.5:
+		if prop is Node3D and prop.global_position.distance_to(point) < 2.3:
 			return "Barrel placement obstructed"
 	spawn_prop("explosive_barrel", point)
 	return "EXPLOSIVE BARREL PLACED // HAMMER TO DETONATE"
@@ -681,9 +684,9 @@ func _execute_build_explosion(blast: Dictionary) -> void:
 	var radius := float(blast.radius)
 	var damage := float(blast.damage)
 	var source: Node = blast.source
-	var blocks := 0
+	var damage_report := {"total": 0, "ground": 0, "built": 0}
 	if terrain_slice != null:
-		blocks = int(terrain_slice.call("blast_placed_blocks", center, radius, 6.5))
+		damage_report = terrain_slice.call("blast_world_blocks", center, radius, 6.5)
 	for enemy in get_tree().get_nodes_in_group("spiral_enemy"):
 		if not is_instance_valid(enemy) or not enemy is Node3D:
 			continue
@@ -706,9 +709,35 @@ func _execute_build_explosion(blast: Dictionary) -> void:
 		if player_distance < radius and player.has_method("take_spiral_damage"):
 			player.call("take_spiral_damage", damage * (1.0 - player_distance / radius), "EXPLOSIVE BARREL")
 	_spawn_blast_visual(center, radius)
+	if int(damage_report.total) > 0:
+		_spawn_blast_debris(center, int(damage_report.total))
 	if hud != null:
-		hud.call("flash", "BOOM // %d BUILT BLOCKS DESTROYED" % blocks, 2.0)
-	print("SPIRAL_BUILD_BLAST radius=", radius, " blocks=", blocks)
+		hud.call("flash", "BLAST // %d GROUND + %d BUILT VOXELS" % [int(damage_report.ground), int(damage_report.built)], 2.5)
+	print("SPIRAL_BUILD_BLAST radius=", radius, " ground=", damage_report.ground, " built=", damage_report.built)
+
+func _spawn_blast_debris(point: Vector3, damaged: int) -> void:
+	# Actual short-lived physics chunks, bounded for phone performance.
+	var count := mini(12, maxi(3, damaged / 12))
+	for i in range(count):
+		var angle := float(i) * TAU / float(count)
+		var body := RigidBody3D.new()
+		body.name = "BlastDebris"
+		body.mass = 0.25
+		body.position = point + Vector3(cos(angle), 0.45, sin(angle)) * 0.30
+		var visual := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3.ONE * 0.22
+		visual.mesh = box
+		visual.material_override = _material(Color(0.43, 0.39, 0.34))
+		body.add_child(visual)
+		var collider := CollisionShape3D.new()
+		var shape := BoxShape3D.new()
+		shape.size = box.size
+		collider.shape = shape
+		body.add_child(collider)
+		add_child(body)
+		body.apply_central_impulse(Vector3(cos(angle) * 2.7, 3.3 + float(i % 3), sin(angle) * 2.7))
+		get_tree().create_timer(1.8).timeout.connect(body.queue_free)
 
 func _spawn_blast_visual(point: Vector3, radius: float) -> void:
 	var sfx := AudioStreamPlayer3D.new()
@@ -766,6 +795,8 @@ func terrain_inventory_summary() -> String:
 	return str(terrain_slice.call("inventory_summary"))
 
 func spawn_from_menu(kind: String) -> void:
+	if kind == "explosive_barrel" and get_tree().get_nodes_in_group("explosive_barrel").size() >= MAX_LIVE_EXPLOSIVE_BARRELS:
+		return
 	spawn_menu_serial += 1
 	var at := _menu_spawn_point(player.call("get_spawn_point"), kind)
 	if kind == "npc":
@@ -825,13 +856,13 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 			color = Color(0.92, 0.72, 0.18)
 		"barrel", "explosive_barrel":
 			var cylinder := CylinderMesh.new()
-			cylinder.top_radius = 0.7
-			cylinder.bottom_radius = 0.7
-			cylinder.height = 1.8
+			cylinder.top_radius = 0.54 if kind == "explosive_barrel" else 0.7
+			cylinder.bottom_radius = cylinder.top_radius
+			cylinder.height = 1.45 if kind == "explosive_barrel" else 1.8
 			mesh_instance.mesh = cylinder
 			var cylinder_shape := CylinderShape3D.new()
-			cylinder_shape.radius = 0.7
-			cylinder_shape.height = 1.8
+			cylinder_shape.radius = cylinder.top_radius
+			cylinder_shape.height = cylinder.height
 			collision.shape = cylinder_shape
 			color = Color(0.85, 0.16, 0.10) if kind == "explosive_barrel" else Color(0.25, 0.45, 0.62)
 		"cone":
@@ -870,15 +901,40 @@ func spawn_prop(kind: String, at: Vector3) -> RigidBody3D:
 		mesh_instance.material_override = prop_material
 	body.add_child(mesh_instance)
 	body.add_child(collision)
+	if kind == "explosive_barrel":
+		for height_offset in [-0.48, 0.45]:
+			var band := MeshInstance3D.new()
+			var ring := CylinderMesh.new()
+			ring.top_radius = 0.56
+			ring.bottom_radius = 0.56
+			ring.height = 0.10
+			band.mesh = ring
+			band.position.y = height_offset
+			band.material_override = _material(Color(1.0, 0.76, 0.05))
+			body.add_child(band)
 	add_child(body)
 	_attach_stream_guard(body)
 	return body
 
-func duplicate_prop(source: Node3D) -> void:
+func duplicate_prop(source: Node3D) -> bool:
 	if not source.has_meta("prop_kind"):
-		return
+		return false
 	var kind := str(source.get_meta("prop_kind"))
-	spawn_prop(kind, source.global_position + Vector3(2.2, 1.0, 0))
+	if kind == "explosive_barrel" and get_tree().get_nodes_in_group("explosive_barrel").size() >= MAX_LIVE_EXPLOSIVE_BARRELS:
+		return false
+	# Search a horizontal ring instead of stacking duplicates higher each time.
+	for i in range(12):
+		var theta := float(i) * TAU / 12.0
+		var location := source.global_position + Vector3(cos(theta) * 2.4, 0.1, sin(theta) * 2.4)
+		var clear := true
+		for body in get_tree().get_nodes_in_group("sandbox_prop"):
+			if body is Node3D and not body.is_queued_for_deletion() and body.global_position.distance_to(location) < 2.1:
+				clear = false
+				break
+		if clear:
+			spawn_prop(kind, location)
+			return true
+	return false
 
 func _spawn_npc(at: Vector3, display_name: String) -> void:
 	var npc := CharacterBody3D.new()

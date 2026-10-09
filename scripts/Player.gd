@@ -564,9 +564,9 @@ func use_tool() -> void:
 					hud.call("flash", "Removed prop")
 		"duplicate":
 			if target.is_in_group("sandbox_prop"):
-				game.call("duplicate_prop", target)
+				var duplicated := bool(game.call("duplicate_prop", target))
 				if hud != null:
-					hud.call("flash", "Duplicated prop")
+					hud.call("flash", "Duplicated prop" if duplicated else "No space / barrel limit reached")
 		"inspect":
 			if hud != null:
 				var groups = target.get_groups()

@@ -195,37 +195,51 @@ func toggle_creative_build() -> bool:
 	creative_build = not creative_build
 	return creative_build
 
-func blast_placed_blocks(world_position: Vector3, radius: float, power: float) -> int:
-	if voxel_tool == null or persistence == null:
-		return 0
-	var edits: Dictionary = persistence.call("get_voxel_deltas")
-	var center := Vector3i(floori(world_position.x), floori(world_position.y), floori(world_position.z))
-	var extent := ceili(clampf(radius, 0.5, 5.0))
-	var destroyed := 0
+func blast_world_blocks(world_position: Vector3, radius: float, power: float) -> Dictionary:
+	# BOTH player-authored construction and freshly generated terrain are editable.
+	# This is authoritative voxel destruction (not a transient mesh/scorch overlay).
+	var report := {"total": 0, "built": 0, "ground": 0}
+	if voxel_tool == null or persistence == null or terrain == null:
+		return report
+	var saved_edits: Dictionary = persistence.call("get_voxel_deltas")
+	var origin: Vector3 = terrain.to_local(world_position)
+	var center := Vector3i(floori(origin.x), floori(origin.y), floori(origin.z))
+	var bounded_radius := clampf(radius, 0.5, 5.0)
+	var extent := ceili(bounded_radius)
+	var candidates: Array[Dictionary] = []
 	for x in range(center.x - extent, center.x + extent + 1):
 		for y in range(center.y - extent, center.y + extent + 1):
 			for z in range(center.z - extent, center.z + extent + 1):
-				if destroyed >= 256:
-					return destroyed
 				var pos := Vector3i(x, y, z)
 				var distance := _voxel_world_center(pos).distance_to(world_position)
-				if distance >= radius or not _is_editable(pos):
-					continue
-				var key := "%d,%d,%d" % [x, y, z]
-				if not edits.has(key):
-					continue # Native geology and landmarks are NOT demolished.
-				var value := int(voxel_tool.call("get_voxel", pos))
-				if value == AIR or value != int(edits[key]):
-					continue
-				var impact := power * (1.0 - distance / radius)
-				if impact < float(BLAST_RESISTANCE.get(value, 2.0)):
-					continue
-				voxel_tool.call("set_voxel", pos, AIR)
-				persistence.call("set_voxel_delta", pos, AIR)
-				if macro_terrain != null:
-					macro_terrain.mark_voxel_edit(pos)
-				destroyed += 1
-	return destroyed
+				if distance < bounded_radius:
+					candidates.append({"pos": pos, "distance": distance})
+	# Nearest-first prevents the old X-axis ordered edit cap producing half craters.
+	candidates.sort_custom(func(a: Dictionary, b: Dictionary): return float(a.distance) < float(b.distance))
+	for candidate in candidates:
+		if int(report.total) >= 256:
+			break
+		var pos: Vector3i = candidate.pos
+		if not _is_editable(pos):
+			continue  # Do not write into an unstreamed region.
+		var kind := int(voxel_tool.call("get_voxel", pos))
+		if kind == AIR:
+			continue
+		var distance := float(candidate.distance)
+		if power * (1.0 - distance / bounded_radius) < float(BLAST_RESISTANCE.get(kind, 2.0)):
+			continue
+		var key := "%d,%d,%d" % [pos.x, pos.y, pos.z]
+		var constructed := saved_edits.has(key) and int(saved_edits[key]) != AIR
+		voxel_tool.call("set_voxel", pos, AIR)
+		persistence.call("set_voxel_delta", pos, AIR)
+		if macro_terrain != null:
+			macro_terrain.mark_voxel_edit(pos)
+		report.total += 1
+		if constructed:
+			report.built += 1
+		else:
+			report.ground += 1
+	return report
 
 func craft_recipe(recipe_id: String) -> String:
 	if inventory == null:

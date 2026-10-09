@@ -9,11 +9,11 @@ class SpiralFieldV02Contracts(unittest.TestCase):
         project = (ROOT / "project.godot").read_text(encoding="utf-8")
         presets = (ROOT / "export_presets.cfg").read_text(encoding="utf-8")
         self.assertIn('config/name="Spiral Field"', project)
-        self.assertIn('config/version="0.2.3"', project)
-        self.assertIn("Spiral-Field-v0.2.3-windows.exe", presets)
-        self.assertIn("Spiral-Field-v0.2.3-android.apk", presets)
+        self.assertIn('config/version="0.2.4"', project)
+        self.assertIn("Spiral-Field-v0.2.4-windows.exe", presets)
+        self.assertIn("Spiral-Field-v0.2.4-android.apk", presets)
         self.assertIn('package/unique_name="com.onekawaii.spiralfield"', presets)
-        self.assertIn("version/code=5", presets)
+        self.assertIn("version/code=6", presets)
 
     def test_encounter_verbs_are_contextual_not_tool_belt(self):
         tools = json.loads((ROOT / "data" / "tools_v016.json").read_text(encoding="utf-8"))
