@@ -89,7 +89,7 @@ func _run() -> void:
         slice.get("persistence").call("save_now")
         var disk = JSON.parse_string(FileAccess.get_file_as_string(slice.get("persistence").get("save_path")))
         check(typeof(disk) == TYPE_DICTIONARY and int(disk.get("edits", {}).get(native_key, -1)) == 0, "pristine terrain crater persists in world save")
-    check(str(world.get("hud").get("header_panel").get_node("Title").text).contains("0.2.4"), "HUD release version agrees with installed build")
+    check(str(world.get("hud").get("header_panel").get_node("Title").text).contains(str(ProjectSettings.get_setting("application/config/version"))), "HUD release version agrees with installed build")
     var spawned := 0
     for x in range(16, 22):
         for z in range(25, 31):
