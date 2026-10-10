@@ -6,10 +6,13 @@ const CONCRETE := 7
 const HALF := 480
 const GRID_STEP := 8
 const GRID_WIDTH := 121
+const BEDROCK := 10
+const WorldLimits = preload("res://scripts/world/WorldBounds.gd")
 var heights := PackedFloat32Array()
 
-func configure_world(seed: int, scale_value: float) -> void:
+func configure_world(seed: int, scale_value: float, version: int = 1) -> void:
 	configure(seed)
+	world_plan = KimiWorldPlan.new(seed, version)
 	var source := MacroTerrain.new()
 	source.world_plan = world_plan
 	source.height_scale = scale_value
@@ -45,7 +48,10 @@ func _generate_block(buffer: VoxelBuffer, origin: Vector3i, lod: int) -> void:
 			var top := ceili(maxf(height_at(gx, gz), terrace_height)) - 1
 			for y in range(size.y):
 				var gy := origin.y + y
-				if gy < -16:
+				if gy == WorldLimits.MIN_VOXEL_Y:
+					buffer.set_voxel(BEDROCK, x, y, z, CHANNEL_TYPE)
+					continue
+				if gy < WorldLimits.MIN_VOXEL_Y:
 					continue
 				if quarry and gy >= 0:
 					continue
@@ -87,3 +93,4 @@ func _top_surface_id(x: int, z: int) -> int:
 func _inside_rotated_road(point: Vector2, center: Vector2, length: float, width: float, rotation_degrees: float) -> bool:
 	var local := (point - center).rotated(deg_to_rad(-rotation_degrees))
 	return absf(local.x) < length * 0.5 and absf(local.y) < width * 0.5
+

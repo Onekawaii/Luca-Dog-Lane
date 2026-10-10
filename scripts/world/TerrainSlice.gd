@@ -11,6 +11,8 @@ const METAL := 6
 const CONCRETE := 7
 const ROAD := 8
 const ROAD_LINE := 9
+const BEDROCK := 10
+const WorldLimits = preload("res://scripts/world/WorldBounds.gd")
 const BUILD_PALETTE := ["stone", "grass_block", "stone_brick", "wood_plank", "glass_block", "metal_block", "concrete_block"]
 const ITEM_TO_VOXEL := {"stone": STONE, "grass_block": SURFACE, "stone_brick": BRICK, "wood_plank": WOOD, "glass_block": GLASS, "metal_block": METAL, "concrete_block": CONCRETE}
 const VOXEL_TO_ITEM := {STONE: "stone", SURFACE: "grass_block", BRICK: "stone_brick", WOOD: "wood_plank", GLASS: "glass_block", METAL: "metal_block", CONCRETE: "concrete_block"}
@@ -26,6 +28,7 @@ var macro_terrain: MacroTerrain
 var hud: CanvasLayer
 var save_path_override := ""
 var world_seed := 6060
+var generation_version := 1
 var world_voxels := false
 var height_scale := 1.0
 var active_bounds := SLICE_BOUNDS
@@ -55,6 +58,8 @@ func _ready() -> void:
 	print("V013_TERRAIN_SLICE_READY bounds=", active_bounds, " world_voxels=", world_voxels)
 
 func _process(delta: float) -> void:
+	if world_voxels and is_instance_valid(viewer) and is_instance_valid(player):
+		viewer.set("view_distance", maxi(76, collision_view_distance(player.global_position)))
 	replay_timer += delta
 	if replay_timer < REPLAY_INTERVAL:
 		return
@@ -90,6 +95,8 @@ func mine_from_ray(
 		return "No mineable voxel in reach"
 
 	var center: Vector3i = result.call("get_position")
+	if WorldLimits.protected_voxel(center, world_voxels):
+		return "BEDROCK // cannot mine the world boundary"
 	if not _is_editable(center):
 		return "Terrain chunk is still streaming"
 	var recovered := {"stone": 0, "grass_block": 0, "stone_brick": 0, "wood_plank": 0, "glass_block": 0, "metal_block": 0, "concrete_block": 0}
@@ -324,20 +331,20 @@ func _setup_persistence() -> void:
 	persistence.name = "SlicePersistence"
 	persistence.set_script(load("res://scripts/systems/SlicePersistence.gd"))
 	if world_voxels:
-		persistence.set("generator_version", 2)
+		persistence.set("generator_version", 3 if generation_version >= 2 else 2)
 		persistence.set("deferred_saves", true)
 	add_child(persistence)
 	var selected_path := save_path_override
 	if selected_path.is_empty():
 		selected_path = OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
 	if selected_path.is_empty():
-		selected_path = ("user://v023_world_voxels_%d.json" if world_voxels else "user://v016_terrain_slice_%d.json") % world_seed
+		selected_path = (("user://v026_world_voxels_%d.json" if generation_version >= 2 else "user://v023_world_voxels_%d.json") if world_voxels else "user://v016_terrain_slice_%d.json") % world_seed
 	else:
 		# Seeded test namespaces prevent maps sharing one override file.
-		selected_path = selected_path.replace("{seed}", str(world_seed))
+		selected_path = selected_path.replace("{seed}", str(world_seed)) if selected_path.contains("{seed}") or generation_version < 2 else selected_path + "." + str(world_seed)
 	persistence.call("configure", selected_path, world_seed)
 	# Copy compatible authored-quarry deltas/inventory once; never modify the old save.
-	if world_voxels and save_path_override.is_empty() and OS.get_environment("LUCA_V013_SLICE_SAVE_PATH").is_empty() and not FileAccess.file_exists(selected_path):
+	if world_voxels and generation_version < 2 and save_path_override.is_empty() and OS.get_environment("LUCA_V013_SLICE_SAVE_PATH").is_empty() and not FileAccess.file_exists(selected_path):
 		# Always migrate by copy. A rollback to v0.2.2 must retain its original file.
 		for legacy_path in ["user://v020_world_voxels_%d.json" % world_seed, "user://v016_terrain_slice_%d.json" % world_seed]:
 			if not FileAccess.file_exists(legacy_path):
@@ -374,6 +381,7 @@ func _setup_terrain() -> void:
 	var concrete_model = _cube_model(Color(0.62, 0.61, 0.57), "stone")
 	var road_model = _cube_model(Color(0.34, 0.37, 0.39), "metal")
 	var line_model = _cube_model(Color(0.94, 0.75, 0.20), "metal")
+	var bedrock_model = _cube_model(Color(0.10, 0.09, 0.12), "stone")
 
 	var air_id := int(library.call("add_model", empty_model))
 	var stone_id := int(library.call("add_model", stone_model))
@@ -385,9 +393,10 @@ func _setup_terrain() -> void:
 	var concrete_id := int(library.call("add_model", concrete_model))
 	var road_id := int(library.call("add_model", road_model))
 	var line_id := int(library.call("add_model", line_model))
+	var bedrock_id := int(library.call("add_model", bedrock_model))
 	library.call("bake")
 
-	if [air_id, stone_id, surface_id, brick_id, wood_id, glass_id, metal_id, concrete_id, road_id, line_id] != [AIR, STONE, SURFACE, BRICK, WOOD, GLASS, METAL, CONCRETE, ROAD, ROAD_LINE]:
+	if [air_id, stone_id, surface_id, brick_id, wood_id, glass_id, metal_id, concrete_id, road_id, line_id, bedrock_id] != [AIR, STONE, SURFACE, BRICK, WOOD, GLASS, METAL, CONCRETE, ROAD, ROAD_LINE, BEDROCK]:
 		push_error("Voxel model IDs changed; terrain contract invalid")
 		return
 
@@ -397,7 +406,7 @@ func _setup_terrain() -> void:
 	var generator = load("res://scripts/world/TerrainSliceGenerator.gd").new()
 	if world_voxels:
 		generator = load("res://scripts/world/WorldVoxelGenerator.gd").new()
-		generator.call("configure_world", world_seed, height_scale)
+		generator.call("configure_world", world_seed, height_scale, generation_version)
 	else:
 		generator.call("configure", world_seed)
 
@@ -406,7 +415,7 @@ func _setup_terrain() -> void:
 	terrain.set("generator", generator)
 	terrain.set("mesher", mesher)
 	terrain.set("bounds", active_bounds)
-	terrain.set("max_view_distance", 96)
+	terrain.set("max_view_distance", 144 if world_voxels else 96)
 	terrain.set("mesh_block_size", 16)
 	terrain.set("generate_collisions", true)
 	terrain.set("collision_layer", 1)
@@ -491,9 +500,44 @@ func _spawn_resource_pickup(pos: Vector3i, item_id: String, amount: int) -> void
 	pickup.set("launch_velocity", launch)
 	pickup.position = get_parent().to_local(world_pos + Vector3.UP * 0.35)
 	get_parent().add_child(pickup)
+	attach_stream_guard(pickup)
+
+func attach_stream_guard(body: PhysicsBody3D) -> void:
+	if not world_voxels or body.has_node("WorldStreamGuard"):
+		return
+	var guard: Node3D = load("res://scripts/world/WorldStreamGuard.gd").new()
+	guard.name = "WorldStreamGuard"
+	guard.set("slice", self)
+	body.add_child(guard)
+
+func physics_support_ready(body: PhysicsBody3D) -> bool:
+	if voxel_tool == null or not is_instance_valid(body) or not _stream_data_ready(body.global_position):
+		return false
+	var at := body.global_position
+	var query := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 2.0, Vector3(at.x, WorldLimits.BEDROCK_TOP - 1.0, at.z), 1)
+	query.exclude = [body.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return false
+	var voxel_floor = voxel_tool.call("raycast", query.from, Vector3.DOWN, query.from.y - query.to.y)
+	if voxel_floor == null:
+		# Only the permanent bottom may support an empty excavated column.
+		var column := AABB(Vector3(at.x - 1.0, WorldLimits.MIN_VOXEL_Y, at.z - 1.0), Vector3(2.0, query.from.y - WorldLimits.MIN_VOXEL_Y, 2.0)).intersection(active_bounds)
+		return hit.collider.is_in_group("world_bedrock") and bool(voxel_tool.call("is_area_editable", column))
+	# Reject the backup slab while a higher voxel floor is still being meshed.
+	var floor_pos: Vector3i = voxel_floor.call("get_position")
+	var expected_y := float(floor_pos.y + 1)
+	var column := AABB(Vector3(at.x - 1.0, expected_y - 1.0, at.z - 1.0), Vector3(2.0, maxf(1.0, query.from.y - expected_y + 1.0), 2.0)).intersection(active_bounds)
+	return bool(voxel_tool.call("is_area_editable", column)) and hit.position.y >= expected_y - 0.25
+
+func _stream_data_ready(at: Vector3) -> bool:
+	if voxel_tool == null or not active_bounds.has_point(at):
+		return false
+	var area := AABB(at - Vector3(2.0, 2.0, 2.0), Vector3(4.0, 4.0, 4.0)).intersection(active_bounds)
+	return bool(voxel_tool.call("is_area_editable", area))
 
 func _is_editable(pos: Vector3i) -> bool:
-	if not _inside_slice(pos):
+	if voxel_tool == null or not _inside_slice(pos) or WorldLimits.protected_voxel(pos, world_voxels):
 		return false
 	var p := Vector3(float(pos.x), float(pos.y), float(pos.z))
 	return bool(voxel_tool.call("is_area_editable", AABB(p - Vector3.ONE, Vector3(3.0, 3.0, 3.0))))
@@ -513,3 +557,15 @@ func _parse_voxel_key(key: String) -> Vector3i:
 func _on_inventory_changed(summary: String) -> void:
 	if hud != null:
 		hud.call("set_inventory_status", summary)
+
+
+func collision_view_distance(at: Vector3) -> int:
+	if not world_voxels or not _stream_data_ready(at):
+		return 32
+	var depth := maxf(2.0, at.y + 2.0 - WorldLimits.BEDROCK_TOP)
+	var floor_result = voxel_tool.call("raycast", at + Vector3.UP * 2.0, Vector3.DOWN, depth)
+	if floor_result != null:
+		var pos: Vector3i = floor_result.call("get_position")
+		depth = maxf(2.0, at.y + 2.0 - float(pos.y))
+	# Load the full support column; a bottom block can outlive unloaded blocks above.
+	return clampi(ceili(depth) + 16, 32, 144)

@@ -6,9 +6,17 @@ const LEGACY_SAVE_PATH := "user://spiral_field_state_v1.json"
 
 func state_save_path() -> String:
 	var override := OS.get_environment("SPIRAL_STATE_SAVE_PATH")
+	if game != null and int(game.get("generation_version")) >= 2:
+		var seed_value := str(game.get("world_seed"))
+		var map_id := str(game.get("active_map_id"))
+		if override.is_empty():
+			return "user://spiral_field_state_%s_%s_v2.json" % [map_id, seed_value]
+		return override.replace("{seed}", seed_value) if override.contains("{seed}") else override + "." + map_id + "." + seed_value
 	return SAVE_PATH if override.is_empty() else override
 
 func legacy_state_save_path() -> String:
+	if game != null and int(game.get("generation_version")) >= 2:
+		return state_save_path() + ".legacy"
 	return LEGACY_SAVE_PATH if OS.get_environment("SPIRAL_STATE_SAVE_PATH").is_empty() else state_save_path() + ".legacy"
 const WITNESS_POS := Vector3(-155.0, 0.0, -132.0)
 const WAIL_POS := Vector3(176.0, 0.0, 148.0)
@@ -721,3 +729,4 @@ func clear_state_for_test() -> void:
 	for path in [state_save_path(), legacy_state_save_path()]:
 		if FileAccess.file_exists(path):
 			DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
