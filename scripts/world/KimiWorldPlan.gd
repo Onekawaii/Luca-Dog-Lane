@@ -3,9 +3,11 @@ extends RefCounted
 
 const GENERATOR_VERSION := 1
 var seed: int = 6060
+var generation_version := 1
 
-func _init(world_seed: int = 6060) -> void:
+func _init(world_seed: int = 6060, version: int = 1) -> void:
 	seed = world_seed
+	generation_version = version
 
 static func _fade(t: float) -> float:
 	return t * t * (3.0 - 2.0 * t)
@@ -56,3 +58,4 @@ func sample_biome(world_x: float, world_z: float) -> StringName:
 	if moisture < 0.35:
 		return &"meadow"
 	return &"mixed_forest"
+

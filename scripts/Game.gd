@@ -4,6 +4,8 @@ const WORLD_HALF := 480.0
 const GROUND_THICKNESS := 2.0
 const DEFAULT_WORLD_SEED := 6060
 const DEFAULT_PLAYER_START := Vector3(0.0, 2.5, 24.0)
+const WorldLimits = preload("res://scripts/world/WorldBounds.gd")
+const SessionWorldPolicy = preload("res://scripts/world/SessionWorld.gd")
 
 var player: CharacterBody3D
 var hud: CanvasLayer
@@ -27,6 +29,8 @@ var spiral_world: SpiralWorldDirector
 var active_map_id := "lucas_field"
 var active_map_profile: Dictionary = {}
 var world_seed := DEFAULT_WORLD_SEED
+var generation_version := 1
+var session_world: RefCounted
 var player_start := DEFAULT_PLAYER_START
 var terrain_scale := 1.0
 var world_environment_node: WorldEnvironment
@@ -55,8 +59,9 @@ func _ready() -> void:
 		return
 	var player_terrain_probe := OS.get_environment("SPIRAL_PLAYER_TERRAIN_PROBE") == "1"
 
-	_setup_content_registry()
-	world_plan = KimiWorldPlan.new(world_seed)
+	if not _setup_content_registry():
+		return
+	world_plan = KimiWorldPlan.new(world_seed, generation_version)
 	world_generator = KimiWorldGenerator.new(world_plan)
 	_setup_environment()
 	_build_ground_and_boundaries()
@@ -92,7 +97,7 @@ func _ready() -> void:
 		probe.world = self
 		add_child(probe)
 
-func _setup_content_registry() -> void:
+func _setup_content_registry() -> bool:
 	content_registry = ContentRegistry.new()
 	content_registry.name = "ContentRegistry"
 	add_child(content_registry)
@@ -107,11 +112,50 @@ func _setup_content_registry() -> void:
 	active_map_id = requested
 	active_map_profile = content_registry.get_map(active_map_id)
 	world_seed = int(active_map_profile.get("seed", DEFAULT_WORLD_SEED))
+	var explicit_seed := OS.get_environment("SPIRAL_WORLD_SEED")
+	if explicit_seed.is_valid_int():
+		world_seed = int(explicit_seed)
+		generation_version = int(OS.get_environment("SPIRAL_GENERATION_VERSION")) if OS.get_environment("SPIRAL_GENERATION_VERSION").is_valid_int() else 2
+	else:
+		session_world = SessionWorldPolicy.new()
+		var index_path := OS.get_environment("SPIRAL_WORLD_INDEX_PATH")
+		var custom_save := OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
+		if index_path.is_empty() and not custom_save.is_empty():
+			index_path = custom_save.replace("{seed}", "session") + ".world-index.json"
+		if not session_world.configure(index_path):
+			return false
+		var legacy_exists := false
+		for path in ["user://v023_world_voxels_%d.json", "user://v020_world_voxels_%d.json", "user://v016_terrain_slice_%d.json"]:
+			legacy_exists = legacy_exists or FileAccess.file_exists(path % world_seed)
+		if not custom_save.is_empty():
+			legacy_exists = FileAccess.file_exists(custom_save.replace("{seed}", str(world_seed)))
+		var story_path := OS.get_environment("SPIRAL_STATE_SAVE_PATH")
+		var loadout_path := OS.get_environment("SPIRAL_LOADOUT_SAVE_PATH")
+		legacy_exists = legacy_exists or FileAccess.file_exists(story_path if not story_path.is_empty() else "user://spiral_field_state_v2.json")
+		legacy_exists = legacy_exists or FileAccess.file_exists("user://spiral_field_state_v1.json" if story_path.is_empty() else story_path + ".legacy")
+		legacy_exists = legacy_exists or FileAccess.file_exists(loadout_path if not loadout_path.is_empty() else "user://v025_loadout_%d.json" % world_seed)
+		var identity: Dictionary = session_world.identity(active_map_id, world_seed, legacy_exists)
+		if identity.is_empty():
+			push_error("World identity could not be saved; generation stopped")
+			return false
+		world_seed = int(identity.seed)
+		generation_version = int(identity.generation_version)
 	terrain_scale = float(active_map_profile.get("terrain_scale", 1.0))
 	player_start = _vector3_from_array(
 		active_map_profile.get("spawn", [0.0, 2.5, 24.0]),
 		DEFAULT_PLAYER_START
 	)
+	return true
+
+func new_generated_field() -> bool:
+	# Archive by seed: the previous world and its edits remain available on disk.
+	if session_world == null or not save_session():
+		return false
+	var identity: Dictionary = session_world.new_world(active_map_id, world_seed)
+	if identity.is_empty():
+		return false
+	call_deferred("_reload_requested_map")
+	return true
 
 func save_session() -> bool:
 	# Flush existing schemas; no fabricated player/entity persistence promises.
@@ -153,13 +197,15 @@ func reset_field(all_maps := false) -> String:
 	var seeds: Array[int] = [world_seed]
 	if all_maps and content_registry != null:
 		for map_id in content_registry.maps:
-			var seed := int(content_registry.maps[map_id].get("seed", world_seed))
+			var entry: Dictionary = session_world.worlds.get(map_id, {}) if session_world != null else {}
+			var seed := int(entry.get("seed", content_registry.maps[map_id].get("seed", world_seed)))
 			if not seeds.has(seed):
 				seeds.append(seed)
 	var paths: Array[String] = []
 	var custom_save := OS.get_environment("LUCA_V013_SLICE_SAVE_PATH")
 	if custom_save.is_empty():
 		for seed in seeds:
+			paths.append("user://v026_world_voxels_%d.json" % seed)
 			paths.append("user://v023_world_voxels_%d.json" % seed)
 			paths.append("user://v020_world_voxels_%d.json" % seed)
 			paths.append("user://v016_terrain_slice_%d.json" % seed)
@@ -193,6 +239,13 @@ func reset_field(all_maps := false) -> String:
 		if FileAccess.file_exists(path):
 			if DirAccess.remove_absolute(ProjectSettings.globalize_path(path)) != OK:
 				return "RESET BLOCKED // Could not clear " + path
+	if session_world != null:
+		var reset_maps: Array = content_registry.maps.keys() if all_maps and content_registry != null else [active_map_id]
+		for map_id in reset_maps:
+			var entry: Dictionary = session_world.worlds.get(map_id, {})
+			var identity: Dictionary = session_world.new_world(map_id, int(entry.get("seed", world_seed)))
+			if identity.is_empty():
+				return "RESET BLOCKED // Could not save new world identity; backups retained"
 	call_deferred("_reload_requested_map")
 	return "NEW FIELD // current map reset (backups saved)" if not all_maps else "NEW FIELDS // all map saves reset (backups saved)"
 
@@ -372,16 +425,30 @@ func _build_ground_and_boundaries() -> void:
 	# surface now, so there is no second giant flat world rendered underneath it.
 	_create_boundary_wall(
 		"WorldGround",
-		Vector3(0.0, -GROUND_THICKNESS * 0.5 - 0.25, 0.0),
+		Vector3(0.0, WorldLimits.BEDROCK_TOP - GROUND_THICKNESS * 0.5 if uses_world_voxels() else -GROUND_THICKNESS * 0.5 - 0.25, 0.0),
 		Vector3(WORLD_HALF * 2.0, GROUND_THICKNESS, WORLD_HALF * 2.0)
 	)
 	if uses_world_voxels():
-		get_node("WorldGround").set("collision_layer", 0)
+		get_node("WorldGround").add_to_group("world_bedrock")
+		var bedrock := MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(WORLD_HALF * 2.0, GROUND_THICKNESS, WORLD_HALF * 2.0)
+		bedrock.mesh = box
+		var material := StandardMaterial3D.new()
+		material.albedo_color = Color(0.10, 0.09, 0.12)
+		material.roughness = 1.0
+		bedrock.material_override = material
+		get_node("WorldGround").add_child(bedrock)
 	# Collision-only outer walls.
 	_create_boundary_wall("NorthBoundary", Vector3(0, 3, -WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
 	_create_boundary_wall("SouthBoundary", Vector3(0, 3, WORLD_HALF), Vector3(WORLD_HALF * 2.0, 6, 2))
 	_create_boundary_wall("WestBoundary", Vector3(-WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0))
 	_create_boundary_wall("EastBoundary", Vector3(WORLD_HALF, 3, 0), Vector3(2, 6, WORLD_HALF * 2.0))
+	if uses_world_voxels():
+		for wall_name in ["NorthBoundary", "SouthBoundary", "WestBoundary", "EastBoundary"]:
+			var wall: StaticBody3D = get_node(wall_name)
+			wall.position.y = 48.0
+			wall.get_node("Collision").shape.size.y = 128.0
 
 func _build_roads() -> void:
 	if uses_world_voxels():
@@ -552,6 +619,7 @@ func _spawn_terrain_slice() -> void:
 	node.set_script(load("res://scripts/world/TerrainSlice.gd"))
 	node.set("player", player)
 	node.set("world_seed", world_seed)
+	node.set("generation_version", generation_version)
 	node.set("world_voxels", uses_world_voxels())
 	node.set("height_scale", terrain_scale)
 	node.set("macro_terrain", macro_terrain)
@@ -1003,15 +1071,14 @@ func _spawn_buggy(at: Vector3) -> void:
 func _attach_stream_guard(body: Node3D) -> void:
 	if not uses_world_voxels():
 		return
-	var guard: Node = load("res://scripts/world/WorldStreamGuard.gd").new()
-	guard.set("slice", terrain_slice)
-	body.add_child(guard)
+	terrain_slice.call("attach_stream_guard", body)
 
 func _create_boundary_wall(label: String, at: Vector3, size: Vector3) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = label
 	body.position = at
 	var collision := CollisionShape3D.new()
+	collision.name = "Collision"
 	var shape := BoxShape3D.new()
 	shape.size = size
 	collision.shape = shape
@@ -1164,3 +1231,4 @@ func _material(color: Color, roughness := 0.92) -> StandardMaterial3D:
 	material.albedo_color = color
 	material.roughness = roughness
 	return material
+

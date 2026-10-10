@@ -9,12 +9,12 @@ func _init(world_plan: KimiWorldPlan) -> void:
 
 func chunk_seed_for(coord: Vector2i) -> int:
 	return KimiDeterministic.hash2i(
-		plan.seed ^ (KimiWorldPlan.GENERATOR_VERSION << 20), coord.x, coord.y)
+		plan.seed ^ (plan.generation_version << 20), coord.x, coord.y)
 
 func describe_chunk(coord: Vector2i) -> KimiChunkDescriptor:
 	var desc := KimiChunkDescriptor.new()
 	desc.coord = coord
-	desc.generator_version = KimiWorldPlan.GENERATOR_VERSION
+	desc.generator_version = plan.generation_version
 	var size := KimiChunkDescriptor.SIZE_M
 	var origin := Vector2(coord.x * size, coord.y * size)
 	desc.biome = plan.sample_biome(origin.x + size * 0.5, origin.y + size * 0.5)
@@ -48,3 +48,4 @@ func describe_chunk(coord: Vector2i) -> KimiChunkDescriptor:
 
 	desc.generation_hash = desc.compute_hash()
 	return desc
+

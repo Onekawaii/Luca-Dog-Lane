@@ -1,0 +1,23 @@
+{
+  "date": "2026-10-10",
+  "local_snapshot_head": "acf83d453baa07c0e72e0555192affadab4b959c",
+  "files_sha256": {
+    "scripts/Game.gd": "e8cf2c0c7a3e86f3a3a4ff1788940fca04d016f1af4a9e40b66c66b535e2f12c",
+    "scripts/Luca.gd": "ebcc264af89f1413b5f59ffbb8049112f516b489b2c5fe0be02c0dd7d7240891",
+    "scripts/Player.gd": "b19ef0bf8935d1542cfcfc619f8d8eaff1f0a48c7a924bce15955a048180f86e",
+    "scripts/systems/SessionMenu.gd": "02974eacd30c3b70193dd86508471cc76d03221e3a543cfe6172f737f099a4db",
+    "scripts/systems/SpiralWorldDirector.gd": "3584510877bbf5663450ebfc0a9d635df324619bd9216b5b8d68318cd97c8cf7",
+    "scripts/world/KimiWorldGenerator.gd": "db08c01792016bf6d3237f8b4ba490b682f9e2723408e2fb48b2c3f11411b6f1",
+    "scripts/world/KimiWorldPlan.gd": "552c8c9dcbff068bd95670d5c390a8b66ac7c159b41e74a053def00ceb89145e",
+    "scripts/world/MacroTerrain.gd": "563e09747b3cf8108e592a3928982dded1da0be470c6839e91a0d4afcaa41364",
+    "scripts/world/SessionWorld.gd": "43a8ccecb8a1e5814c37c491c542eb2bd4d79012694f6010aaf83cb1b0f98364",
+    "scripts/world/TerrainSlice.gd": "620c4abdec4fd0ab6854d057f919e25b6ed8a4c97cc9188de49eda62567a55b3",
+    "scripts/world/WorldBounds.gd": "98e5e3f4ea08f337156c3343cbeed812125491e9ad13ce15a6b9eb6bf8608d0f",
+    "scripts/world/WorldStreamGuard.gd": "98a6c12ced2151eade1d515d44b185a4948e57afc63ae3f453f75e69dab47aa6",
+    "scripts/world/WorldVoxelGenerator.gd": "b01589d8be4943956c6f8bab87cc74c34a3539aa0744f6990d0c079e10152b4f",
+    "tests/world_support_generation_acceptance.gd": "9ce81b02247c0fe37c53378a5b1e8be468f96325494c07d4a1045c294693bc20"
+  },
+  "native_focused_log_sha256": "631a3d9ef2dce1883868e6a82a951ef72e458335870448b8c9f465aa47a9cd84",
+  "engine": "4.6.3.stable.official.7d41c59c4",
+  "status": "PARTIAL_SOURCE_ONLY"
+}

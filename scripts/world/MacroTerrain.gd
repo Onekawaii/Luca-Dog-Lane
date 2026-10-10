@@ -9,6 +9,7 @@ var world_half := 480.0
 var height_scale := 1.0
 var terrain_body: StaticBody3D
 var voxel_preview := false
+var _region_profiles: Dictionary = {}
 
 # Hide the smooth distance terrain only where a player can edit or has edited.
 # A compact 2D column mask preserves all persistent edits without per-pixel loops.
@@ -145,29 +146,49 @@ func region_name_at(world_x: float, world_z: float) -> String:
 	return "SouthValley"
 
 func _north_pass_height(world_x: float, world_z: float) -> float:
+	var profile := _region_profile(911)
+	world_x -= profile.x
+	world_z -= profile.y
 	var band := exp(-pow((world_z + 350.0) / 112.0, 2.0))
 	var side := _smoothstep(30.0, 118.0, absf(world_x))
 	var normalized_side := clampf(absf(world_x) / 250.0, 0.0, 1.0)
 	var ridge := 13.0 + 24.0 * pow(normalized_side, 0.78)
 	var irregular := (world_plan.fbm(world_x, world_z, 4, 0.0075, 911) - 0.5) * 12.0
-	return maxf(0.0, band * side * (ridge + irregular))
+	return maxf(0.0, band * side * (ridge + irregular) * profile.z)
 
 func _west_ridge_height(world_x: float, world_z: float) -> float:
+	var profile := _region_profile(912)
+	world_x -= profile.x
+	world_z -= profile.y
 	var band := exp(-pow((world_x + 350.0) / 108.0, 2.0))
 	var pass_clear := _smoothstep(30.0, 108.0, absf(world_z))
 	var normalized_z := clampf(absf(world_z) / 310.0, 0.0, 1.0)
 	var ridge := 15.0 + 21.0 * pow(normalized_z, 0.72)
 	var shoulder := 8.0 * exp(-pow((world_z + 150.0) / 95.0, 2.0))
 	var irregular := (world_plan.fbm(world_x, world_z, 4, 0.0068, 912) - 0.5) * 10.0
-	return maxf(0.0, band * pass_clear * (ridge + shoulder + irregular))
+	return maxf(0.0, band * pass_clear * (ridge + shoulder + irregular) * profile.z)
 
 func _south_valley_height(world_x: float, world_z: float) -> float:
+	var profile := _region_profile(913)
+	world_x -= profile.x
+	world_z -= profile.y
 	var band := exp(-pow((world_z - 360.0) / 112.0, 2.0))
 	var side := _smoothstep(34.0, 125.0, absf(world_x))
 	var normalized_side := clampf(absf(world_x) / 245.0, 0.0, 1.0)
 	var wall := 11.0 + 27.0 * pow(normalized_side, 0.90)
 	var irregular := (world_plan.fbm(world_x, world_z, 4, 0.0071, 913) - 0.5) * 9.0
-	return maxf(0.0, band * side * (wall + irregular))
+	return maxf(0.0, band * side * (wall + irregular) * profile.z)
+
+func _region_profile(salt: int) -> Vector3:
+	if world_plan.generation_version < 2:
+		return Vector3(0.0, 0.0, 1.0)
+	var key := "%d:%d" % [world_plan.seed, salt]
+	if _region_profiles.has(key):
+		return _region_profiles[key]
+	var rng := KimiDeterministic.RNG.new(KimiDeterministic.hash2i(world_plan.seed, salt, 2))
+	var profile := Vector3(rng.randf() * 150.0 - 75.0, rng.randf() * 130.0 - 65.0, 0.65 + rng.randf() * 0.70)
+	_region_profiles[key] = profile
+	return profile
 
 func _build_world_terrain() -> void:
 	var extent := world_half
@@ -297,3 +318,4 @@ func _smoothstep(edge0: float, edge1: float, x: float) -> float:
 		return 0.0
 	var t := clampf((x - edge0) / (edge1 - edge0), 0.0, 1.0)
 	return t * t * (3.0 - 2.0 * t)
+

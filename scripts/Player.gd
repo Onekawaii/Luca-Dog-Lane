@@ -114,12 +114,7 @@ func _physics_process(delta: float) -> void:
 	# Hold on spawn/teleport until local voxel data is available, not on a hidden floor.
 	if game != null and game.call("uses_world_voxels") and riding == null and not noclip:
 		var terrain_node = game.get("terrain_slice")
-		if terrain_node != null and not terrain_node.call("_is_editable", Vector3i(global_position)):
-			velocity = Vector3.ZERO
-			return
-		var floor_query := PhysicsRayQueryParameters3D.create(global_position + Vector3.UP * 2.0, global_position - Vector3.UP * 24.0, 1)
-		var voxel_floor = terrain_node.get("voxel_tool").call("raycast", floor_query.from, Vector3.DOWN, 26.0)
-		if voxel_floor != null and get_world_3d().direct_space_state.intersect_ray(floor_query).is_empty():
+		if terrain_node == null or not terrain_node.call("physics_support_ready", self):
 			velocity = Vector3.ZERO
 			return
 
@@ -247,7 +242,7 @@ func _update_safe_ground(delta: float) -> void:
 
 	if (
 		is_on_floor()
-		and global_position.y > -0.5
+		and global_position.y >= (preload("res://scripts/world/WorldBounds.gd").BEDROCK_TOP if game != null and game.call("uses_world_voxels") else -0.5)
 		and abs(global_position.x) < 465.0
 		and abs(global_position.z) < 465.0
 	):
@@ -545,7 +540,7 @@ func use_tool() -> void:
 		"grab":
 			if target is RigidBody3D and target.is_in_group("sandbox_prop"):
 				held_body = target
-				held_body.freeze = true
+				_set_held_freeze(true)
 				if hud != null:
 					hud.call("flash", "Grabbed " + str(target.name))
 		"remove":
@@ -608,9 +603,16 @@ func _raycast(distance: float) -> Dictionary:
 	query.collide_with_bodies = true
 	return get_world_3d().direct_space_state.intersect_ray(query)
 
+func _set_held_freeze(value: bool) -> void:
+	var guard := held_body.get_node_or_null("WorldStreamGuard")
+	if guard != null:
+		guard.call("request_freeze", value)
+	else:
+		held_body.freeze = value
+
 func _release_held() -> void:
 	if held_body != null and is_instance_valid(held_body):
-		held_body.freeze = false
+		_set_held_freeze(false)
 	held_body = null
 
 func enter_vehicle(vehicle: Node3D) -> void:
@@ -692,7 +694,7 @@ func get_spawn_point() -> Vector3:
 
 func _recover_if_outside() -> void:
 	var limit: float = 480.0 + SAFE_MARGIN
-	var recovery_y := -24.0 if game != null and game.call("uses_world_voxels") else FALL_RECOVERY_Y
+	var recovery_y := preload("res://scripts/world/WorldBounds.gd").FALL_RECOVERY_Y if game != null and game.call("uses_world_voxels") else FALL_RECOVERY_Y
 	var fell_below_world: bool = global_position.y < recovery_y
 	var escaped_bounds: bool = absf(global_position.x) > limit or absf(global_position.z) > limit
 
@@ -717,3 +719,4 @@ func _recover_if_outside() -> void:
 			if fell_below_world
 			else "Boundary recovery // returned to spawn"
 		)
+

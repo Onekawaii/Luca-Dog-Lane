@@ -95,13 +95,15 @@ func open(kind: String) -> void:
 		_button("Done", func(): open(options_return))
 	else:
 		_button("Play / Continue World" if kind == "title" else "Back to Game", resume)
+		if kind == "title":
+			_button("New Generated World", _new_generated_world)
 		_button("Options...", func(): open("options"))
 		_button("Controls", _controls)
 		if kind == "pause":
 			_button("Save and Return to Title", _save_to_title)
 		else:
 			_button("Save and Quit", _save_and_quit)
-	status = _heading("Existing world retained. No reset or new-world action here.", 14)
+	status = _heading("Continue keeps this world. New World preserves its saved progress.", 14)
 	if kind == "pause":
 		status.text = "Single player paused // world simulation stopped"
 
@@ -117,6 +119,12 @@ func _save_to_title() -> void:
 		open("title")
 	else:
 		status.text = "Save failed. World retained; return to game and try again."
+
+func _new_generated_world() -> void:
+	if game.call("new_generated_field"):
+		get_tree().paused = false
+	else:
+		status.text = "Could not create a world. Existing progress retained."
 
 func _save_and_quit() -> void:
 	if game.call("save_session"):
@@ -162,3 +170,4 @@ func _slider(low: float, high: float, value: float) -> HSlider:
 	slider.custom_minimum_size.y = 32
 	column.add_child(slider)
 	return slider
+

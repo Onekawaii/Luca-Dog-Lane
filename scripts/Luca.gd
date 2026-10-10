@@ -324,3 +324,17 @@ func _material(color: Color) -> StandardMaterial3D:
 	material.albedo_color = color
 	material.roughness = 0.85
 	return material
+
+
+func recover_stream_position() -> void:
+	# Called by the guard even while motion is suspended; STAY never teleports.
+	if not follow_enabled or not is_instance_valid(player):
+		return
+	var offset := player.global_position - global_position
+	offset.y = 0.0
+	if offset.length() > RECOVER_DISTANCE:
+		_initialize_follow_anchor()
+		global_position = follow_anchor + Vector3.UP * 0.6
+		velocity = Vector3.ZERO
+		follow_engaged = false
+		giving_space = false
