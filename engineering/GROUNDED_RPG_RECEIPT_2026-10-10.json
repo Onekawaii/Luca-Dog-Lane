@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-10",
+  "status": "PARTIAL_SOURCE_ONLY",
+  "parent_local_commit": "3a8874b2de95406c66f75156f627a8b4e000a7ed",
+  "engine": "4.6.3.stable.official.7d41c59c4; no Voxel Tools",
+  "files_sha256": {
+    "data/rpg/world_stories.json": "436c9667ad0e542538c08111aef1b77ba9aa1e7b882626d1ac2022f5fe4e3565",
+    "scripts/rpg/ExplorationJournal.gd": "d2ea4e98a3c3a27c4807610ba6db8d2d93f9ac4ad6d0b5be50ebbb9214aada4b",
+    "scripts/rpg/FieldStoryDirector.gd": "83eecfc45f9b13d102d0f466d169738785400e01591a12fe0ff44eff4275cdc7",
+    "scripts/rpg/LoreStone.gd": "c01c8316175929bbd3d3fd10a8b94c42c8b2ad649af8b1de52ca5f0dadd47f31",
+    "scripts/rpg/RPGPanel.gd": "b4da68cfa2d8d31fd2f6e516ee7585a820f2c422656371fe736d6f9efb98e8e3",
+    "shaders/grounded_terrain.gdshader": "bac73fc0e0bf9fce4609d69e69ae4d2d7830d69defa1585f0107118418f88e85",
+    "tests/grounded_rpg_acceptance.gd": "e722e5adddfbc2dfa9588aeabf20752b65f1932b81251e6f61cb61af30a9dbb4",
+    "scripts/Game.gd": "9a2a800338a8749bda61f2669d2cf592cd60e83b281b4d6ac9ae9b0637fdfa65",
+    "scripts/HUD.gd": "9aabd5a2091e893b3eab93e121efca4a49fc0f60589b4f9e2c01f1e2b33fd06d",
+    "scripts/NPC.gd": "c6e2078bd5cc5f0a276cb513e1ac67dc3bac44d088328d6428496114abdebe03",
+    "scripts/Player.gd": "18abeaa2ea8351c1c2ea7a4fe73579c244e8ab9496df0e216951d666c9749c14",
+    "scripts/systems/ObjectMaterials.gd": "58197b1c6491c01e85efc7406281761e96c0bd948ad0c4697f73f1c22c573c82",
+    "scripts/world/MacroTerrain.gd": "4c8dfb5c499c4685ac0c0e38b7fc5ba99bed2fd550d146744fc4963995f62733"
+  },
+  "logs_sha256": {
+    "/tmp/rpg-spiral-test.log": "9e82406d297d48e1e34f744a16cdf199b04706d9588052aebf9f005853cec945",
+    "/tmp/spiral-support-rpg.log": "631a3d9ef2dce1883868e6a82a951ef72e458335870448b8c9f465aa47a9cd84"
+  }
+}

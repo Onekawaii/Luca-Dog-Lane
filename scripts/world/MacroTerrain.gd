@@ -42,12 +42,16 @@ func _process(delta: float) -> void:
 func make_voxel_visibility_material(kind: String, tint: Color) -> ShaderMaterial:
 	if voxel_material_shader == null:
 		voxel_material_shader = Shader.new()
-		voxel_material_shader.code = "shader_type spatial; render_mode cull_back, shadows_disabled; varying vec3 pworld; uniform sampler2D edited_columns : filter_nearest, repeat_disable; uniform sampler2D block_texture : source_color, filter_linear_mipmap; uniform vec4 block_tint : source_color = vec4(1.0); uniform bool underground_view = false; void vertex(){pworld=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){vec2 mask_uv=(pworld.xz+vec2(480.0))/960.0; bool quarry=pworld.x>254.0 && pworld.x<370.0 && pworld.z>226.0 && pworld.z<338.0; if(!underground_view && !quarry && texture(edited_columns,clamp(mask_uv,vec2(0.0),vec2(1.0))).r<0.5){discard;} ALBEDO=texture(block_texture,UV).rgb*block_tint.rgb; ROUGHNESS=0.94;}"
+		voxel_material_shader.code = "shader_type spatial; render_mode cull_back, shadows_disabled; varying vec3 pworld; uniform sampler2D edited_columns : filter_nearest, repeat_disable; uniform sampler2D block_texture : source_color, filter_linear_mipmap; uniform vec4 block_tint : source_color = vec4(1.0); uniform sampler2D block_normal : hint_normal; uniform sampler2D block_roughness; uniform bool underground_view = false; uniform bool distance_preview_active = false; void vertex(){pworld=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){vec2 mask_uv=(pworld.xz+vec2(480.0))/960.0; bool quarry=pworld.x>254.0 && pworld.x<370.0 && pworld.z>226.0 && pworld.z<338.0; if(distance_preview_active && !underground_view && !quarry && texture(edited_columns,clamp(mask_uv,vec2(0.0),vec2(1.0))).r<0.5){discard;} ALBEDO=texture(block_texture,UV).rgb*block_tint.rgb; NORMAL_MAP=texture(block_normal,UV).rgb; NORMAL_MAP_DEPTH=0.45; ROUGHNESS=clamp(texture(block_roughness,UV).r,0.65,1.0);}"
 	var result := ShaderMaterial.new()
 	result.shader = voxel_material_shader
 	result.set_shader_parameter("edited_columns", edit_mask_texture)
+	result.set_shader_parameter("distance_preview_active", preview_shader != null)
 	result.set_shader_parameter("block_texture", load("res://scripts/systems/ObjectMaterials.gd").texture(kind))
 	result.set_shader_parameter("block_tint", tint)
+	var sources = load("res://scripts/systems/ObjectMaterials.gd")
+	result.set_shader_parameter("block_normal", sources.map_texture(kind, "NormalGL"))
+	result.set_shader_parameter("block_roughness", sources.map_texture(kind, "Roughness"))
 	voxel_materials.append(result)
 	return result
 
@@ -222,20 +226,23 @@ func _build_world_terrain() -> void:
 	surface.index()
 	surface.generate_normals()
 	var mesh := surface.commit() as ArrayMesh
-	var material := StandardMaterial3D.new()
-	material.vertex_color_use_as_albedo = true
-	material.roughness = 0.98
-	mesh.surface_set_material(0, material)
+	var material := ShaderMaterial.new()
+	material.shader = preload("res://shaders/grounded_terrain.gdshader")
+	var sources = load("res://scripts/systems/ObjectMaterials.gd")
+	material.set_shader_parameter("ground_color", sources.texture("grass"))
+	material.set_shader_parameter("rock_color", sources.texture("stone"))
+	for kind in ["ground", "rock"]:
+		var source_kind := "grass" if kind == "ground" else "stone"
+		material.set_shader_parameter(kind + "_normal", sources.map_texture(source_kind, "NormalGL"))
+		material.set_shader_parameter(kind + "_roughness", sources.map_texture(source_kind, "Roughness"))
 	if voxel_preview:
 		edit_mask_image = Image.create(EDIT_MASK_SIDE, EDIT_MASK_SIDE, false, Image.FORMAT_L8)
 		edit_mask_image.fill(Color.BLACK)
 		edit_mask_texture = ImageTexture.create_from_image(edit_mask_image)
-		preview_shader = ShaderMaterial.new()
-		var shader := Shader.new()
-		shader.code = "shader_type spatial; render_mode shadows_disabled; varying vec3 world_pos; uniform sampler2D edited_columns : filter_nearest, repeat_disable; void vertex(){world_pos=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;} void fragment(){vec2 uv=(world_pos.xz+vec2(480.0))/960.0; if(texture(edited_columns,clamp(uv,vec2(0.0),vec2(1.0))).r>0.5){discard;} ALBEDO=COLOR.rgb; ROUGHNESS=0.98;}"
-		preview_shader.shader = shader
+		preview_shader = material
+		preview_shader.set_shader_parameter("mask_edits", true)
 		preview_shader.set_shader_parameter("edited_columns", edit_mask_texture)
-		mesh.surface_set_material(0, preview_shader)
+	mesh.surface_set_material(0, material)
 
 	terrain_body = StaticBody3D.new()
 	terrain_body.name = "WorldTerrain"

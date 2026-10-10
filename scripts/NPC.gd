@@ -9,6 +9,9 @@ const GRAVITY := 18.0
 const MAX_HEALTH := 100.0
 const KNOCKBACK_DECAY := 8.5
 
+var resident_id := ""
+var occupation := "traveler"
+var is_talking := false
 var display_name := "Wanderer"
 var world_half := 480.0
 var target_direction := Vector3.ZERO
@@ -46,7 +49,7 @@ func _physics_process(delta: float) -> void:
 	if think_time <= 0.0:
 		_choose_direction()
 
-	var desired := target_direction * SPEED
+	var desired := Vector3.ZERO if is_talking else target_direction * SPEED
 	velocity.x = move_toward(velocity.x, desired.x + knockback_velocity.x, ACCEL * delta)
 	velocity.z = move_toward(velocity.z, desired.z + knockback_velocity.z, ACCEL * delta)
 
@@ -335,3 +338,4 @@ func _material(color: Color) -> StandardMaterial3D:
 	material.albedo_color = color
 	material.roughness = 0.88
 	return material
+

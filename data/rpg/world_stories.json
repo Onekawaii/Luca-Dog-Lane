@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "quest": {
+    "title": "The road that remembers",
+    "introduction": "Ask a field resident about the abandoned survey.",
+    "offer": "Three survey records survived the evacuation: the roadside watch, the wagon camp, and the quarry approach. Read them. Bring back what the crew was trying to tell us before the field started answering.",
+    "return_objective": "Return to a field resident and report the three survey records.",
+    "conclusion": "They were not mapping a seam. They were mapping where the voices stopped. You brought back something the field did not get to rewrite. We will remember who did it.",
+    "reward_title": "Witness of the Road",
+    "return_greeting": "Witness. I still keep a copy of what you found. Some mornings I check that the names have not changed.",
+    "epilogue": "The survey testimony is preserved."
+  },
+  "default_resident": {
+    "history": "The road was built to haul stone out. By the end, people used it to count who had made it back.",
+    "hint": "Find the survey stones outside the roadside watch, the wagon camp, and the quarry approach."
+  },
+  "residents": {
+    "resident_0": {
+      "name": "Mara Vale",
+      "role": "survey keeper",
+      "history": "I kept the manifests because numbers were the first things to change. The names lasted longer.",
+      "hint": "Read all three survey stones, then ask one of us about the survey again."
+    },
+    "resident_1": {
+      "name": "Jonah Bell",
+      "role": "watch keeper",
+      "history": "At the watch we learned to wait for a second voice before believing the first one. Some nights the second voice was worse.",
+      "hint": "Read all three survey stones, then ask one of us about the survey again."
+    },
+    "resident_2": {
+      "name": "Noor Cross",
+      "role": "wagon medic",
+      "history": "I treated cuts from unbroken stone. Then I started treating people who could not remember which hand was theirs.",
+      "hint": "Read all three survey stones, then ask one of us about the survey again."
+    },
+    "resident_3": {
+      "name": "Elsie Morrow",
+      "role": "quarry mason",
+      "history": "I know what a fracture sounds like. What came from that quarry was not a fracture.",
+      "hint": "Read all three survey stones, then ask one of us about the survey again."
+    },
+    "resident_4": {
+      "name": "Cal Reed",
+      "role": "road warden",
+      "history": "We marked the road so people could leave. Every morning somebody turned the last sign back toward the field.",
+      "hint": "Read all three survey stones, then ask one of us about the survey again."
+    },
+    "resident_5": {
+      "name": "Rhea Moss",
+      "role": "camp cook",
+      "history": "We kept setting out nine bowls. I cannot tell you when there stopped being nine people.",
+      "hint": "Read all three survey stones, then ask one of us about the survey again."
+    }
+  },
+  "locations": [
+    {
+      "id": "roadside_watch",
+      "title": "The roadside watch",
+      "position": [
+        -48,
+        0,
+        -38
+      ],
+      "text": "Watch log, third night. A worker answered his own voice from across the field. We found him at dawn facing the wrong road. He knew our names, but called every one of us by a different face."
+    },
+    {
+      "id": "wagon_camp",
+      "title": "The wagon camp",
+      "position": [
+        109,
+        0,
+        22
+      ],
+      "text": "Haul manifest. Nine names leave the quarry. Eight arrive at camp. The wagon has nine places worn into its bench. Nobody will sit in the empty one. Someone has written a warning in the margin: do not count aloud."
+    },
+    {
+      "id": "quarry_approach",
+      "title": "The quarry approach",
+      "position": [
+        214,
+        0,
+        96
+      ],
+      "text": "Final survey note. The stone is sound. The ground does not move. The field moves what we believe is standing on it. If you find this, keep the names. Tell someone who has not heard the answer yet."
+    }
+  ]
+}

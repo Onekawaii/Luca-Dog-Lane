@@ -10,6 +10,7 @@ var move_knob: Panel
 var spawn_panel: Panel
 var map_panel: Panel
 var map_chart: Control
+var rpg_panel: PanelContainer
 var encounter_panel: Panel
 var spawn_button: Button
 var map_button: Button
@@ -99,7 +100,12 @@ func _ready() -> void:
 	_build_catalog_and_loadout()
 	_build_quickbar()
 	_build_encounter_panel()
-	for panel in [spawn_panel, map_panel, inventory_panel, build_panel, loadout_panel, encounter_panel]:
+	rpg_panel = preload("res://scripts/rpg/RPGPanel.gd").new()
+	rpg_panel.game = game
+	rpg_panel.hud = self
+	root.add_child(rpg_panel)
+	interactive_controls.append(rpg_panel)
+	for panel in [spawn_panel, map_panel, inventory_panel, build_panel, loadout_panel, encounter_panel, rpg_panel]:
 		panel.visibility_changed.connect(sync_modal_input)
 
 	root.resized.connect(_layout_for_viewport)
@@ -399,6 +405,9 @@ func _build_map_menu() -> void:
 	reset.pressed.connect(_reset_pressed.bind(reset))
 	reset_button = reset
 	interactive_controls.append(reset)
+	var journal := _button("ROAD JOURNAL", Vector2(390, 308), Vector2(286, 34), map_panel)
+	journal.pressed.connect(show_road_journal)
+	interactive_controls.append(journal)
 	var companion := _button("LUCA: STAY / FOLLOW", Vector2(390, 356), Vector2(286, 34), map_panel)
 	companion.pressed.connect(func(): flash(str(game.call("toggle_companion_stay")), 2.0))
 	interactive_controls.append(companion)
@@ -581,7 +590,7 @@ func _process(delta: float) -> void:
 			status_label.visible = false
 
 func has_modal() -> bool:
-	return spawn_panel.visible or map_panel.visible or inventory_panel.visible or build_panel.visible or loadout_panel.visible or encounter_panel.visible
+	return (rpg_panel != null and rpg_panel.visible) or spawn_panel.visible or map_panel.visible or inventory_panel.visible or build_panel.visible or loadout_panel.visible or encounter_panel.visible
 
 func _update_controls_label() -> void:
 	if controls_label == null:
@@ -592,6 +601,8 @@ func _update_controls_label() -> void:
 	controls_label.visible = not mobile_ui
 
 func close_modals(sync := true) -> void:
+	if rpg_panel != null:
+		rpg_panel.hide()
 	spawn_panel.hide()
 	map_panel.hide()
 	inventory_panel.hide()
@@ -620,6 +631,18 @@ func _input(event: InputEvent) -> void:
 			developer_ui = not developer_ui
 			_apply_mode_visibility()
 			flash("DEVELOPER UI ON" if developer_ui else "DEVELOPER UI OFF", 1.2)
+			get_viewport().set_input_as_handled()
+			return
+		if rpg_panel.visible and event.keycode == KEY_ESCAPE:
+			rpg_panel.hide()
+			sync_modal_input()
+			get_viewport().set_input_as_handled()
+			return
+		if event.keycode == KEY_J:
+			var menu = game.get("session_menu") if game != null else null
+			if menu != null and menu.call("is_open"):
+				return
+			show_road_journal()
 			get_viewport().set_input_as_handled()
 			return
 		if event.keycode == KEY_I:
@@ -904,3 +927,18 @@ func _round_style(fill: Color, border: Color, radius: int, width: int) -> StyleB
 	style.corner_radius_bottom_left = radius
 	style.corner_radius_bottom_right = radius
 	return style
+
+
+func show_rpg_text(title: String, text: String, id := "", npc: Node3D = null) -> void:
+	close_modals(false)
+	rpg_panel.show_text(title, text, id, npc)
+
+func show_road_journal() -> void:
+	if rpg_panel.visible:
+		rpg_panel.hide()
+		sync_modal_input()
+		return
+	if game.story_director != null and game.story_director.enabled:
+		show_rpg_text("Road journal", game.story_director.model.journal_text(), "")
+	else:
+		show_rpg_text("Road journal unavailable", "The journal could not be loaded. Its existing file has been retained. You can continue exploring or create a new generated world from the map.", "")

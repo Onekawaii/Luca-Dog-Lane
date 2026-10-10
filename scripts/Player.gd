@@ -466,6 +466,12 @@ func use_tool() -> void:
 		exit_vehicle()
 		return
 
+	var record_hit := _raycast(5.0)
+	var record = record_hit.get("collider")
+	if record != null and record.is_in_group("rpg_record"):
+		record.call("interact", self)
+		return
+
 	# Encounter verbs are contextual, not tools. A Spiral target always takes
 	# priority over the ordinary sandbox/tool belt.
 	var encounter_hit := _raycast(9.5)
@@ -532,8 +538,7 @@ func use_tool() -> void:
 		return
 
 	if target.is_in_group("npc"):
-		if hud != null:
-			hud.call("flash", str(target.call("describe")))
+		game.call("talk_to_resident", target)
 		return
 
 	match action:

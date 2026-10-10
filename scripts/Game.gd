@@ -25,6 +25,7 @@ var world_plan: KimiWorldPlan
 var world_generator: KimiWorldGenerator
 var content_registry: ContentRegistry
 var loadout: Node
+var story_director: Node
 var spiral_world: SpiralWorldDirector
 var active_map_id := "lucas_field"
 var active_map_profile: Dictionary = {}
@@ -61,6 +62,11 @@ func _ready() -> void:
 
 	if not _setup_content_registry():
 		return
+	story_director = preload("res://scripts/rpg/FieldStoryDirector.gd").new()
+	story_director.name = "RoadStories"
+	add_child(story_director)
+	if not story_director.configure(self):
+		push_warning("Road journal unavailable; existing file retained. World and new-world menu remain available.")
 	world_plan = KimiWorldPlan.new(world_seed, generation_version)
 	world_generator = KimiWorldGenerator.new(world_plan)
 	_setup_environment()
@@ -78,6 +84,7 @@ func _ready() -> void:
 	_spawn_buggy(Vector3(13.0, 1.2, 10.0))
 	_spawn_starter_props()
 	_spawn_hud()
+	story_director.spawn_records()
 	_spawn_spiral_world()
 	_spawn_egg_hunt()
 	session_menu = load("res://scripts/systems/SessionMenu.gd").new()
@@ -165,7 +172,8 @@ func save_session() -> bool:
 	var spiral_saved := true
 	if spiral_world != null:
 		spiral_saved = bool(spiral_world.call("save_state_now"))
-	return terrain_saved and spiral_saved
+	var journal_saved := bool(story_director.save_now()) if story_director != null and story_director.enabled else true
+	return terrain_saved and spiral_saved and journal_saved
 
 func get_tool_ids() -> Array[String]:
 	return content_registry.get_tool_ids() if content_registry != null else []
@@ -658,7 +666,7 @@ func _spawn_people() -> void:
 	for i in range(positions.size()):
 		var at: Vector3 = positions[i]
 		at.y = _surface_height(at.x, at.z) + 1.1
-		_spawn_npc(at, "Drifter %02d" % (i + 1))
+		_spawn_npc(at, "Drifter %02d" % (i + 1), "resident_%d" % i)
 
 func _spawn_starter_props() -> void:
 	for i in range(4):
@@ -1047,12 +1055,15 @@ func duplicate_prop(source: Node3D) -> bool:
 			return true
 	return false
 
-func _spawn_npc(at: Vector3, display_name: String) -> void:
+func _spawn_npc(at: Vector3, display_name: String, resident_id := "") -> void:
 	var npc := CharacterBody3D.new()
 	npc.name = display_name.replace(" ", "_")
 	npc.set_script(load("res://scripts/NPC.gd"))
 	npc.position = Vector3(clamp(at.x, -440.0, 440.0), max(at.y, 1.1), clamp(at.z, -440.0, 440.0))
-	npc.set("display_name", display_name)
+	var profile: Dictionary = story_director.resident(resident_id) if story_director != null and not resident_id.is_empty() else {}
+	npc.set("display_name", str(profile.get("name", display_name)))
+	npc.set("resident_id", resident_id)
+	npc.set("occupation", str(profile.get("role", "traveler")))
 	npc.set("world_half", WORLD_HALF)
 	add_child(npc)
 	_attach_stream_guard(npc)
@@ -1232,3 +1243,10 @@ func _material(color: Color, roughness := 0.92) -> StandardMaterial3D:
 	material.roughness = roughness
 	return material
 
+
+func talk_to_resident(npc: Node3D) -> void:
+	if story_director == null or not npc.call("is_alive_for_test"):
+		return
+	var id := str(npc.get("resident_id"))
+	var lines: Array = story_director.converse(id, "history")
+	hud.call("show_rpg_text", str(npc.get("display_name")) + " — " + str(npc.get("occupation")), "\n\n".join(lines), id, npc)
