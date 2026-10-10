@@ -318,3 +318,11 @@ Every entry must contain:
 - Godot4.6.3 withoutVoxel Tools: focused synthetic physics + disk persistence/identity harness exit0, zerofailures; 27variedheight samples. Python46contracts exit0; editor import exit0 with sandbox socket errors. Native Voxel Tools and pinned4.7.2 checks blocked, not substituted by synthetic evidence.
 - Demolition/review repaired held freeze ownership, dormant companion catchup/STAY, deep probes, cached bedrock under missing intermediate blocks, v1-only story detection and generator/save-version isolation. Independent Demander reinspected/reran; source-only PARTIAL.
 - Status PARTIAL: no actual Voxel Tools streaming/remeshing/edit replay, exported runtime, physical Android or mobile144m viewer telemetry. Exact next commands and success criteria in the handoff. No release/main promotion.
+
+
+## ENG-016 — grounded materials and road journal candidate
+
+- Date2026-10-10; follow-on on feat/grounded-rpg-worlds, parent local3a8874b. No lockfile/main/release changes.
+- Ownership/invariants/falsifiers/rollback/costs: GROUNDED_RPG_2026-10-10.md; exact authored source and native log hashes: GROUNDED_RPG_RECEIPT_2026-10-10.json.
+- RPG and support native harnesses:0failures on Godot4.6.3 withoutVoxel Tools. Python46PASS. Demolition repaired sampler compile failure, transactional reconfigure and corrupt supplemental-journal startup/save recovery; actual HUD modal, NPC pause, sidecar roundtrip and real session save methods tested.
+- PARTIAL_SOURCE_ONLY: no binary texture availability, rendered visual verdict, native Voxel Tools terrain replay, pinned dual-platform exports or physical-phone evidence. Layered shader is mesh-mode only; voxel mode gets map bindings/visibility guard.

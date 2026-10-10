@@ -52,3 +52,19 @@ static func texture(kind: String) -> Texture2D:
 	var result := ImageTexture.create_from_image(image)
 	textures[kind] = result
 	return result
+
+
+static func map_texture(kind: String, map_name: String) -> Texture2D:
+	var key := kind + ":" + map_name
+	if textures.has(key):
+		return textures[key]
+	if SOURCE_IDS.has(kind):
+		var path := "res://assets/materials/%s_1K-JPG_%s.jpg" % [SOURCE_IDS[kind], map_name]
+		if ResourceLoader.exists(path):
+			textures[key] = load(path)
+			return textures[key]
+	var fallback := Image.create(1, 1, false, Image.FORMAT_RGB8)
+	fallback.fill(Color(0.5, 0.5, 1.0) if map_name == "NormalGL" else Color(0.94, 0.94, 0.94))
+	var result := ImageTexture.create_from_image(fallback)
+	textures[key] = result
+	return result
